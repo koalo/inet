@@ -27,8 +27,6 @@ namespace bgp {
 
 class BGPSession;
 
-namespace BGP {
-
 namespace fsm {
 
 ////////////////////////////////////////////////////////
@@ -222,8 +220,6 @@ SUBSTATE(Established, TopState) {
 };
 
 } // namespace fsm
-
-} // namespace BGP
 
 } // namespace bgp
 

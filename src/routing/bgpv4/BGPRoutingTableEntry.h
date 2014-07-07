@@ -25,8 +25,6 @@ namespace inet {
 
 namespace bgp {
 
-namespace BGP {
-
 class INET_API RoutingTableEntry : public IPv4Route
 {
   public:
@@ -53,7 +51,7 @@ inline RoutingTableEntry::RoutingTableEntry(void) :
     IPv4Route(), _pathType(INCOMPLETE)
 {
     setNetmask(IPv4Address::ALLONES_ADDRESS);
-    setMetric(BGP::DEFAULT_COST);
+    setMetric(DEFAULT_COST);
     setSourceType(IRoute::BGP);
 }
 
@@ -63,7 +61,7 @@ inline RoutingTableEntry::RoutingTableEntry(const IPv4Route *entry)
     setNetmask(entry->getNetmask());
     setGateway(entry->getGateway());
     setInterface(entry->getInterface());
-    setMetric(BGP::DEFAULT_COST);
+    setMetric(DEFAULT_COST);
     setSourceType(IRoute::BGP);
 }
 
@@ -102,8 +100,6 @@ inline std::ostream& operator<<(std::ostream& out, RoutingTableEntry& entry)
     }
     return out;
 }
-
-} // namespace BGP
 
 } // namespace bgp
 
