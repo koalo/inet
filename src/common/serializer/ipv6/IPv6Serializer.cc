@@ -20,13 +20,21 @@
 
 #include "headers/defs.h"
 
-namespace INET6Fw    // load headers into a namespace, to avoid conflicts with platform definitions of the same stuff
-{
-/*#include "headers/bsdint.h"
-   #include "headers/in.h"
- #include "headers/in_systm.h"*/
+namespace inet {
+
+namespace serializer {
+
+// load headers into a namespace, to avoid conflicts with platform definitions of the same stuff
+/*
+#include "headers/bsdint.h"
+#include "headers/in.h"
+#include "headers/in_systm.h"
+*/
 #include "headers/ip6.h"
-};
+
+} // namespace serializer
+
+} // namespace inet
 
 #include "IPv6Serializer.h"
 
@@ -56,8 +64,9 @@ namespace INET6Fw    // load headers into a namespace, to avoid conflicts with p
 // This in_addr field is defined as a macro in Windows and Solaris, which interferes with us
 #undef s_addr
 
-using namespace INET6Fw;
 namespace inet {
+
+using namespace serializer;
 
 int IPv6Serializer::serialize(const IPv6Datagram *dgram, unsigned char *buf, unsigned int bufsize)
 {

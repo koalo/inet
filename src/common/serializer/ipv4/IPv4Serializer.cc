@@ -22,13 +22,19 @@
 
 #include "headers/defs.h"
 
-namespace INETFw    // load headers into a namespace, to avoid conflicts with platform definitions of the same stuff
-{
+namespace inet {
+
+namespace serializer {
+
+// load headers into a namespace, to avoid conflicts with platform definitions of the same stuff
 #include "headers/bsdint.h"
 #include "headers/in.h"
 #include "headers/in_systm.h"
 #include "headers/ip.h"
-};
+
+} // namespace serializer
+
+} // namespace inet
 
 #include "IPv4Serializer.h"
 
@@ -62,8 +68,9 @@ namespace INETFw    // load headers into a namespace, to avoid conflicts with pl
 // This in_addr field is defined as a macro in Windows and Solaris, which interferes with us
 #undef s_addr
 
-using namespace INETFw;
 namespace inet {
+
+using namespace serializer;
 
 int IPv4Serializer::serialize(const IPv4Datagram *dgram, unsigned char *buf, unsigned int bufsize, bool hasCalcChkSum)
 {

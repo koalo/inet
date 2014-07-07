@@ -20,14 +20,20 @@
 
 #include "headers/defs.h"
 
-namespace INETFw    // load headers into a namespace, to avoid conflicts with platform definitions of the same stuff
-{
+namespace inet {
+
+namespace serializer {
+// load headers into a namespace, to avoid conflicts with platform definitions of the same stuff
+
 #include "headers/bsdint.h"
 #include "headers/in.h"
 #include "headers/in_systm.h"
 #include "headers/ip.h"
 #include "headers/sctphdr.h"
-};
+
+} // namespace serializer
+
+} // namespace inet
 
 #include "SCTPSerializer.h"
 #include "SCTPAssociation.h"
@@ -41,8 +47,9 @@ namespace INETFw    // load headers into a namespace, to avoid conflicts with pl
 
 #include <sys/types.h>
 
-using namespace INETFw;
 namespace inet {
+
+using namespace serializer;
 
 unsigned char SCTPSerializer::keyVector[512];
 unsigned int SCTPSerializer::sizeKeyVector = 0;
