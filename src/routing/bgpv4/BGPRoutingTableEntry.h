@@ -23,6 +23,8 @@
 
 namespace inet {
 
+namespace bgp {
+
 namespace BGP {
 
 class INET_API RoutingTableEntry : public IPv4Route
@@ -47,9 +49,7 @@ class INET_API RoutingTableEntry : public IPv4Route
     std::vector<ASID> _ASList;
 };
 
-} // namespace BGP
-
-inline BGP::RoutingTableEntry::RoutingTableEntry(void) :
+inline RoutingTableEntry::RoutingTableEntry(void) :
     IPv4Route(), _pathType(BGP::Incomplete)
 {
     setNetmask(IPv4Address::ALLONES_ADDRESS);
@@ -57,7 +57,7 @@ inline BGP::RoutingTableEntry::RoutingTableEntry(void) :
     setSourceType(IRoute::BGP);
 }
 
-inline BGP::RoutingTableEntry::RoutingTableEntry(const IPv4Route *entry)
+inline RoutingTableEntry::RoutingTableEntry(const IPv4Route *entry)
 {
     setDestination(entry->getDestination());
     setNetmask(entry->getNetmask());
@@ -67,7 +67,7 @@ inline BGP::RoutingTableEntry::RoutingTableEntry(const IPv4Route *entry)
     setSourceType(IRoute::BGP);
 }
 
-inline std::ostream& operator<<(std::ostream& out, BGP::RoutingTableEntry& entry)
+inline std::ostream& operator<<(std::ostream& out, RoutingTableEntry& entry)
 {
     out << "BGP - Destination: "
         << entry.getDestination().str()
@@ -102,6 +102,10 @@ inline std::ostream& operator<<(std::ostream& out, BGP::RoutingTableEntry& entry
     }
     return out;
 }
+
+} // namespace BGP
+
+} // namespace bgp
 
 } // namespace inet
 

@@ -104,102 +104,92 @@ namespace math {
 #define isNaN(X)    std::isnan(X)
 
 /**
- * @brief Support functions for mathematical operations.
- *
- * This namespace contains all kind of mathematical support functions
- *
- * @ingroup basicUtils
- * @ingroup utils
- * @author Christian Frank
+ * Returns the rest of a whole-numbered division.
  */
+inline double mod(double dividend, double divisor)
+{
+    double i;
+    return modf(dividend / divisor, &i) * divisor;
+}
 
-    /**
-     * Returns the rest of a whole-numbered division.
-     */
-    inline double mod(double dividend, double divisor)
-    {
-        double i;
-        return modf(dividend / divisor, &i) * divisor;
-    }
+/**
+ * Returns the result of a whole-numbered division.
+ */
+inline double div(double dividend, double divisor)
+{
+    double i;
+    modf(dividend / divisor, &i);
+    return i;
+}
 
-    /**
-     * Returns the result of a whole-numbered division.
-     */
-    inline double div(double dividend, double divisor)
-    {
-        double i;
-        modf(dividend / divisor, &i);
-        return i;
-    }
+/**
+ * Returns the remainder r on division of dividend a by divisor n,
+ * using floored division. The remainder r has the same sign as the divisor n.
+ */
+inline double modulo(double a, double n) { return a - n * floor(a / n); }
 
-    /**
-     * Returns the remainder r on division of dividend a by divisor n,
-     * using floored division. The remainder r has the same sign as the divisor n.
-     */
-    inline double modulo(double a, double n) { return a - n * floor(a / n); }
+/**
+ * Tests whether two doubles are close enough to be declared equal.
+ * Returns true if parameters are at most epsilon apart, false
+ * otherwise
+ */
+inline bool close(double one, double two) { return fabs(one - two) < EPSILON; }
 
-    /**
-     * Tests whether two doubles are close enough to be declared equal.
-     * Returns true if parameters are at most epsilon apart, false
-     * otherwise
-     */
-    inline bool close(double one, double two) { return fabs(one - two) < EPSILON; }
+/**
+ * Returns 0 if i is close to 0, 1 if i is positive and greater than epsilon,
+ * or -1 if it is negative and less than epsilon.
+ */
+inline int stepfunction(double i) { return (i > EPSILON) ? 1 : close(i, 0) ? 0 : -1; };
 
-    /**
-     * Returns 0 if i is close to 0, 1 if i is positive and greater than epsilon,
-     * or -1 if it is negative and less than epsilon.
-     */
-    inline int stepfunction(double i) { return (i > EPSILON) ? 1 : close(i, 0) ? 0 : -1; };
+/**
+ * Returns 1 if the parameter is greater or equal to zero, -1 otherwise
+ */
+inline int sign(double i) { return (i >= 0) ? 1 : -1; };
 
-    /**
-     * Returns 1 if the parameter is greater or equal to zero, -1 otherwise
-     */
-    inline int sign(double i) { return (i >= 0) ? 1 : -1; };
+/**
+ * Returns an integer that corresponds to rounded double parameter
+ */
+inline int round(double d) { return (int)(ceil(d - 0.5)); }
 
-    /**
-     * Returns an integer that corresponds to rounded double parameter
-     */
-    inline int round(double d) { return (int)(ceil(d - 0.5)); }
+/**
+ * Discards the fractional part of the parameter, e.g. -3.8 becomes -3
+ */
+inline double floorToZero(double d) { return (d >= 0.0) ? floor(d) : ceil(d); }
 
-    /**
-     * Discards the fractional part of the parameter, e.g. -3.8 becomes -3
-     */
-    inline double floorToZero(double d) { return (d >= 0.0) ? floor(d) : ceil(d); }
+/**
+ * Returns the greater of the given parameters
+ */
+inline double max(double a, double b) { return (a < b) ? b : a; }
 
-    /**
-     * Returns the greater of the given parameters
-     */
-    inline double max(double a, double b) { return (a < b) ? b : a; }
+/**
+ * Converts a dB value to fraction.
+ */
+inline double dB2fraction(double dB) { return pow(10.0, dB / 10.0); }
 
-    /**
-     * Converts a dB value to fraction.
-     */
-    inline double dB2fraction(double dB) { return pow(10.0, dB / 10.0); }
+/**
+ * Convert a fraction value to dB.
+ */
+inline double fraction2dB(double fraction) { return 10 * log10(fraction); }
 
-    /**
-     * Convert a fraction value to dB.
-     */
-    inline double fraction2dB(double fraction) { return 10 * log10(fraction); }
+/**
+ * Converts a dBm value into milliwatts
+ */
+inline double dBm2mW(double dBm) { return pow(10.0, dBm / 10.0); }
 
-    /**
-     * Converts a dBm value into milliwatts
-     */
-    inline double dBm2mW(double dBm) { return pow(10.0, dBm / 10.0); }
+/**
+ * Convert a mW value to dBm.
+ */
+inline double mW2dBm(double mW) { return 10 * log10(mW); }
 
-    /**
-     * Convert a mW value to dBm.
-     */
-    inline double mW2dBm(double mW) { return 10 * log10(mW); }
+/**
+ * Convert a degree value to radian.
+ */
+inline double deg2rad(double deg) { return deg * M_PI / 180; }
 
-    /**
-     * Convert a degree value to radian.
-     */
-    inline double deg2rad(double deg) { return deg * M_PI / 180; }
-
-    /**
-     * Convert a radian value to degree.
-     */
-    inline double rad2deg(double rad) { return rad * 180 / M_PI; }
+/**
+ * Convert a radian value to degree.
+ */
+inline double rad2deg(double rad) { return rad * 180 / M_PI; }
 
 } // namespace math
 

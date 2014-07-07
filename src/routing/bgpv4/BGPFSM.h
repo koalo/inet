@@ -23,6 +23,8 @@
 
 namespace inet {
 
+namespace bgp {
+
 class BGPSession;
 
 namespace BGP {
@@ -222,6 +224,8 @@ SUBSTATE(Established, TopState) {
 } // namespace fsm
 
 } // namespace BGP
+
+} // namespace bgp
 
 } // namespace inet
 

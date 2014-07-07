@@ -23,6 +23,8 @@
 
 namespace inet {
 
+namespace bgp {
+
 Define_Module(BGPRouting);
 
 BGPRouting::~BGPRouting(void)
@@ -805,6 +807,8 @@ BGP::SessionID BGPRouting::findNextSession(BGP::type type, bool startSession)
     }
     return sessionID;
 }
+
+} // namespace bgp
 
 } // namespace inet
 

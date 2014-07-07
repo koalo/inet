@@ -20,6 +20,8 @@
 
 namespace inet {
 
+namespace bgp {
+
 namespace BGP {
 
 namespace fsm {
@@ -529,6 +531,8 @@ void Established::UpdateMsgEvent()
 } // namespace fsm
 
 } // namespace BGP
+
+} // namespace bgp
 
 } // namespace inet
 

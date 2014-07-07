@@ -27,6 +27,8 @@ namespace inet {
 //Forward declarations:
 class TCPSocket;
 
+namespace bgp {
+
 namespace BGP {
 
 const unsigned char TCP_PORT = 179;
@@ -73,6 +75,8 @@ struct SessionInfo
 };
 
 } // namespace BGP
+
+} // namespace bgp
 
 } // namespace inet
 

@@ -29,6 +29,8 @@
 
 namespace inet {
 
+namespace bgp {
+
 class INET_API BGPSession : public cObject
 {
   public:
@@ -108,6 +110,8 @@ class INET_API BGPSession : public cObject
     friend struct BGP::fsm::OpenConfirm;
     friend struct BGP::fsm::Established;
 };
+
+} // namespace bgp
 
 } // namespace inet
 
