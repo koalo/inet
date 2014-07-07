@@ -40,6 +40,8 @@ namespace inet {
 
 Define_Module(RSVP);
 
+using namespace xmlutils;
+
 RSVP::RSVP()
 {
 }
