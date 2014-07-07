@@ -24,7 +24,7 @@
 
 namespace inet {
 
-namespace OPP_Global {
+namespace OPP_Global { //TODO file INETUtils.h, namespace utils
 
 /**
  *  Converts an integer to string.

@@ -14,7 +14,7 @@
 //
 
 #include "opp_utils.h"
-#include "FWMath.h"
+#include "INETMath.h"
 #include "InterfaceEntry.h"
 #include "ModuleAccess.h"
 #include "IMACProtocolControlInfo.h"

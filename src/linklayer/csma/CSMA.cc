@@ -29,7 +29,7 @@
 #include <cassert>
 
 #include "opp_utils.h"
-#include "FWMath.h"
+#include "INETMath.h"
 #include "InterfaceEntry.h"
 #include "IMACProtocolControlInfo.h"
 #include "FindModule.h"

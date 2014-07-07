@@ -11,7 +11,7 @@
 
 #include "opp_utils.h"
 #include "LMacLayer.h"
-#include "FWMath.h"
+#include "INETMath.h"
 #include "LMacFrame_m.h"
 #include "InterfaceEntry.h"
 #include "SimpleLinkLayerControlInfo.h"
