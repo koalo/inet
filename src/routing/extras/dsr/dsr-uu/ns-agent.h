@@ -12,7 +12,7 @@
 #error "To compile the ns-2 version of DSR-UU, NS2 must be defined!"
 #endif              /* NS2 */
 
-class DSRUU;
+namespace inet { namespace inetmanet { class DSRUU; } }
 
 #include <stdarg.h>
 
