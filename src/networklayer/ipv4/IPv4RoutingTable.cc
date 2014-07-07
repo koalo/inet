@@ -30,7 +30,7 @@
 #include "RoutingTableParser.h"
 #include "NodeOperations.h"
 #include "NodeStatus.h"
-#include "opp_utils.h"
+#include "INETUtils.h"
 #include "ModuleAccess.h"
 
 namespace inet {

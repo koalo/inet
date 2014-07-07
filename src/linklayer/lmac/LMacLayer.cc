@@ -9,7 +9,7 @@
  *  Converted to MiXiM by Kapourniotis Theodoros
  */
 
-#include "opp_utils.h"
+#include "INETUtils.h"
 #include "LMacLayer.h"
 #include "INETMath.h"
 #include "LMacFrame_m.h"

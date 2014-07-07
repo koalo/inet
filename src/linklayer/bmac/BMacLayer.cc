@@ -13,7 +13,7 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 
-#include "opp_utils.h"
+#include "INETUtils.h"
 #include "INETMath.h"
 #include "InterfaceEntry.h"
 #include "ModuleAccess.h"

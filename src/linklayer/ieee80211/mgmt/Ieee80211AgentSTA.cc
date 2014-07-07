@@ -19,7 +19,7 @@
 #include "Ieee80211Primitives_m.h"
 #include "ModuleAccess.h"
 #include "NotifierConsts.h"
-#include "opp_utils.h"
+#include "INETUtils.h"
 
 namespace inet {
 

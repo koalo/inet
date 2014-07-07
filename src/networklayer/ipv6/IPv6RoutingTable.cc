@@ -18,7 +18,7 @@
 
 #include <algorithm>
 
-#include "opp_utils.h"
+#include "INETUtils.h"
 
 #include "IPv6RoutingTable.h"
 #include "IInterfaceTable.h"

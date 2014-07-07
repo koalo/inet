@@ -26,7 +26,7 @@
 #include "InterfaceEntry.h"
 #include "IPassiveQueue.h"
 #include "NodeOperations.h"
-#include "opp_utils.h"
+#include "INETUtils.h"
 
 namespace inet {
 

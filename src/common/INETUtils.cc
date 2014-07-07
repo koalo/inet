@@ -15,7 +15,7 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "opp_utils.h"
+#include "INETUtils.h"
 
 namespace inet {
 

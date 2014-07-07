@@ -20,7 +20,7 @@
 
 #include "PPP.h"
 
-#include "opp_utils.h"
+#include "INETUtils.h"
 #include "IInterfaceTable.h"
 #include "IPassiveQueue.h"
 #include "NotifierConsts.h"

@@ -24,7 +24,7 @@
 #include "Radio80211aControlInfo_m.h"
 #include "Ieee80211eClassifier.h"
 #include "Ieee80211DataRate.h"
-#include "opp_utils.h"
+#include "INETUtils.h"
 #include "ModuleAccess.h"
 
 namespace inet {

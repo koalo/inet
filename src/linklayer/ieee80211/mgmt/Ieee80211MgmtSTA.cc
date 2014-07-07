@@ -26,7 +26,7 @@
 #include "NotifierConsts.h"
 #include "RadioControlInfo_m.h"
 #include "Radio80211aControlInfo_m.h"
-#include "opp_utils.h"
+#include "INETUtils.h"
 
 namespace inet {
 

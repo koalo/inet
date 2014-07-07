@@ -31,7 +31,7 @@
 #include "InterfaceEntry.h"
 #include "InterfaceTable.h"
 #include "IPv4Serializer.h"
-#include "opp_utils.h"
+#include "INETUtils.h"
 
 namespace inet {
 

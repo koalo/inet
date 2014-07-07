@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 #include "INETDefs.h"
-#include "opp_utils.h"
+#include "INETUtils.h"
 
 namespace inet {
 

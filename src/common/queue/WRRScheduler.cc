@@ -16,7 +16,7 @@
 //
 
 #include "WRRScheduler.h"
-#include "opp_utils.h"
+#include "INETUtils.h"
 
 namespace inet {
 

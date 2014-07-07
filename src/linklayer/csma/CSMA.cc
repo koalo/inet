@@ -28,7 +28,7 @@
 
 #include <cassert>
 
-#include "opp_utils.h"
+#include "INETUtils.h"
 #include "INETMath.h"
 #include "InterfaceEntry.h"
 #include "IMACProtocolControlInfo.h"
