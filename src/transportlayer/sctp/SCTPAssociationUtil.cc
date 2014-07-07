@@ -30,7 +30,6 @@
 #include "IPv6RoutingTable.h"
 #include "InterfaceTable.h"
 #include "IPProtocolId_m.h"
-#include "common.h"
 
 #ifdef WITH_IPv4
 #include "IPv4InterfaceData.h"

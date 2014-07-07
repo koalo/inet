@@ -18,7 +18,6 @@
 
 #include "L3AddressResolver.h"
 #include "SCTPAssociation.h"
-#include "common.h"
 
 namespace inet {
 void SCTPAssociation::sendAsconf(const char *type, const bool remote)
