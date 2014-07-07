@@ -423,7 +423,7 @@ void Established::entry()
             continue;
         }
 
-        if (session.getType() == BGP::EGP) {
+        if (session.getType() == EGP) {
             if (rtEntry->getSourceType() == IRoute::OSPF && session.checkExternalRoute(rtEntry)) {
                 continue;
             }
@@ -441,9 +441,9 @@ void Established::entry()
     }
 
     //when all EGP Session is in established state, start IGP Session(s)
-    BGP::SessionID nextSession = session.findAndStartNextSession(BGP::EGP);
+    BGP::SessionID nextSession = session.findAndStartNextSession(EGP);
     if (nextSession == (BGP::SessionID)-1) {
-        session.findAndStartNextSession(BGP::IGP);
+        session.findAndStartNextSession(IGP);
     }
 }
 

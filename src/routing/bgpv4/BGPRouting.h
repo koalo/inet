@@ -82,7 +82,7 @@ class INET_API BGPRouting : public cSimpleModule, public ILifecycle, public TCPS
     /**
      * \brief find the next SessionID compared to his type and start this session if boolean is true
      */
-    BGP::SessionID findNextSession(BGP::type type, bool startSession = false);
+    BGP::SessionID findNextSession(BGPSessionType type, bool startSession = false);
     /**
      * \brief check if the route is in OSPF external IPv4RoutingTable
      *
@@ -113,7 +113,7 @@ class INET_API BGPRouting : public cSimpleModule, public ILifecycle, public TCPS
      */
     bool tieBreakingProcess(BGP::RoutingTableEntry *oldEntry, BGP::RoutingTableEntry *entry);
 
-    BGP::SessionID createSession(BGP::type typeSession, const char *peerAddr);
+    BGP::SessionID createSession(BGPSessionType typeSession, const char *peerAddr);
     bool isInASList(std::vector<BGP::ASID> ASList, BGP::RoutingTableEntry *entry);
     unsigned long isInTable(std::vector<BGP::RoutingTableEntry *> rtTable, BGP::RoutingTableEntry *entry);
 

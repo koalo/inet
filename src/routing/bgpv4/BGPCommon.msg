@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2010 Helene Lageber
+// Copyright (C) 2014 OpenSim Ltd.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -15,21 +15,19 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //
 
-cplusplus {{
-#include "BGPCommon_m.h"
-}}
 
 namespace inet::bgp;
 
-enum BGPPathSegmentType;
-
-//
-// Represents a BGPv4 AS_PATH path attribute (RFC 4271 Section 4.3)
-//
-class BGPASPathSegment
+enum BGPSessionType
 {
-    unsigned char type @enum(BGPPathSegmentType);
-    unsigned char length;
-    unsigned short asValue[];
+    IGP = 0;
+    EGP = 1;
+    INCOMPLETE = 2;
+}
+
+enum BGPPathSegmentType
+{
+    AS_SET = 1;
+    AS_SEQUENCE = 2;
 }
 

@@ -194,8 +194,8 @@ void BGPRouting::socketEstablished(int connId, void *yourPtr)
     }
 
     //if it's an IGP Session, TCPConnectionConfirmed only if all EGP Sessions established
-    if (_BGPSessions[_currSessionId]->getType() == BGP::IGP &&
-        this->findNextSession(BGP::EGP) != (BGP::SessionID)-1)
+    if (_BGPSessions[_currSessionId]->getType() == IGP &&
+        this->findNextSession(EGP) != (BGP::SessionID)-1)
     {
         _BGPSessions[_currSessionId]->getFSM()->TcpConnectionFails();
     }
@@ -205,8 +205,8 @@ void BGPRouting::socketEstablished(int connId, void *yourPtr)
     }
 
     if (_BGPSessions[_currSessionId]->getSocketListen()->getConnectionId() != connId &&
-        _BGPSessions[_currSessionId]->getType() == BGP::EGP &&
-        this->findNextSession(BGP::EGP) != (BGP::SessionID)-1)
+        _BGPSessions[_currSessionId]->getType() == EGP &&
+        this->findNextSession(EGP) != (BGP::SessionID)-1)
     {
         _BGPSessions[_currSessionId]->getSocketListen()->abort();
     }
@@ -318,7 +318,7 @@ unsigned char BGPRouting::decisionProcess(const BGPUpdateMessage& msg, BGP::Rout
     //Don't add the route if it exists in IPv4 routing table except if the msg come from IGP session
     int indexIP = isInRoutingTable(_rt, entry->getDestination());
     if (indexIP != -1 && _rt->getRoute(indexIP)->getSourceType() != IRoute::BGP) {
-        if (_BGPSessions[sessionIndex]->getType() != BGP::IGP) {
+        if (_BGPSessions[sessionIndex]->getType() != IGP) {
             return 0;
         }
         else {
@@ -336,7 +336,7 @@ unsigned char BGPRouting::decisionProcess(const BGPUpdateMessage& msg, BGP::Rout
     entry->setInterface(_BGPSessions[sessionIndex]->getLinkIntf());
     _BGPRoutingTable.push_back(entry);
 
-    if (_BGPSessions[sessionIndex]->getType() == BGP::EGP) {
+    if (_BGPSessions[sessionIndex]->getType() == EGP) {
         std::string entryh = entry->getDestination().str();
         std::string entryn = entry->getNetmask().str();
         _rt->addRoute(entry);
@@ -392,8 +392,8 @@ void BGPRouting::updateSendProcess(const unsigned char type, BGP::SessionID sess
         {
             continue;
         }
-        if ((_BGPSessions[sessionIndex]->getType() == BGP::IGP && (*sessionIt).second->getType() == BGP::EGP) ||
-            _BGPSessions[sessionIndex]->getType() == BGP::EGP ||
+        if ((_BGPSessions[sessionIndex]->getType() == IGP && (*sessionIt).second->getType() == EGP) ||
+            _BGPSessions[sessionIndex]->getType() == EGP ||
             type == BGP::ROUTE_DESTINATION_CHANGED ||
             type == BGP::NEW_SESSION_ESTABLISHED)
         {
@@ -403,7 +403,7 @@ void BGPRouting::updateSendProcess(const unsigned char type, BGP::SessionID sess
             unsigned int nbAS = entry->getASCount();
             content.setAsPathArraySize(1);
             content.getAsPath(0).setValueArraySize(1);
-            content.getAsPath(0).getValue(0).setType(BGP::AS_SEQUENCE);
+            content.getAsPath(0).getValue(0).setType(AS_SEQUENCE);
             //RFC 4271 : set My AS in first position if it is not already
             if (entry->getAS(0) != _myAS) {
                 content.getAsPath(0).getValue(0).setAsValueArraySize(nbAS + 1);
@@ -512,7 +512,7 @@ void BGPRouting::loadSessionConfig(cXMLElementList& sessionList, simtime_t *dela
             throw cRuntimeError("BGP Error: No valid external address for session ID : %s", (*sessionListIt)->getAttribute("id"));
         }
 
-        BGP::SessionID newSessionID = createSession(BGP::EGP, peerAddr.str().c_str());
+        BGP::SessionID newSessionID = createSession(EGP, peerAddr.str().c_str());
         _BGPSessions[newSessionID]->setTimers(delayTab);
         TCPSocket *socketListenEGP = new TCPSocket();
         _BGPSessions[newSessionID]->setSocketListen(socketListenEGP);
@@ -613,7 +613,7 @@ void BGPRouting::loadConfigFromXML(cXMLElement *bgpConfig)
         for (std::vector<const char *>::iterator it = routerInSameASList.begin(); it != routerInSameASList.end(); it++, routerPeerPosition++) {
             BGP::SessionID newSessionID;
             TCPSocket *socketListenIGP = new TCPSocket();
-            newSessionID = createSession(BGP::IGP, (*it));
+            newSessionID = createSession(IGP, (*it));
             delayTab[3] += calculateStartDelay(routerInSameASList.size(), routerPosition, routerPeerPosition);
             _BGPSessions[newSessionID]->setTimers(delayTab);
             _BGPSessions[newSessionID]->setSocketListen(socketListenIGP);
@@ -646,7 +646,7 @@ unsigned int BGPRouting::calculateStartDelay(int rtListSize, unsigned char rtPos
     return startDelay;
 }
 
-BGP::SessionID BGPRouting::createSession(BGP::type typeSession, const char *peerAddr)
+BGP::SessionID BGPRouting::createSession(BGPSessionType typeSession, const char *peerAddr)
 {
     BGPSession *newSession = new BGPSession(*this);
     BGP::SessionID newSessionId;
@@ -656,7 +656,7 @@ BGP::SessionID BGPRouting::createSession(BGP::type typeSession, const char *peer
     info.ASValue = _myAS;
     info.routerID = _rt->getRouterId();
     info.peerAddr.set(peerAddr);
-    if (typeSession == BGP::EGP) {
+    if (typeSession == EGP) {
         info.linkIntf = _rt->getInterfaceForDestAddr(info.peerAddr);
         if (info.linkIntf == 0) {
             throw cRuntimeError("BGP Error: No configuration interface for peer address: %s", peerAddr);
@@ -786,7 +786,7 @@ unsigned char BGPRouting::asLoopDetection(BGP::RoutingTableEntry *entry, BGP::AS
 }
 
 /*return sessionID if the session is found, -1 else*/
-BGP::SessionID BGPRouting::findNextSession(BGP::type type, bool startSession)
+BGP::SessionID BGPRouting::findNextSession(BGPSessionType type, bool startSession)
 {
     BGP::SessionID sessionID = -1;
     for (std::map<BGP::SessionID, BGPSession *>::iterator sessionIterator = _BGPSessions.begin();
@@ -797,7 +797,7 @@ BGP::SessionID BGPRouting::findNextSession(BGP::type type, bool startSession)
             break;
         }
     }
-    if (startSession == true && type == BGP::IGP && sessionID != (BGP::SessionID)-1) {
+    if (startSession == true && type == IGP && sessionID != (BGP::SessionID)-1) {
         InterfaceEntry *linkIntf = _rt->getInterfaceForDestAddr(_BGPSessions[sessionID]->getPeerAddr());
         if (linkIntf == 0) {
             throw cRuntimeError("No configuration interface for peer address: %s", _BGPSessions[sessionID]->getPeerAddr().str().c_str());

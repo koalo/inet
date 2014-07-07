@@ -47,7 +47,7 @@ class INET_API BGPSession : public cObject
     void addUpdateMsgSent() { _updateMsgSent++; }
     void listenConnectionFromPeer() { _bgpRouting.listenConnectionFromPeer(_info.sessionID); }
     void openTCPConnectionToPeer() { _bgpRouting.openTCPConnectionToPeer(_info.sessionID); }
-    BGP::SessionID findAndStartNextSession(BGP::type type) { return _bgpRouting.findNextSession(type, true); }
+    BGP::SessionID findAndStartNextSession(BGPSessionType type) { return _bgpRouting.findNextSession(type, true); }
 
     //setters for creating and editing the information in the BGPRouting session:
     void setInfo(BGP::SessionInfo info);
@@ -60,7 +60,7 @@ class INET_API BGPSession : public cObject
     void getStatistics(unsigned int *statTab);
     bool isEstablished() { return _info.sessionEstablished; }
     BGP::SessionID getSessionID() { return _info.sessionID; }
-    BGP::type getType() { return _info.sessionType; }
+    BGPSessionType getType() { return _info.sessionType; }
     InterfaceEntry *getLinkIntf() { return _info.linkIntf; }
     IPv4Address getPeerAddr() { return _info.peerAddr; }
     TCPSocket *getSocket() { return _info.socket; }

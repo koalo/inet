@@ -50,7 +50,7 @@ class INET_API RoutingTableEntry : public IPv4Route
 };
 
 inline RoutingTableEntry::RoutingTableEntry(void) :
-    IPv4Route(), _pathType(BGP::Incomplete)
+    IPv4Route(), _pathType(INCOMPLETE)
 {
     setNetmask(IPv4Address::ALLONES_ADDRESS);
     setMetric(BGP::DEFAULT_COST);
@@ -75,15 +75,15 @@ inline std::ostream& operator<<(std::ostream& out, RoutingTableEntry& entry)
         << entry.getNetmask().str()
         << " , PathType: ";
     switch (entry.getPathType()) {
-        case BGP::EGP:
+        case EGP:
             out << "EGP";
             break;
 
-        case BGP::IGP:
+        case IGP:
             out << "IGP";
             break;
 
-        case BGP::Incomplete:
+        case INCOMPLETE:
             out << "Incomplete";
             break;
 

@@ -62,7 +62,7 @@ void BGPSession::setTimers(simtime_t *delayTab)
     _connectRetryTime = delayTab[0];
     _holdTime = delayTab[1];
     _keepAliveTime = delayTab[2];
-    if (_info.sessionType == BGP::IGP) {
+    if (_info.sessionType == IGP) {
         _StartEventTime = delayTab[3];
     }
     else if (delayTab[3] != SIMTIME_ZERO) {
@@ -85,7 +85,7 @@ void BGPSession::startConnection()
     if (_ptrStartEvent == 0) {
         _ptrStartEvent = new cMessage("BGP Start", BGP::START_EVENT_KIND);
     }
-    if (_info.sessionType == BGP::IGP) {
+    if (_info.sessionType == IGP) {
         if (_bgpRouting.getSimTime() > _StartEventTime) {
             _StartEventTime = _bgpRouting.getSimTime();
         }
