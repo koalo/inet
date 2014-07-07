@@ -39,6 +39,7 @@
 
 #include "InitStages.h"
 
+/// main namespace of INET framework
 namespace inet {
 
 typedef unsigned short ushort;
