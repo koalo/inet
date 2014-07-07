@@ -20,7 +20,9 @@
 
 namespace inet {
 
-namespace BGPFSM {
+namespace BGP {
+
+namespace fsm {
 
 //TopState
 void TopState::init()
@@ -524,7 +526,9 @@ void Established::UpdateMsgEvent()
     //- remains in the Established state.
 }
 
-} // namespace BGPFSM
+} // namespace fsm
+
+} // namespace BGP
 
 } // namespace inet
 

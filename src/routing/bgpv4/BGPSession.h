@@ -65,7 +65,7 @@ class INET_API BGPSession : public cObject
     TCPSocket *getSocketListen() { return _info.socketListen; }
     IIPv4RoutingTable *getIPRoutingTable() { return _bgpRouting.getIPRoutingTable(); }
     std::vector<BGP::RoutingTableEntry *> getBGPRoutingTable() { return _bgpRouting.getBGPRoutingTable(); }
-    Macho::Machine<BGPFSM::TopState>& getFSM() { return *_fsm; }
+    Macho::Machine<BGP::fsm::TopState>& getFSM() { return *_fsm; }
     bool checkExternalRoute(const IPv4Route *ospfRoute) { return _bgpRouting.checkExternalRoute(ospfRoute); }
     void updateSendProcess(BGP::RoutingTableEntry *entry) { return _bgpRouting.updateSendProcess(BGP::NEW_SESSION_ESTABLISHED, _info.sessionID, entry); }
 
@@ -98,15 +98,15 @@ class INET_API BGPSession : public cObject
     unsigned int _updateMsgRcv;
 
     //FINAL STATE MACHINE
-    BGPFSM::TopState::Box *_box;
-    Macho::Machine<BGPFSM::TopState> *_fsm;
+    BGP::fsm::TopState::Box *_box;
+    Macho::Machine<BGP::fsm::TopState> *_fsm;
 
-    friend struct BGPFSM::Idle;
-    friend struct BGPFSM::Connect;
-    friend struct BGPFSM::Active;
-    friend struct BGPFSM::OpenSent;
-    friend struct BGPFSM::OpenConfirm;
-    friend struct BGPFSM::Established;
+    friend struct BGP::fsm::Idle;
+    friend struct BGP::fsm::Connect;
+    friend struct BGP::fsm::Active;
+    friend struct BGP::fsm::OpenSent;
+    friend struct BGP::fsm::OpenConfirm;
+    friend struct BGP::fsm::Established;
 };
 
 } // namespace inet

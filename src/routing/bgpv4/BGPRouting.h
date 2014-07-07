@@ -66,11 +66,11 @@ class INET_API BGPRouting : public cSimpleModule, public ILifecycle, public TCPS
     IIPv4RoutingTable *getIPRoutingTable() { return _rt; }
     std::vector<BGP::RoutingTableEntry *> getBGPRoutingTable() { return _BGPRoutingTable; }
     /**
-     * \brief active listenSocket for a given session (used by BGPFSM)
+     * \brief active listenSocket for a given session (used by BGP::fsm)
      */
     void listenConnectionFromPeer(BGP::SessionID sessionID);
     /**
-     * \brief active TCPConnection for a given session (used by BGPFSM)
+     * \brief active TCPConnection for a given session (used by BGP::fsm)
      */
     void openTCPConnectionToPeer(BGP::SessionID sessionID);
     /**

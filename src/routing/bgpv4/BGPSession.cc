@@ -29,8 +29,8 @@ BGPSession::BGPSession(BGPRouting& _bgpRouting)
     , _openMsgSent(0), _openMsgRcv(0), _keepAliveMsgSent(0)
     , _keepAliveMsgRcv(0), _updateMsgSent(0), _updateMsgRcv(0)
 {
-    _box = new BGPFSM::TopState::Box(*this);
-    _fsm = new Macho::Machine<BGPFSM::TopState>(_box);
+    _box = new BGP::fsm::TopState::Box(*this);
+    _fsm = new Macho::Machine<BGP::fsm::TopState>(_box);
     _info.sessionEstablished = false;
 };
 
