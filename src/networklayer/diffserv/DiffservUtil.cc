@@ -36,7 +36,7 @@ namespace inet {
 
 namespace DiffservUtil {
 
-using namespace OPP_Global;
+using namespace utils;
 
 // cached enums
 cEnum *dscpEnum = NULL;

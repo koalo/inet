@@ -76,7 +76,7 @@ namespace inetmanet {
 #define CURRENT_TIME_T  SIMTIME_DBL(simTime())
 #endif
 
-#define debug  EV << OPP_Global::stringf
+#define debug  EV << utils::stringf
 
 
 

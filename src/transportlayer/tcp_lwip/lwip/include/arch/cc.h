@@ -17,7 +17,7 @@ namespace inet {
 #define LWIP_PLATFORM_DIAG(c) do { printf("%u] ", get_stack_id()); printf(c); } while (0)
 */
 //#define LWIP_PLATFORM_DIAG(c) printf(c)
-#define LWIP_PLATFORM_DIAG(c) do { EV_DETAIL << "(LWIP):" << OPP_Global::stringf c; } while (0)
+#define LWIP_PLATFORM_DIAG(c) do { EV_DETAIL << "(LWIP):" << utils::stringf c; } while (0)
 
 #ifndef BYTE_ORDER
 #define BYTE_ORDER LITTLE_ENDIAN

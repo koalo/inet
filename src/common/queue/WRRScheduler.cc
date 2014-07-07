@@ -41,7 +41,7 @@ void WRRScheduler::initialize()
     cStringTokenizer tokenizer(par("weights"));
     int i;
     for (i = 0; i < numInputs && tokenizer.hasMoreTokens(); ++i)
-        buckets[i] = weights[i] = (int)OPP_Global::atoul(tokenizer.nextToken());
+        buckets[i] = weights[i] = (int)utils::atoul(tokenizer.nextToken());
 
     if (i < numInputs)
         throw cRuntimeError("Too few values given in the weights parameter.");

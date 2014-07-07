@@ -24,7 +24,7 @@
 
 namespace inet {
 
-namespace OPP_Global { //TODO file INETUtils.h, namespace utils
+namespace utils { //TODO file INETUtils.h, namespace utils
 
 /**
  *  Converts an integer to string.
@@ -63,7 +63,7 @@ std::string stringf(const char *fmt, ...);
  */
 std::string vstringf(const char *fmt, va_list& args);
 
-} // namespace OPP_Global
+} // namespace utils
 
 } // namespace inet
 

@@ -471,7 +471,7 @@ InterfaceEntry *Ieee80211Mac::createInterfaceEntry()
     InterfaceEntry *e = new InterfaceEntry(this);
 
     // interface name: NetworkInterface module's name without special characters ([])
-    std::string interfaceName = OPP_Global::stripnonalnum(getParentModule()->getFullName());
+    std::string interfaceName = utils::stripnonalnum(getParentModule()->getFullName());
     e->setName(interfaceName.c_str());
 
     // address
@@ -2619,7 +2619,7 @@ const MACAddress& Ieee80211Mac::isInterfaceRegistered()
     IInterfaceTable *ift = findModuleFromPar<IInterfaceTable>(par("interfaceTableModule"), this);
     if (!ift)
         return MACAddress::UNSPECIFIED_ADDRESS;
-    std::string interfaceName = OPP_Global::stripnonalnum(getParentModule()->getFullName());
+    std::string interfaceName = utils::stripnonalnum(getParentModule()->getFullName());
     InterfaceEntry *e = ift->getInterfaceByName(interfaceName.c_str());
     if (e)
         return e->getMacAddress();

@@ -82,7 +82,7 @@ InterfaceEntry *ExtInterface::createInterfaceEntry()
     InterfaceEntry *e = new InterfaceEntry(this);
 
     // interface name: our module name without special characters ([])
-    e->setName(OPP_Global::stripnonalnum(getFullName()).c_str());
+    e->setName(utils::stripnonalnum(getFullName()).c_str());
 
     e->setMtu(par("mtu"));
     e->setMulticast(true);

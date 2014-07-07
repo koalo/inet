@@ -35,7 +35,7 @@
 
 namespace inet {
 
-using namespace OPP_Global;
+using namespace utils;
 
 Define_Module(IPv4RoutingTable);
 
