@@ -69,6 +69,10 @@ typedef dsr_opt_hdr hdr_dsr;
 
 #define IPDEFTTL 64
 
+namespace inet {
+
+namespace inetmanet {
+
 class DSRUU:public Tap, public Agent
 {
   public:
@@ -164,10 +168,6 @@ class DSRUU:public Tap, public Agent
 
 #undef _DEBUG_H
 #include "debug_dsr.h"
-
-namespace inet {
-
-namespace inetmanet {
 
 #undef NO_GLOBALS
 
