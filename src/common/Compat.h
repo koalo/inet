@@ -129,6 +129,16 @@ T check_and_cast_nullable(P *p)
 
 #endif    // OMNETPP_VERSION < 0x0500
 
+/**
+ * Replace cObjectFactory::createOneIfClassIsKnown().
+ */
+cObject *createOneIfClassIsKnown(const char *classname, cObject *owner = simulation.getContext());
+
+/**
+ * Replace cObjectFactory::createOne().
+ */
+cObject *createOne(const char *classname, cObject *owner = simulation.getContext());
+
 } // namespace inet
 
 #endif // ifndef __INET_COMPAT_H

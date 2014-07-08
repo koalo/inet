@@ -64,5 +64,31 @@ double INET_API erfc(double x)
 
 #endif // ifdef _MSC_VER
 
+cObject *createOneIfClassIsKnown(const char *classname, cObject *owner)
+{
+    std::string ownclass = owner->getClassName();
+    do {
+        std::string::size_type found = ownclass.rfind("::");
+        if (found == std::string::npos)
+            found = 0;
+        ownclass.erase(found);
+        std::string cn = found ? ownclass + "::" + classname : classname;
+        cObject *ret = cObjectFactory::createOneIfClassIsKnown(cn.c_str());
+        if (ret)
+            return ret;
+    } while (!ownclass.empty());
+    return NULL;
+}
+
+cObject *createOne(const char *classname, cObject *owner)
+{
+    cObject *ret = createOneIfClassIsKnown(classname, owner);
+    if (!ret)
+        throw cRuntimeError("Class \"%s\" not found -- perhaps its code was not linked in, "
+                            "or the class wasn't registered with Register_Class(), or in the case of "
+                            "modules and channels, with Define_Module()/Define_Channel()", classname);
+    return ret;
+}
+
 } // namespace inet
 
