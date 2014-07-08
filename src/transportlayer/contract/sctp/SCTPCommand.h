@@ -19,6 +19,10 @@
 #ifndef __INET_SCTPCOMMAND_H
 #define __INET_SCTPCOMMAND_H
 
+namespace inet {
+
+namespace sctp {
+
 //
 // SCTP command codes, sent by the application to SCTP. These constants
 // should be set as message kind on a message sent to the SCTP entity.
@@ -79,6 +83,10 @@ enum SCTPFlags {
     COMPLETE_MESG_UNORDERED = 1,
     COMPLETE_MESG_ORDERED = 0
 };
+
+} // namespace sctp
+
+} // namespace inet
 
 #endif // ifndef __INET_SCTPCOMMAND_H
 

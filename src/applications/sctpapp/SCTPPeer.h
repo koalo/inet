@@ -26,6 +26,8 @@
 
 namespace inet {
 
+namespace sctp {
+
 class SCTPConnectInfo;
 
 /**
@@ -126,6 +128,8 @@ class INET_API SCTPPeer : public cSimpleModule, public SCTPSocket::CallbackInter
     SCTPPeer();
     ~SCTPPeer();
 };
+
+} // namespace sctp
 
 } // namespace inet
 

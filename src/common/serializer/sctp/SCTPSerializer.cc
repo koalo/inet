@@ -22,6 +22,8 @@
 
 namespace inet {
 
+namespace sctp {
+
 namespace serializer {
 // load headers into a namespace, to avoid conflicts with platform definitions of the same stuff
 
@@ -32,6 +34,8 @@ namespace serializer {
 #include "headers/sctphdr.h"
 
 } // namespace serializer
+
+} // namespace sctp
 
 } // namespace inet
 
@@ -48,6 +52,8 @@ namespace serializer {
 #include <sys/types.h>
 
 namespace inet {
+
+namespace sctp {
 
 using namespace serializer;
 
@@ -2091,6 +2097,8 @@ void SCTPSerializer::calculateSharedKey()
             sharedKey[i + sizePeerKeyVector] = keyVector[i];
     }
 }
+
+} // namespace sctp
 
 } // namespace inet
 

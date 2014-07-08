@@ -20,7 +20,7 @@ cplusplus {{
 #include "L3Address.h"
 }}
 
-namespace inet;
+namespace inet::sctp;
 
 cplusplus {{
 typedef cPacket *cPacketPtr;

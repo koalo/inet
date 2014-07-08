@@ -120,7 +120,7 @@ int IPv4Serializer::serialize(const IPv4Datagram *dgram, unsigned char *buf, uns
 
 #ifdef WITH_SCTP
         case IP_PROT_SCTP:    //I.R.
-            packetLength += SCTPSerializer().serialize(check_and_cast<SCTPMessage *>(encapPacket),
+            packetLength += sctp::SCTPSerializer().serialize(check_and_cast<sctp::SCTPMessage *>(encapPacket),
                         buf + IP_HEADER_BYTES, bufsize - IP_HEADER_BYTES);
             break;
 #endif // ifdef WITH_SCTP
@@ -197,8 +197,8 @@ void IPv4Serializer::parse(const unsigned char *buf, unsigned int bufsize, IPv4D
 
 #ifdef WITH_SCTP
         case IP_PROT_SCTP:
-            encapPacket = new SCTPMessage("sctp-from-wire");
-            SCTPSerializer().parse(buf + headerLength, encapLength, (SCTPMessage *)encapPacket);
+            encapPacket = new sctp::SCTPMessage("sctp-from-wire");
+            sctp::SCTPSerializer().parse(buf + headerLength, encapLength, (sctp::SCTPMessage *)encapPacket);
             break;
 #endif // ifdef WITH_SCTP
 

@@ -20,6 +20,8 @@
 #include "SCTPAssociation.h"
 
 namespace inet {
+
+namespace sctp {
 void SCTPAssociation::sendAsconf(const char *type, const bool remote)
 {
     SCTPAuthenticationChunk *authChunk;
@@ -312,5 +314,8 @@ SCTPSuccessIndication *SCTPAssociation::createSuccessIndication(const uint32 cor
     success->setBitLength(SCTP_ADD_IP_PARAMETER_LENGTH * 8);
     return success;
 }
+
+} // namespace sctp
+
 } // namespace inet
 

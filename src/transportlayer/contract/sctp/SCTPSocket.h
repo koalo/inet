@@ -26,6 +26,8 @@
 
 namespace inet {
 
+namespace sctp {
+
 class SCTPStatusInfo;
 class SCTP;
 
@@ -280,7 +282,10 @@ class INET_API SCTPSocket
     void setState(int state) { sockstate = state; };
 };
 
+} // namespace sctp
+
 } // namespace inet
 
 #endif // ifndef __INET_SCTPSOCKET_H
+
 

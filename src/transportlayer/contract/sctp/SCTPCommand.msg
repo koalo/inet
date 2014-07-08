@@ -23,7 +23,7 @@ cplusplus {{
 #include "SCTPCommand.h"
 }}
 
-namespace inet;
+namespace inet::sctp;
 
 cplusplus {{
 typedef std::vector<L3Address> AddressVector;

@@ -26,6 +26,8 @@
 
 namespace inet {
 
+namespace sctp {
+
 class SCTPAssociation;
 
 /**
@@ -115,6 +117,8 @@ class INET_API SCTPClient : public cSimpleModule, public SCTPSocket::CallbackInt
     SCTPClient();
     virtual ~SCTPClient();
 };
+
+} // namespace sctp
 
 } // namespace inet
 

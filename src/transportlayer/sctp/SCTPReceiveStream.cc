@@ -21,6 +21,8 @@
 
 namespace inet {
 
+namespace sctp {
+
 SCTPReceiveStream::SCTPReceiveStream()
 {
     streamId = 0;
@@ -150,6 +152,8 @@ uint32 SCTPReceiveStream::enqueueNewDataChunk(SCTPDataVariables *dchunk)
 
     return delivery;
 }
+
+} // namespace sctp
 
 } // namespace inet
 

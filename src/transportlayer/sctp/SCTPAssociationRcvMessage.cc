@@ -36,6 +36,8 @@
 
 namespace inet {
 
+namespace sctp {
+
 void SCTPAssociation::decreaseOutstandingBytes(SCTPDataVariables *chunk)
 {
     SCTPPathVariables *lastPath = chunk->getLastDestinationPath();
@@ -3238,6 +3240,8 @@ void SCTPAssociation::moveChunkToOtherPath(SCTPDataVariables *chunk,
 
     statisticsPeerRwnd->record(state->peerRwnd);
 }
+
+} // namespace sctp
 
 } // namespace inet
 

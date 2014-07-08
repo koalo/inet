@@ -27,6 +27,8 @@
 
 namespace inet {
 
+namespace sctp {
+
 /**
  * Implements the SCTPServer simple module. See the NED file for more info.
  */
@@ -103,6 +105,8 @@ class INET_API SCTPServer : public cSimpleModule, public ILifecycle
     virtual ~SCTPServer();
     SCTPServer();
 };
+
+} // namespace sctp
 
 } // namespace inet
 

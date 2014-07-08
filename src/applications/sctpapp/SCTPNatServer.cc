@@ -29,6 +29,8 @@
 
 namespace inet {
 
+namespace sctp {
+
 Define_Module(SCTPNatServer);
 
 NatVector SCTPNatServer::natVector;
@@ -487,6 +489,8 @@ void SCTPNatServer::finish()
     EV << getFullPath() << "Over all " << packetsRcvd << " packets received\n ";
     EV << getFullPath() << "Over all " << notifications << " notifications received\n ";
 }
+
+} // namespace sctp
 
 } // namespace inet
 

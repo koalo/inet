@@ -28,10 +28,10 @@ namespace inet {
 // Foreign declarations:
 class IPv4Datagram;
 class IPv6Datagram;
-class SCTPMessage;
 class TCPSegment;
 class UDPPacket;
 class ARPPacket;
+namespace sctp { class SCTPMessage; }
 
 /**
  * Utility class that provides tcpdump-like functionality. It prints
@@ -104,7 +104,7 @@ class INET_API PacketDump
     /**
      * Dumps info about the given SCTP message.
      */
-    void sctpDump(const char *label, SCTPMessage *sctpmsg, const std::string& srcAddr,
+    void sctpDump(const char *label, sctp::SCTPMessage *sctpmsg, const std::string& srcAddr,
             const std::string& destAddr, const char *comment = NULL);
 
     /**

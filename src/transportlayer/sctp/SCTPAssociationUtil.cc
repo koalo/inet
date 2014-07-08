@@ -43,6 +43,8 @@
 
 namespace inet {
 
+namespace sctp {
+
 void SCTPAssociation::calculateRcvBuffer()
 {
     uint32 sumDelivery = 0;
@@ -2772,6 +2774,8 @@ void SCTPAssociation::putInTransmissionQ(const uint32 tsn, SCTPDataVariables *ch
         }
     }
 }
+
+} // namespace sctp
 
 } // namespace inet
 

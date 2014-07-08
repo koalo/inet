@@ -58,9 +58,11 @@ PacketDump::~PacketDump()
 {
 }
 
-void PacketDump::sctpDump(const char *label, SCTPMessage *sctpmsg,
+void PacketDump::sctpDump(const char *label, sctp::SCTPMessage *sctpmsg,
         const std::string& srcAddr, const std::string& destAddr, const char *comment)
 {
+    using namespace sctp;
+
     std::ostream& out = *outp;
 
     // seq and time (not part of the tcpdump format)
@@ -375,8 +377,8 @@ void PacketDump::dumpPacket(bool l2r, cPacket *msg)
     else
 #endif // ifdef WITH_IPv4
 #ifdef WITH_SCTP
-    if (dynamic_cast<SCTPMessage *>(msg)) {
-        sctpDump("", (SCTPMessage *)msg, std::string(l2r ? "A" : "B"), std::string(l2r ? "B" : "A"));
+    if (dynamic_cast<sctp::SCTPMessage *>(msg)) {
+        sctpDump("", (sctp::SCTPMessage *)msg, std::string(l2r ? "A" : "B"), std::string(l2r ? "B" : "A"));
     }
     else
 #endif // ifdef WITH_SCTP
@@ -455,8 +457,8 @@ void PacketDump::udpDump(bool l2r, const char *label, UDPPacket *udppkt,
 
 #ifdef WITH_SCTP
     if (udppkt->getSourcePort() == 9899 || udppkt->getDestinationPort() == 9899) {
-        if (dynamic_cast<SCTPMessage *>(udppkt->getEncapsulatedPacket()))
-            sctpDump("", (SCTPMessage *)(udppkt->getEncapsulatedPacket()),
+        if (dynamic_cast<sctp::SCTPMessage *>(udppkt->getEncapsulatedPacket()))
+            sctpDump("", (sctp::SCTPMessage *)(udppkt->getEncapsulatedPacket()),
                     std::string(l2r ? "A" : "B"), std::string(l2r ? "B" : "A"));
     }
 #endif // ifdef WITH_SCTP
@@ -504,8 +506,8 @@ void PacketDump::dumpIPv4(bool l2r, const char *label, IPv4Datagram *dgram, cons
     else
 #endif // ifdef WITH_UDP
 #ifdef WITH_SCTP
-    if (dynamic_cast<SCTPMessage *>(dgram->getEncapsulatedPacket())) {
-        SCTPMessage *sctpmsg = check_and_cast<SCTPMessage *>(dgram->getEncapsulatedPacket());
+    if (dynamic_cast<sctp::SCTPMessage *>(dgram->getEncapsulatedPacket())) {
+        sctp::SCTPMessage *sctpmsg = check_and_cast<sctp::SCTPMessage *>(dgram->getEncapsulatedPacket());
         if (dgram->hasBitError())
             sctpmsg->setBitError(true);
         sctpDump(label, sctpmsg, dgram->getSrcAddress().str(), dgram->getDestAddress().str(), comment);

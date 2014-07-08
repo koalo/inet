@@ -20,6 +20,8 @@
 
 namespace inet {
 
+namespace sctp {
+
 SCTPSendStream::SCTPSendStream(const uint16 id)
 {
     streamId = id;
@@ -59,6 +61,8 @@ void SCTPSendStream::deleteQueue()
     delete uStreamQ;
     totalLength = 0;
 }
+
+} // namespace sctp
 
 } // namespace inet
 
