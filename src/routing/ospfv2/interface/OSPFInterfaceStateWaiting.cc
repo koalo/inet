@@ -25,6 +25,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 void OSPF::InterfaceStateWaiting::processEvent(OSPF::Interface *intf, OSPF::Interface::InterfaceEventType event)
 {
     if ((event == OSPF::Interface::BACKUP_SEEN) ||
@@ -60,6 +62,8 @@ void OSPF::InterfaceStateWaiting::processEvent(OSPF::Interface *intf, OSPF::Inte
         intf->sendDelayedAcknowledgements();
     }
 }
+
+} // namespace ospf
 
 } // namespace inet
 

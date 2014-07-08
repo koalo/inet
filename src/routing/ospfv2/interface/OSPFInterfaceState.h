@@ -22,6 +22,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 namespace OSPF {
 
 class InterfaceState
@@ -38,6 +40,8 @@ class InterfaceState
 };
 
 } // namespace OSPF
+
+} // namespace ospf
 
 } // namespace inet
 

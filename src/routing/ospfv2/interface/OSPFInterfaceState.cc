@@ -28,6 +28,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 void OSPF::InterfaceState::changeState(OSPF::Interface *intf, OSPF::InterfaceState *newState, OSPF::InterfaceState *currentState)
 {
     OSPF::Interface::InterfaceStateType oldState = currentState->getState();
@@ -382,6 +384,8 @@ void OSPF::InterfaceState::calculateDesignatedRouter(OSPF::Interface *intf)
         }
     }
 }
+
+} // namespace ospf
 
 } // namespace inet
 

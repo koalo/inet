@@ -22,6 +22,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 namespace OSPF {
 
 class InterfaceStateBackup : public InterfaceState
@@ -32,6 +34,8 @@ class InterfaceStateBackup : public InterfaceState
 };
 
 } // namespace OSPF
+
+} // namespace ospf
 
 } // namespace inet
 

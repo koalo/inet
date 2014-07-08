@@ -24,6 +24,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 OSPF::DatabaseDescriptionHandler::DatabaseDescriptionHandler(OSPF::Router *containingRouter) :
     OSPF::IMessageHandler(containingRouter)
 {
@@ -252,6 +254,8 @@ bool OSPF::DatabaseDescriptionHandler::processDDPacket(OSPFDatabaseDescriptionPa
     }
     return true;
 }
+
+} // namespace ospf
 
 } // namespace inet
 

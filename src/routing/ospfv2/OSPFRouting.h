@@ -30,6 +30,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 /**
  * Implements the OSPFv2 routing protocol. See the NED file for more information.
  */
@@ -67,6 +69,8 @@ class OSPFRouting : public cSimpleModule, public ILifecycle
     virtual void createOspfRouter();
     virtual bool isNodeUp();
 };
+
+} // namespace ospf
 
 } // namespace inet
 

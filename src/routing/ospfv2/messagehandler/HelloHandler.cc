@@ -24,6 +24,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 OSPF::HelloHandler::HelloHandler(OSPF::Router *containingRouter) :
     OSPF::IMessageHandler(containingRouter)
 {
@@ -338,6 +340,8 @@ void OSPF::HelloHandler::processPacket(OSPFPacket *packet, OSPF::Interface *intf
         router->rebuildRoutingTable();
     }
 }
+
+} // namespace ospf
 
 } // namespace inet
 

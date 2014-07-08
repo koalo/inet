@@ -19,6 +19,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 OSPF::RoutingTableEntry::RoutingTableEntry(IInterfaceTable *_ift) :
     ift(_ift),
     IPv4Route(),
@@ -125,6 +127,8 @@ bool OSPF::RoutingTableEntry::operator==(const RoutingTableEntry& entry) const
            (linkStateOrigin == entry.linkStateOrigin);
 }
 
+namespace OSPF {
+
 std::ostream& operator<<(std::ostream& out, const OSPF::RoutingTableEntry& entry)
 {
     out << "Destination: " << entry.getDestination() << "/" << entry.getNetmask() << " (";
@@ -179,6 +183,10 @@ std::ostream& operator<<(std::ostream& out, const OSPF::RoutingTableEntry& entry
 
     return out;
 }
+
+} // namespace OSPF
+
+} // namespace ospf
 
 } // namespace inet
 

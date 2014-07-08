@@ -24,6 +24,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 class LSAProcessingMarker
 {
   private:
@@ -365,6 +367,8 @@ void OSPF::LinkStateUpdateHandler::acknowledgeLSA(OSPFLSAHeader& lsaHeader,
         }
     }
 }
+
+} // namespace ospf
 
 } // namespace inet
 

@@ -21,6 +21,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 OSPF::Area::Area(IInterfaceTable *ift, OSPF::AreaID id) :
     ift(ift),
     areaID(id),
@@ -2519,6 +2521,8 @@ void OSPF::Area::recheckSummaryLSAs(std::vector<OSPF::RoutingTableEntry *>& newR
         }
     }
 }
+
+} // namespace ospf
 
 } // namespace inet
 

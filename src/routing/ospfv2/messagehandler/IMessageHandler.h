@@ -22,6 +22,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 namespace OSPF {
 
 class Router;
@@ -41,6 +43,8 @@ class IMessageHandler
 };
 
 } // namespace OSPF
+
+} // namespace ospf
 
 } // namespace inet
 

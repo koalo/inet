@@ -19,6 +19,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 bool OSPF::ASExternalLSA::update(const OSPFASExternalLSA *lsa)
 {
     bool different = differsFrom(lsa);
@@ -75,6 +77,8 @@ bool OSPF::ASExternalLSA::differsFrom(const OSPFASExternalLSA *asExternalLSA) co
 
     return differentHeader || differentBody;
 }
+
+} // namespace ospf
 
 } // namespace inet
 

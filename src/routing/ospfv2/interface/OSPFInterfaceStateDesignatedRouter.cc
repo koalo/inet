@@ -25,6 +25,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 void OSPF::InterfaceStateDesignatedRouter::processEvent(OSPF::Interface *intf, OSPF::Interface::InterfaceEventType event)
 {
     if (event == OSPF::Interface::NEIGHBOR_CHANGE) {
@@ -55,6 +57,8 @@ void OSPF::InterfaceStateDesignatedRouter::processEvent(OSPF::Interface *intf, O
         intf->sendDelayedAcknowledgements();
     }
 }
+
+} // namespace ospf
 
 } // namespace inet
 

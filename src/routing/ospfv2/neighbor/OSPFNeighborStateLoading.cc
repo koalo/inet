@@ -29,6 +29,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 void OSPF::NeighborStateLoading::processEvent(OSPF::Neighbor *neighbor, OSPF::Neighbor::NeighborEventType event)
 {
     if ((event == OSPF::Neighbor::KILL_NEIGHBOR) || (event == OSPF::Neighbor::LINK_DOWN)) {
@@ -84,6 +86,8 @@ void OSPF::NeighborStateLoading::processEvent(OSPF::Neighbor *neighbor, OSPF::Ne
         neighbor->deleteLastSentDDPacket();
     }
 }
+
+} // namespace ospf
 
 } // namespace inet
 

@@ -28,6 +28,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 // FIXME!!! Should come from a global unique number generator module.
 unsigned long OSPF::Neighbor::ddSequenceNumberInitSeed = 0;
 
@@ -781,6 +783,8 @@ void OSPF::Neighbor::deleteLastSentDDPacket()
         lastTransmittedDDPacket = NULL;
     }
 }
+
+} // namespace ospf
 
 } // namespace inet
 

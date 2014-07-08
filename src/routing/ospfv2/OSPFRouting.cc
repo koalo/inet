@@ -32,6 +32,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 Define_Module(OSPFRouting);
 
 OSPFRouting::OSPFRouting()
@@ -150,6 +152,8 @@ bool OSPFRouting::checkExternalRoute(const IPv4Address& route)
     }
     return false;
 }
+
+} // namespace ospf
 
 } // namespace inet
 

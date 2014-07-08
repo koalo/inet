@@ -27,6 +27,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 namespace OSPF {
 
 class NeighborState;
@@ -214,6 +216,8 @@ inline bool operator!=(OSPF::Neighbor::DDPacketID leftID, OSPF::Neighbor::DDPack
 {
     return !(leftID == rightID);
 }
+
+} // namespace ospf
 
 } // namespace inet
 

@@ -30,6 +30,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 /**
  * All OSPF classes are in this namespace.
  */
@@ -372,6 +374,8 @@ class Router
 };
 
 } // namespace OSPF
+
+} // namespace ospf
 
 } // namespace inet
 

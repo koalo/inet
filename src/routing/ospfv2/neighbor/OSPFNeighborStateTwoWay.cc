@@ -27,6 +27,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 void OSPF::NeighborStateTwoWay::processEvent(OSPF::Neighbor *neighbor, OSPF::Neighbor::NeighborEventType event)
 {
     if ((event == OSPF::Neighbor::KILL_NEIGHBOR) || (event == OSPF::Neighbor::LINK_DOWN)) {
@@ -67,6 +69,8 @@ void OSPF::NeighborStateTwoWay::processEvent(OSPF::Neighbor *neighbor, OSPF::Nei
         }
     }
 }
+
+} // namespace ospf
 
 } // namespace inet
 

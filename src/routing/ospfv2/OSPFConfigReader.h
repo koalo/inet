@@ -29,6 +29,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 /**
  * Configuration reader for the OSPF module.
  */
@@ -106,6 +108,8 @@ class INET_API OSPFConfigReader
      */
     bool loadConfigFromXML(cXMLElement *asConfig, OSPF::Router *ospfRouter);
 };
+
+} // namespace ospf
 
 } // namespace inet
 

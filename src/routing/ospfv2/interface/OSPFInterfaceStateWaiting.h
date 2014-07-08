@@ -22,6 +22,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 namespace OSPF {
 
 class InterfaceStateWaiting : public InterfaceState
@@ -32,6 +34,8 @@ class InterfaceStateWaiting : public InterfaceState
 };
 
 } // namespace OSPF
+
+} // namespace ospf
 
 } // namespace inet
 

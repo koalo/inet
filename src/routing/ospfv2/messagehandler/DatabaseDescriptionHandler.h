@@ -22,6 +22,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 namespace OSPF {
 
 class DatabaseDescriptionHandler : public IMessageHandler
@@ -36,6 +38,8 @@ class DatabaseDescriptionHandler : public IMessageHandler
 };
 
 } // namespace OSPF
+
+} // namespace ospf
 
 } // namespace inet
 

@@ -21,6 +21,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 void OSPF::InterfaceStateLoopback::processEvent(OSPF::Interface *intf, OSPF::Interface::InterfaceEventType event)
 {
     if (event == OSPF::Interface::INTERFACE_DOWN) {
@@ -31,6 +33,8 @@ void OSPF::InterfaceStateLoopback::processEvent(OSPF::Interface *intf, OSPF::Int
         changeState(intf, new OSPF::InterfaceStateDown, this);
     }
 }
+
+} // namespace ospf
 
 } // namespace inet
 

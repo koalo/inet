@@ -26,6 +26,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 namespace OSPF {
 
 struct NextHop
@@ -201,6 +203,8 @@ std::ostream& operator<<(std::ostream& ostr, const OSPFRouterLSA& lsa);
 std::ostream& operator<<(std::ostream& ostr, const OSPFSummaryLSA& lsa);
 std::ostream& operator<<(std::ostream& ostr, const ExternalTOSInfo& tos);
 std::ostream& operator<<(std::ostream& ostr, const OSPFASExternalLSA& lsa);
+
+} // namespace ospf
 
 } // namespace inet
 

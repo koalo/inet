@@ -22,6 +22,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 namespace OSPF {
 
 class LinkStateRequestHandler : public IMessageHandler
@@ -33,6 +35,8 @@ class LinkStateRequestHandler : public IMessageHandler
 };
 
 } // namespace OSPF
+
+} // namespace ospf
 
 } // namespace inet
 

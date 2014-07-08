@@ -26,6 +26,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 void OSPF::NeighborStateDown::processEvent(OSPF::Neighbor *neighbor, OSPF::Neighbor::NeighborEventType event)
 {
     if (event == OSPF::Neighbor::START) {
@@ -50,6 +52,8 @@ void OSPF::NeighborStateDown::processEvent(OSPF::Neighbor *neighbor, OSPF::Neigh
         messageHandler->startTimer(neighbor->getPollTimer(), neighbor->getInterface()->getPollInterval());
     }
 }
+
+} // namespace ospf
 
 } // namespace inet
 

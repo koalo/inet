@@ -31,6 +31,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 namespace OSPF {
 
 class InterfaceState;
@@ -176,6 +178,8 @@ class Interface
 };
 
 } // namespace OSPF
+
+} // namespace ospf
 
 } // namespace inet
 

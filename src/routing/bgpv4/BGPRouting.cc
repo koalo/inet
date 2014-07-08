@@ -342,10 +342,10 @@ unsigned char BGPRouting::decisionProcess(const BGPUpdateMessage& msg, RoutingTa
         _rt->addRoute(entry);
         //insertExternalRoute on OSPF ExternalRoutingTable if OSPF exist on this BGP router
         if (ospfExist(_rt)) {
-            OSPF::IPv4AddressRange OSPFnetAddr;
+            ospf::OSPF::IPv4AddressRange OSPFnetAddr;
             OSPFnetAddr.address = entry->getDestination();
             OSPFnetAddr.mask = entry->getNetmask();
-            OSPFRouting *ospf = findModuleFromPar<OSPFRouting>(par("ospfRoutingModule"), this);
+            ospf::OSPFRouting *ospf = findModuleFromPar<ospf::OSPFRouting>(par("ospfRoutingModule"), this);
             InterfaceEntry *ie = entry->getInterface();
             if (!ie)
                 throw cRuntimeError("Model error: interface entry is NULL");
@@ -443,7 +443,7 @@ bool BGPRouting::checkExternalRoute(const IPv4Route *route)
 {
     IPv4Address OSPFRoute;
     OSPFRoute = route->getDestination();
-    OSPFRouting *ospf = findModuleFromPar<OSPFRouting>(par("ospfRoutingModule"), this);
+    ospf::OSPFRouting *ospf = findModuleFromPar<ospf::OSPFRouting>(par("ospfRoutingModule"), this);
     bool returnValue = ospf->checkExternalRoute(OSPFRoute);
     simulation.setContext(this);
     return returnValue;

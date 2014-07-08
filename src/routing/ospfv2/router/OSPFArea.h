@@ -29,6 +29,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 namespace OSPF {
 
 class Router;
@@ -153,6 +155,8 @@ inline std::ostream& operator<<(std::ostream& ostr, Area& area)
 }
 
 } // namespace OSPF
+
+} // namespace ospf
 
 } // namespace inet
 

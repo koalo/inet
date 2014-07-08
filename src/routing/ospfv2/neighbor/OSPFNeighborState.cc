@@ -23,6 +23,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 void OSPF::NeighborState::changeState(OSPF::Neighbor *neighbor, OSPF::NeighborState *newState, OSPF::NeighborState *currentState)
 {
     OSPF::Neighbor::NeighborStateType oldState = currentState->getState();
@@ -86,6 +88,8 @@ void OSPF::NeighborState::changeState(OSPF::Neighbor *neighbor, OSPF::NeighborSt
         neighbor->getInterface()->getArea()->getRouter()->rebuildRoutingTable();
     }
 }
+
+} // namespace ospf
 
 } // namespace inet
 

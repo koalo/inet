@@ -22,6 +22,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 OSPF::MessageHandler::MessageHandler(OSPF::Router *containingRouter, cSimpleModule *containingModule) :
     OSPF::IMessageHandler(containingRouter),
     ospfModule(containingModule),
@@ -561,6 +563,8 @@ void OSPF::MessageHandler::printLinkStateAcknowledgementPacket(const OSPFLinkSta
         EV_DETAIL << "    " << ackPacket->getLsaHeaders(i) << "\n";
     }
 }
+
+} // namespace ospf
 
 } // namespace inet
 

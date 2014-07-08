@@ -37,6 +37,8 @@
 
 namespace inet {
 
+namespace ospf {
+
 using namespace xmlutils;
 
 OSPFConfigReader::OSPFConfigReader(cModule *ospfModule, IInterfaceTable *ift) : ospfModule(ospfModule), ift(ift)
@@ -491,6 +493,8 @@ bool OSPFConfigReader::loadConfigFromXML(cXMLElement *asConfig, OSPF::Router *os
     }
     return true;
 }
+
+} // namespace ospf
 
 } // namespace inet
 
