@@ -65,7 +65,7 @@ void OSPFRouting::initialize(int stage)
 
 void OSPFRouting::createOspfRouter()
 {
-    ospfRouter = new OSPF::Router(rt->getRouterId(), this, ift, rt);
+    ospfRouter = new Router(rt->getRouterId(), this, ift, rt);
 
     // read the OSPF AS configuration
     cXMLElement *ospfConfig = par("ospfConfig").xmlValue();
@@ -131,7 +131,7 @@ bool OSPFRouting::isNodeUp()
     return !nodeStatus || nodeStatus->getState() == NodeStatus::UP;
 }
 
-void OSPFRouting::insertExternalRoute(int ifIndex, const OSPF::IPv4AddressRange& netAddr)
+void OSPFRouting::insertExternalRoute(int ifIndex, const IPv4AddressRange& netAddr)
 {
     simulation.setContext(this);
     OSPFASExternalLSAContents newExternalContents;
@@ -145,7 +145,7 @@ void OSPFRouting::insertExternalRoute(int ifIndex, const OSPF::IPv4AddressRange&
 bool OSPFRouting::checkExternalRoute(const IPv4Address& route)
 {
     for (unsigned long i = 1; i < ospfRouter->getASExternalLSACount(); i++) {
-        OSPF::ASExternalLSA *externalLSA = ospfRouter->getASExternalLSA(i);
+        ASExternalLSA *externalLSA = ospfRouter->getASExternalLSA(i);
         IPv4Address externalAddr = externalLSA->getHeader().getLinkStateID();
         if (externalAddr == route) //FIXME was this meant???
             return true;

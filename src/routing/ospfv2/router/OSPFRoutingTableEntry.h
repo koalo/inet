@@ -32,8 +32,6 @@ namespace inet {
 
 namespace ospf {
 
-namespace OSPF {
-
 class RoutingTableEntry : public IPv4Route
 {
   public:
@@ -93,8 +91,6 @@ class RoutingTableEntry : public IPv4Route
 };
 
 std::ostream& operator<<(std::ostream& out, const RoutingTableEntry& entry);
-
-} // namespace OSPF
 
 } // namespace ospf
 

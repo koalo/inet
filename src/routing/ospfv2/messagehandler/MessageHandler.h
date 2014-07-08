@@ -32,8 +32,6 @@ namespace inet {
 
 namespace ospf {
 
-namespace OSPF {
-
 class MessageHandler : public IMessageHandler
 {
   private:
@@ -67,8 +65,6 @@ class MessageHandler : public IMessageHandler
     // Authentication not implemented
     bool authenticatePacket(OSPFPacket *packet) { return true; }
 };
-
-} // namespace OSPF
 
 } // namespace ospf
 

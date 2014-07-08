@@ -28,8 +28,6 @@ namespace inet {
 
 namespace ospf {
 
-namespace OSPF {
-
 struct NextHop
 {
     int ifIndex;
@@ -158,8 +156,6 @@ class ASExternalLSA : public OSPFASExternalLSA,
     bool differsFrom(const OSPFASExternalLSA *asExternalLSA) const;
 };
 
-} // namespace OSPF
-
 /**
  * Returns true if leftLSA is older than rightLSA.
  */
@@ -177,14 +173,14 @@ inline bool operator!=(const OSPFOptions& leftOptions, const OSPFOptions& rightO
     return !(leftOptions == rightOptions);
 }
 
-inline bool operator==(const OSPF::NextHop& leftHop, const OSPF::NextHop& rightHop)
+inline bool operator==(const NextHop& leftHop, const NextHop& rightHop)
 {
     return (leftHop.ifIndex == rightHop.ifIndex) &&
            (leftHop.hopAddress == rightHop.hopAddress) &&
            (leftHop.advertisingRouter == rightHop.advertisingRouter);
 }
 
-inline bool operator!=(const OSPF::NextHop& leftHop, const OSPF::NextHop& rightHop)
+inline bool operator!=(const NextHop& leftHop, const NextHop& rightHop)
 {
     return !(leftHop == rightHop);
 }

@@ -21,7 +21,7 @@ namespace inet {
 
 namespace ospf {
 
-bool OSPF::ASExternalLSA::update(const OSPFASExternalLSA *lsa)
+bool ASExternalLSA::update(const OSPFASExternalLSA *lsa)
 {
     bool different = differsFrom(lsa);
     (*this) = (*lsa);
@@ -35,7 +35,7 @@ bool OSPF::ASExternalLSA::update(const OSPFASExternalLSA *lsa)
     }
 }
 
-bool OSPF::ASExternalLSA::differsFrom(const OSPFASExternalLSA *asExternalLSA) const
+bool ASExternalLSA::differsFrom(const OSPFASExternalLSA *asExternalLSA) const
 {
     const OSPFLSAHeader& lsaHeader = asExternalLSA->getHeader();
     bool differentHeader = ((header_var.getLsOptions() != lsaHeader.getLsOptions()) ||

@@ -24,16 +24,12 @@ namespace inet {
 
 namespace ospf {
 
-namespace OSPF {
-
 class NeighborStateDown : public NeighborState
 {
   public:
     virtual void processEvent(Neighbor *neighbor, Neighbor::NeighborEventType event);
     virtual Neighbor::NeighborStateType getState() const { return Neighbor::DOWN_STATE; }
 };
-
-} // namespace OSPF
 
 } // namespace ospf
 

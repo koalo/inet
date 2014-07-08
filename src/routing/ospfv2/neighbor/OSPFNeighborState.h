@@ -24,8 +24,6 @@ namespace inet {
 
 namespace ospf {
 
-namespace OSPF {
-
 class NeighborState
 {
   protected:
@@ -37,8 +35,6 @@ class NeighborState
     virtual void processEvent(Neighbor *neighbor, Neighbor::NeighborEventType event) = 0;
     virtual Neighbor::NeighborStateType getState() const = 0;
 };
-
-} // namespace OSPF
 
 } // namespace ospf
 

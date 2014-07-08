@@ -24,8 +24,6 @@ namespace inet {
 
 namespace ospf {
 
-namespace OSPF {
-
 class LinkStateRequestHandler : public IMessageHandler
 {
   public:
@@ -33,8 +31,6 @@ class LinkStateRequestHandler : public IMessageHandler
 
     void processPacket(OSPFPacket *packet, Interface *intf, Neighbor *neighbor);
 };
-
-} // namespace OSPF
 
 } // namespace ospf
 

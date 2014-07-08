@@ -24,8 +24,6 @@ namespace inet {
 
 namespace ospf {
 
-namespace OSPF {
-
 class DatabaseDescriptionHandler : public IMessageHandler
 {
   private:
@@ -36,8 +34,6 @@ class DatabaseDescriptionHandler : public IMessageHandler
 
     void processPacket(OSPFPacket *packet, Interface *intf, Neighbor *neighbor);
 };
-
-} // namespace OSPF
 
 } // namespace ospf
 

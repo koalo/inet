@@ -23,16 +23,16 @@ namespace inet {
 
 namespace ospf {
 
-OSPF::LinkStateAcknowledgementHandler::LinkStateAcknowledgementHandler(OSPF::Router *containingRouter) :
-    OSPF::IMessageHandler(containingRouter)
+LinkStateAcknowledgementHandler::LinkStateAcknowledgementHandler(Router *containingRouter) :
+    IMessageHandler(containingRouter)
 {
 }
 
-void OSPF::LinkStateAcknowledgementHandler::processPacket(OSPFPacket *packet, OSPF::Interface *intf, OSPF::Neighbor *neighbor)
+void LinkStateAcknowledgementHandler::processPacket(OSPFPacket *packet, Interface *intf, Neighbor *neighbor)
 {
     router->getMessageHandler()->printEvent("Link State Acknowledgement packet received", intf, neighbor);
 
-    if (neighbor->getState() >= OSPF::Neighbor::EXCHANGE_STATE) {
+    if (neighbor->getState() >= Neighbor::EXCHANGE_STATE) {
         OSPFLinkStateAcknowledgementPacket *lsAckPacket = check_and_cast<OSPFLinkStateAcknowledgementPacket *>(packet);
 
         int lsaCount = lsAckPacket->getLsaHeadersArraySize();
@@ -42,7 +42,7 @@ void OSPF::LinkStateAcknowledgementHandler::processPacket(OSPFPacket *packet, OS
         for (int i = 0; i < lsaCount; i++) {
             OSPFLSAHeader& lsaHeader = lsAckPacket->getLsaHeaders(i);
             OSPFLSA *lsaOnRetransmissionList;
-            OSPF::LSAKeyType lsaKey;
+            LSAKeyType lsaKey;
 
             EV_DETAIL << "    " << lsaHeader << "\n";
 

@@ -24,8 +24,6 @@ namespace inet {
 
 namespace ospf {
 
-namespace OSPF {
-
 class Router;
 class Interface;
 class Neighbor;
@@ -41,8 +39,6 @@ class IMessageHandler
 
     virtual void processPacket(OSPFPacket *, Interface *intf, Neighbor *neighbor) = 0;
 };
-
-} // namespace OSPF
 
 } // namespace ospf
 

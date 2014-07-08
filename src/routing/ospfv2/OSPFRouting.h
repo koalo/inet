@@ -41,7 +41,7 @@ class OSPFRouting : public cSimpleModule, public ILifecycle
     IIPv4RoutingTable *rt;
     IInterfaceTable *ift;
     bool isUp;
-    OSPF::Router *ospfRouter;    // root object of the OSPF data structure
+    Router *ospfRouter;    // root object of the OSPF data structure
 
   public:
     OSPFRouting();
@@ -52,7 +52,7 @@ class OSPFRouting : public cSimpleModule, public ILifecycle
      * Used by the BGPRouting module.
      * @ifIndex: interface ID
      */
-    void insertExternalRoute(int ifIndex, const OSPF::IPv4AddressRange& netAddr);
+    void insertExternalRoute(int ifIndex, const IPv4AddressRange& netAddr);
 
     /**
      * Return true if the route is in OSPF external LSA Table, false else.

@@ -23,14 +23,14 @@ namespace inet {
 
 namespace ospf {
 
-void OSPF::InterfaceStateLoopback::processEvent(OSPF::Interface *intf, OSPF::Interface::InterfaceEventType event)
+void InterfaceStateLoopback::processEvent(Interface *intf, Interface::InterfaceEventType event)
 {
-    if (event == OSPF::Interface::INTERFACE_DOWN) {
+    if (event == Interface::INTERFACE_DOWN) {
         intf->reset();
-        changeState(intf, new OSPF::InterfaceStateDown, this);
+        changeState(intf, new InterfaceStateDown, this);
     }
-    if (event == OSPF::Interface::UNLOOP_INDICATION) {
-        changeState(intf, new OSPF::InterfaceStateDown, this);
+    if (event == Interface::UNLOOP_INDICATION) {
+        changeState(intf, new InterfaceStateDown, this);
     }
 }
 

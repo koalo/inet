@@ -33,8 +33,6 @@ namespace inet {
 
 namespace ospf {
 
-namespace OSPF {
-
 class InterfaceState;
 class Area;
 
@@ -176,8 +174,6 @@ class Interface
     Area *getArea() { return parentArea; }
     const Area *getArea() const { return parentArea; }
 };
-
-} // namespace OSPF
 
 } // namespace ospf
 
