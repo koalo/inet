@@ -1431,7 +1431,7 @@ void DYMO::receiveSignal(cComponent *source, simsignal_t signalID, cObject *obj)
 
         if (false
 #ifdef WITH_IEEE80211
-            || dynamic_cast<Ieee80211Frame *>(frame)
+            || dynamic_cast<ieee80211::Ieee80211Frame *>(frame)
 #endif // ifdef WITH_IEEE80211
 #ifdef WITH_IDEALWIRELESS
             || dynamic_cast<IdealMacFrame *>(frame)

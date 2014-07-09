@@ -50,7 +50,7 @@ class UDPPacket;
 #ifdef WITH_IEEE80211
 #include "Ieee80211Frame_m.h"
 #else // ifdef WITH_IEEE80211
-class Ieee80211Frame;
+namespace inet { namespace ieee80211 { class Ieee80211Frame; } }
 #endif // ifdef WITH_IEEE80211
 
 #include "INetworkDatagram.h"
@@ -94,7 +94,7 @@ class INET_API InetPacketPrinter2 : public cMessagePrinter
   protected:
     std::string formatARPPacket(ARPPacket *packet) const;
     std::string formatICMPPacket(ICMPMessage *packet) const;
-    std::string formatIeee80211Frame(Ieee80211Frame *packet) const;
+    std::string formatIeee80211Frame(ieee80211::Ieee80211Frame *packet) const;
     std::string formatPingPayload(PingPayload *packet) const;
     std::string formatRIPPacket(RIPPacket *packet) const;
     std::string formatRadioFrame(RadioFrame *packet) const;
@@ -170,8 +170,8 @@ void InetPacketPrinter2::printMessage(std::ostream& os, cMessage *msg) const
         }
 #endif // ifdef WITH_IPv4
 #ifdef WITH_IEEE80211
-        else if (dynamic_cast<Ieee80211Frame *>(pk)) {
-            out << formatIeee80211Frame(static_cast<Ieee80211Frame *>(pk));
+        else if (dynamic_cast<ieee80211::Ieee80211Frame *>(pk)) {
+            out << formatIeee80211Frame(static_cast<ieee80211::Ieee80211Frame *>(pk));
         }
 #endif // ifdef WITH_IEEE80211
         else if (dynamic_cast<PingPayload *>(pk)) {
@@ -235,8 +235,10 @@ std::string InetPacketPrinter2::formatARPPacket(ARPPacket *packet) const
     return os.str();
 }
 
-std::string InetPacketPrinter2::formatIeee80211Frame(Ieee80211Frame *packet) const
+std::string InetPacketPrinter2::formatIeee80211Frame(ieee80211::Ieee80211Frame *packet) const
 {
+    using namespace ieee80211;
+
     std::ostringstream os;
 #ifdef WITH_IEEE80211
     os << "WLAN ";

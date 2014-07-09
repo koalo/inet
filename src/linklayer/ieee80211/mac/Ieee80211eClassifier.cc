@@ -37,6 +37,8 @@
 
 namespace inet {
 
+namespace ieee80211 {
+
 Register_Class(Ieee80211eClassifier);
 
 Ieee80211eClassifier::Ieee80211eClassifier()
@@ -110,6 +112,8 @@ int Ieee80211eClassifier::classifyPacket(cMessage *frame)
 
     return defaultAC;
 }
+
+} // namespace ieee80211
 
 } // namespace inet
 

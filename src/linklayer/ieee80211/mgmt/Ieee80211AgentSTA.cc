@@ -23,6 +23,8 @@
 
 namespace inet {
 
+namespace ieee80211 {
+
 Define_Module(Ieee80211AgentSTA);
 
 #define MK_STARTUP    1
@@ -327,6 +329,8 @@ void Ieee80211AgentSTA::processReassociateConfirm(Ieee80211Prim_ReassociateConfi
         // we are happy!
     }
 }
+
+} // namespace ieee80211
 
 } // namespace inet
 

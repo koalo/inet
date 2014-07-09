@@ -30,6 +30,8 @@
 
 namespace inet {
 
+namespace ieee80211 {
+
 using namespace physicallayer;
 
 //TBD supportedRates!
@@ -843,6 +845,8 @@ void Ieee80211MgmtSTA::storeAPInfo(const MACAddress& address, const Ieee80211Bea
     //XXX where to get this from?
     //ap->rxPower = ...
 }
+
+} // namespace ieee80211
 
 } // namespace inet
 
