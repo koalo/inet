@@ -22,7 +22,7 @@
 #ifdef WITH_ETHERNET
 #include "EtherFrame.h"
 #else // ifdef WITH_ETHERNET
-class EtherFrame;
+namespace inet { class EtherFrame; }
 #endif // ifdef WITH_ETHERNET
 
 #ifdef WITH_IPv4
@@ -30,21 +30,27 @@ class EtherFrame;
 #include "ICMPMessage.h"
 #include "IPv4Datagram.h"
 #else // ifdef WITH_IPv4
+
+namespace inet {
+
 class ARPPacket;
 class ICMPMessage;
 class IPv4Datagram;
+
+} // namespace inet
+
 #endif // ifdef WITH_IPv4
 
 #ifdef WITH_TCP_COMMON
 #include "TCPSegment.h"
 #else // ifdef WITH_TCP_COMMON
-class TCPSegment;
+namespace inet { namespace tcp { class TCPSegment; } }
 #endif // ifdef WITH_TCP_COMMON
 
 #ifdef WITH_UDP
 #include "UDPPacket.h"
 #else // ifdef WITH_UDP
-class UDPPacket;
+namespace inet { class UDPPacket; }
 #endif // ifdef WITH_UDP
 
 #ifdef WITH_IEEE80211
@@ -66,15 +72,7 @@ class RIPPacket;
 #include "RadioFrame.h"
 #include "ScalarTransmission.h"
 #else // ifdef WITH_RADIO
-namespace inet {
-
-namespace physicallayer {
-
-class RadioFrame;
-
-} // namespace physicallayer
-
-} // namespace inet
+namespace inet { namespace physicallayer { class RadioFrame; } }
 #endif // ifdef WITH_RADIO
 
 //TODO Do not move next line to top of file - opp_makemake can not detect dependencies inside of '#if' with omnetpp-specific defines
