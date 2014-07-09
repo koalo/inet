@@ -48,6 +48,7 @@ namespace serializer {
 namespace inet {
 
 using namespace serializer;
+using namespace tcp;
 
 int TCPSerializer::serialize(const TCPSegment *tcpseg,
         unsigned char *buf, unsigned int bufsize)

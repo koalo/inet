@@ -117,7 +117,7 @@ int IPv4Serializer::serialize(const IPv4Datagram *dgram, unsigned char *buf, uns
 
 #ifdef WITH_TCP_COMMON
         case IP_PROT_TCP:    //I.R.
-            packetLength += TCPSerializer().serialize(check_and_cast<TCPSegment *>(encapPacket),
+            packetLength += TCPSerializer().serialize(check_and_cast<tcp::TCPSegment *>(encapPacket),
                         buf + IP_HEADER_BYTES, bufsize - IP_HEADER_BYTES,
                         dgram->getSrcAddress(), dgram->getDestAddress());
             break;
@@ -194,8 +194,8 @@ void IPv4Serializer::parse(const unsigned char *buf, unsigned int bufsize, IPv4D
 
 #ifdef WITH_TCP_COMMON
         case IP_PROT_TCP:
-            encapPacket = new TCPSegment("tcp-from-wire");
-            TCPSerializer().parse(buf + headerLength, encapLength, (TCPSegment *)encapPacket, true);
+            encapPacket = new tcp::TCPSegment("tcp-from-wire");
+            TCPSerializer().parse(buf + headerLength, encapLength, (tcp::TCPSegment *)encapPacket, true);
             break;
 #endif // ifdef WITH_TCP_COMMON
 

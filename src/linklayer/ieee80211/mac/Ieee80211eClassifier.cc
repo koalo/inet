@@ -95,7 +95,7 @@ int Ieee80211eClassifier::classifyPacket(cMessage *frame)
 #endif // ifdef WITH_UDP
 
 #ifdef WITH_TCP_COMMON
-    TCPSegment *tcp = dynamic_cast<TCPSegment *>(ipData->getEncapsulatedPacket());
+    tcp::TCPSegment *tcp = dynamic_cast<tcp::TCPSegment *>(ipData->getEncapsulatedPacket());
     if (tcp) {
         if (tcp->getDestPort() == 21 || tcp->getSrcPort() == 21)
             return 0;

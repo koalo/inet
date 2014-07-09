@@ -102,7 +102,7 @@ int IPv6Serializer::serialize(const IPv6Datagram *dgram, unsigned char *buf, uns
 
 #ifdef WITH_TCP_COMMON
         case IP_PROT_TCP:
-            packetLength = TCPSerializer().serialize(check_and_cast<TCPSegment *>(encapPacket),
+            packetLength = TCPSerializer().serialize(check_and_cast<tcp::TCPSegment *>(encapPacket),
                         buf + IPv6_HEADER_BYTES, bufsize - IPv6_HEADER_BYTES,
                         dgram->getSrcAddress(), dgram->getDestAddress());
             break;

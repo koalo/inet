@@ -98,7 +98,7 @@ class INET_API InetPacketPrinter2 : public cMessagePrinter
     std::string formatPingPayload(PingPayload *packet) const;
     std::string formatRIPPacket(RIPPacket *packet) const;
     std::string formatRadioFrame(RadioFrame *packet) const;
-    std::string formatTCPPacket(TCPSegment *tcpSeg) const;
+    std::string formatTCPPacket(tcp::TCPSegment *tcpSeg) const;
     std::string formatUDPPacket(UDPPacket *udpPacket) const;
 
   public:
@@ -152,8 +152,8 @@ void InetPacketPrinter2::printMessage(std::ostream& os, cMessage *msg) const
         }
 #endif // ifdef WITH_ETHERNET
 #ifdef WITH_TCP_COMMON
-        else if (dynamic_cast<TCPSegment *>(pk)) {
-            out << formatTCPPacket(static_cast<TCPSegment *>(pk));
+        else if (dynamic_cast<tcp::TCPSegment *>(pk)) {
+            out << formatTCPPacket(static_cast<tcp::TCPSegment *>(pk));
         }
 #endif // ifdef WITH_TCP_COMMON
 #ifdef WITH_UDP
@@ -339,7 +339,7 @@ std::string InetPacketPrinter2::formatIeee80211Frame(Ieee80211Frame *packet) con
     return os.str();
 }
 
-std::string InetPacketPrinter2::formatTCPPacket(TCPSegment *tcpSeg) const
+std::string InetPacketPrinter2::formatTCPPacket(tcp::TCPSegment *tcpSeg) const
 {
     std::ostringstream os;
 #ifdef WITH_TCP_COMMON

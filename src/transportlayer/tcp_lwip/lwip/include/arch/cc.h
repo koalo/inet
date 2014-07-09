@@ -11,6 +11,8 @@
 
 namespace inet {
 
+namespace tcp {
+
 #define PACK_STRUCT_STRUCT __attribute__ (( __packed__ ))
 #define LWIP_PLATFORM_ASSERT(c) assert(c)
 /*
@@ -57,7 +59,9 @@ typedef int32_t s32_t;
 #define S32_F   "i"
 #define U32_F   "u"
 
-} //namespace
+} // namespace tcp
 
+} //namespace inet
 
 #endif
+
