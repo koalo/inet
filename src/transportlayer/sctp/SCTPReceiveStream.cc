@@ -18,6 +18,7 @@
 
 #include "SCTPReceiveStream.h"
 #include "SCTPAssociation.h"
+#include "SCTPCommand_m.h"
 
 namespace inet {
 

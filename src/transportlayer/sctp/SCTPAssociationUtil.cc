@@ -165,6 +165,7 @@ const char *SCTPAssociation::eventName(const int32 event)
 #undef CASE
 }
 
+//TODO move this function to contrib
 const char *SCTPAssociation::indicationName(const int32 code)
 {
 #define CASE(x)    case x: \

@@ -18,6 +18,8 @@
 
 #include "SCTPSendStream.h"
 
+#include "SCTPCommand_m.h"
+
 namespace inet {
 
 namespace sctp {

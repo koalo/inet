@@ -27,7 +27,9 @@
 #include "headers/sctphdr.h"
 
 #include "SCTPSerializer.h"
+
 #include "SCTPAssociation.h"
+#include "SCTPCommand_m.h"
 #include "IPv4Serializer.h"
 
 #if !defined(_WIN32) && !defined(__CYGWIN__) && !defined(_WIN64)

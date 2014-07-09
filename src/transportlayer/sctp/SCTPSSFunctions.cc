@@ -31,9 +31,11 @@
 
 ************************************************************/
 
-#include "SCTPAssociation.h"
 #include <list>
 #include <math.h>
+
+#include "SCTPAssociation.h"
+#include "SCTPCommand_m.h"
 
 namespace inet {
 

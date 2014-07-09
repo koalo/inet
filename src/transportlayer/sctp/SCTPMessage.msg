@@ -32,14 +32,6 @@ struct cPacketPtr;
 
 class noncobject L3Address;
 
-message SCTPSimpleMessage extends cPacket
-{
-    uint32 dataLen;
-    char data[];
-    simtime_t creationTime = 0;
-    bool encaps = false;
-}
-
 message SCTPMessage extends cPacket
 {
     @customize(true);

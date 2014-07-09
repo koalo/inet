@@ -33,8 +33,6 @@ namespace inet {
 
 Define_Module(SCTPServer);
 
-using namespace sctp;
-
 void SCTPServer::initialize(int stage)
 {
     EV_DEBUG << "initialize SCTP Server stage " << stage << endl;
