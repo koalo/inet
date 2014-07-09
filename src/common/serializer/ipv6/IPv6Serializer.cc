@@ -18,25 +18,10 @@
 #include <algorithm>    // std::min
 #include <platdep/sockets.h>
 
-#include "headers/defs.h"
-
-namespace inet {
-
-namespace serializer {
-
-// load headers into a namespace, to avoid conflicts with platform definitions of the same stuff
-/*
-#include "headers/bsdint.h"
-#include "headers/in.h"
-#include "headers/in_systm.h"
-*/
-#include "headers/ip6.h"
-
-} // namespace serializer
-
-} // namespace inet
-
 #include "IPv6Serializer.h"
+
+#include "headers/defs.h"
+#include "headers/ip6.h"
 
 #ifdef WITH_UDP
 #include "UDPSerializer.h"
@@ -66,7 +51,7 @@ namespace serializer {
 
 namespace inet {
 
-using namespace serializer;
+namespace serializer {
 
 int IPv6Serializer::serialize(const IPv6Datagram *dgram, unsigned char *buf, unsigned int bufsize)
 {
@@ -132,6 +117,8 @@ int IPv6Serializer::serialize(const IPv6Datagram *dgram, unsigned char *buf, uns
 
     return packetLength + IPv6_HEADER_BYTES;
 }
+
+} // namespace serializer
 
 } // namespace inet
 

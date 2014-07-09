@@ -20,23 +20,13 @@
 #include <algorithm>    // std::min
 #include <platdep/sockets.h>
 
+#include "IPv4Serializer.h"
+
 #include "headers/defs.h"
-
-namespace inet {
-
-namespace serializer {
-
-// load headers into a namespace, to avoid conflicts with platform definitions of the same stuff
 #include "headers/bsdint.h"
 #include "headers/in.h"
 #include "headers/in_systm.h"
 #include "headers/ip.h"
-
-} // namespace serializer
-
-} // namespace inet
-
-#include "IPv4Serializer.h"
 
 #include "ICMPSerializer.h"
 #include "IGMPSerializer.h"
@@ -70,7 +60,7 @@ namespace serializer {
 
 namespace inet {
 
-using namespace serializer;
+namespace serializer {
 
 int IPv4Serializer::serialize(const IPv4Datagram *dgram, unsigned char *buf, unsigned int bufsize, bool hasCalcChkSum)
 {
@@ -217,6 +207,8 @@ void IPv4Serializer::parse(const unsigned char *buf, unsigned int bufsize, IPv4D
     dest->encapsulate(encapPacket);
     dest->setName(encapPacket->getName());
 }
+
+} // namespace serializer
 
 } // namespace inet
 

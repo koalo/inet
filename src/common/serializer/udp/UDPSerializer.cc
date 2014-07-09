@@ -17,23 +17,13 @@
 
 #include <platdep/sockets.h>
 
+#include "UDPSerializer.h"
+
 #include "headers/defs.h"
-
-namespace inet {
-
-namespace serializer {
-
-// load headers into a namespace, to avoid conflicts with platform definitions of the same stuff
 #include "headers/bsdint.h"
 #include "headers/in.h"
 #include "headers/in_systm.h"
 #include "headers/udphdr.h"
-
-} // namespace serializer
-
-} // namespace inet
-
-#include "UDPSerializer.h"
 
 #include "ByteArrayMessage.h"
 #include "TCPIPchecksum.h"

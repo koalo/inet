@@ -16,24 +16,17 @@
 //
 
 #include <platdep/sockets.h>
+
+#include "IGMPSerializer.h"
+
 #include "headers/defs.h"
-
-namespace inet {
-
-namespace serializer {
-// load headers into a namespace, to avoid conflicts with platform definitions of the same stuff
 #include "headers/bsdint.h"
 #include "headers/in.h"
 #include "headers/in_systm.h"
 #include "headers/ip.h"
 #include "headers/igmp.h"
 
-} // namespace serializer
-
-} // namespace inet
-
 #include "IPv4Serializer.h"
-#include "IGMPSerializer.h"
 #include "TCPIPchecksum.h"
 
 #if !defined(_WIN32) && !defined(__WIN32__) && !defined(WIN32) && !defined(__CYGWIN__) && !defined(_WIN64)
@@ -42,7 +35,7 @@ namespace serializer {
 
 namespace inet {
 
-using namespace serializer;
+namespace serializer {
 
 int IGMPSerializer::serialize(const IGMPMessage *pkt, unsigned char *buf, unsigned int bufsize)
 {
@@ -90,6 +83,8 @@ void IGMPSerializer::parse(const unsigned char *buf, unsigned int bufsize, IGMPM
             break;
     }
 }
+
+} // namespace serializer
 
 } // namespace inet
 

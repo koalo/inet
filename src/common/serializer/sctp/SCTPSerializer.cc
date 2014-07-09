@@ -20,24 +20,11 @@
 
 #include "headers/defs.h"
 
-namespace inet {
-
-namespace sctp {
-
-namespace serializer {
-// load headers into a namespace, to avoid conflicts with platform definitions of the same stuff
-
-#include "headers/bsdint.h"
-#include "headers/in.h"
 #include "headers/in_systm.h"
 #include "headers/ip.h"
+#include "headers/bsdint.h"
+#include "headers/in.h"
 #include "headers/sctphdr.h"
-
-} // namespace serializer
-
-} // namespace sctp
-
-} // namespace inet
 
 #include "SCTPSerializer.h"
 #include "SCTPAssociation.h"
@@ -53,9 +40,9 @@ namespace serializer {
 
 namespace inet {
 
-namespace sctp {
-
 using namespace serializer;
+
+namespace sctp {
 
 unsigned char SCTPSerializer::keyVector[512];
 unsigned int SCTPSerializer::sizeKeyVector = 0;

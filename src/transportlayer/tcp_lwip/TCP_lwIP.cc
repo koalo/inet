@@ -51,6 +51,8 @@
 
 namespace inet {
 
+using namespace serializer;
+
 Define_Module(TCP_lwIP);
 
 TCP_lwIP::TCP_lwIP()

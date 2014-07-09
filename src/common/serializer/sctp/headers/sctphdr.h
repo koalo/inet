@@ -19,6 +19,10 @@
 #ifndef __INET_SCTPHDR_H
 #define __INET_SCTPHDR_H
 
+namespace inet {
+
+namespace serializer {
+
 #ifdef _MSC_VER
 #define __PACKED__
 #else // ifdef _MSC_VER
@@ -492,6 +496,10 @@ struct data_vector
 {
     uint8_t data[0];
 } __PACKED__;
+
+} // namespace serializer
+
+} // namespace inet
 
 #endif // ifndef __INET_SCTPHDR_H
 

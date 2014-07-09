@@ -93,6 +93,8 @@ InterfaceEntry *ExtInterface::createInterfaceEntry()
 
 void ExtInterface::handleMessage(cMessage *msg)
 {
+    using namespace serializer;
+
     if (!isOperational) {
         handleMessageWhenDown(msg);
         return;

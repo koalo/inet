@@ -16,25 +16,17 @@
 //
 
 #include <platdep/sockets.h>
-#include "headers/defs.h"
 
-namespace inet {
+#include "ICMPSerializer.h"
 
-namespace serializer {
-
-// load headers into a namespace, to avoid conflicts with platform definitions of the same stuff
 #include "headers/bsdint.h"
+#include "headers/defs.h"
 #include "headers/in.h"
 #include "headers/in_systm.h"
 #include "headers/ip.h"
 #include "headers/ip_icmp.h"
 
-} // namespace serializer
-
-} // namespace inet
-
 #include "IPv4Serializer.h"
-#include "ICMPSerializer.h"
 #include "PingPayload_m.h"
 #include "TCPIPchecksum.h"
 
@@ -44,7 +36,7 @@ namespace serializer {
 
 namespace inet {
 
-using namespace serializer;
+namespace serializer {
 
 int ICMPSerializer::serialize(const ICMPMessage *pkt, unsigned char *buf, unsigned int bufsize)
 {
@@ -162,6 +154,8 @@ void ICMPSerializer::parse(const unsigned char *buf, unsigned int bufsize, ICMPM
         }
     }
 }
+
+} // namespace serializer
 
 } // namespace inet
 

@@ -56,6 +56,8 @@
 
 namespace inet {
 
+using namespace serializer;
+
 Define_Module(TCP_NSC);
 
 //static member variables:
