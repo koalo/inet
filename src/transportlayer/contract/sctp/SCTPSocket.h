@@ -26,10 +26,8 @@
 
 namespace inet {
 
-namespace sctp {
-
 class SCTPStatusInfo;
-class SCTP;
+namespace sctp { class SCTP; }
 
 typedef std::vector<L3Address> AddressVector;
 
@@ -281,8 +279,6 @@ class INET_API SCTPSocket
 
     void setState(int state) { sockstate = state; };
 };
-
-} // namespace sctp
 
 } // namespace inet
 

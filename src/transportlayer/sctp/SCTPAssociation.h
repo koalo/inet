@@ -40,11 +40,12 @@
 
 namespace inet {
 
+class SCTPCommand;
+class SCTPOpenCommand;
+
 namespace sctp {
 
 class SCTPMessage;
-class SCTPCommand;
-class SCTPOpenCommand;
 class SCTPReceiveStream;
 class SCTPSendStream;
 class SCTPAlgorithm;

@@ -30,7 +30,7 @@
 
 namespace inet {
 
-namespace sctp {
+using namespace sctp;
 
 static inline int32_t getNewAssocId()
 {
@@ -495,8 +495,6 @@ void SCTPSocket::setStreamPriority(uint32 stream, uint32 priority)
     msg->setControlInfo(cmd);
     sendToSCTP(msg);
 }
-
-} // namespace sctp
 
 } // namespace inet
 

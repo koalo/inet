@@ -28,10 +28,11 @@
 
 namespace inet {
 
+class SCTPCommand;
+
 namespace sctp {
 
 class SCTPMessage;
-class SCTPCommand;
 class SCTPDataVariables;
 
 class INET_API SCTPSendStream : public cObject

@@ -26,9 +26,9 @@
 
 namespace inet {
 
-namespace sctp {
-
 class SCTPConnectInfo;
+
+namespace sctp {
 
 /**
  * Implements the SCTPPeer simple module. See the NED file for more info.
