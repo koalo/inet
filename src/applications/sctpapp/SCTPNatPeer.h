@@ -20,8 +20,6 @@
 
 namespace inet {
 
-namespace sctp {
-
 /**
  * Accepts any number of incoming connections, and sends back whatever
  * arrives on them.
@@ -137,8 +135,6 @@ class INET_API SCTPNatPeer : public cSimpleModule, public SCTPSocket::CallbackIn
     void addressAddedArrived(int32 assocId, L3Address localAddr, L3Address remoteAddr);
     void setStatusString(const char *s);
 };
-
-} // namespace sctp
 
 } // namespace inet
 

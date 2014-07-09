@@ -27,7 +27,7 @@
 
 namespace inet {
 
-namespace sctp {
+using namespace sctp;
 
 #define MSGKIND_CONNECT    0
 #define MSGKIND_SEND       1
@@ -888,8 +888,6 @@ void SCTPNatPeer::finish()
     sentPacketsPerAssoc.clear();
     rcvdBytesPerAssoc.clear();
 }
-
-} // namespace sctp
 
 } // namespace inet
 

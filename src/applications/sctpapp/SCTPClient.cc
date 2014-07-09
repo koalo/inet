@@ -26,7 +26,7 @@
 
 namespace inet {
 
-namespace sctp {
+using namespace sctp;
 
 #define MSGKIND_CONNECT    0
 #define MSGKIND_SEND       1
@@ -628,8 +628,6 @@ void SCTPClient::finish()
     EV_INFO << getFullPath() << ": received " << bytesRcvd << " bytes in " << packetsRcvd << " packets\n";
     EV_INFO << "Client finished\n";
 }
-
-} // namespace sctp
 
 } // namespace inet
 

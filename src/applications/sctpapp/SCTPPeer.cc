@@ -30,7 +30,7 @@
 
 namespace inet {
 
-namespace sctp {
+using namespace sctp;
 
 #define MSGKIND_CONNECT    0
 #define MSGKIND_SEND       1
@@ -730,8 +730,6 @@ void SCTPPeer::finish()
     EV_INFO << getFullPath() << "Over all " << packetsRcvd << " packets received\n ";
     EV_INFO << getFullPath() << "Over all " << notificationsReceived << " notifications received\n ";
 }
-
-} // namespace sctp
 
 } // namespace inet
 
