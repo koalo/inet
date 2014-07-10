@@ -24,7 +24,7 @@
 
 namespace inet {
 
-namespace utils { //TODO file INETUtils.h, namespace utils
+namespace utils {
 
 /**
  *  Converts an integer to string.
