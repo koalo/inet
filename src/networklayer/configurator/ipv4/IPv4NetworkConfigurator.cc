@@ -956,7 +956,7 @@ inline bool strToBool(const char *str, bool defaultValue)
 
 void IPv4NetworkConfigurator::readInterfaceConfiguration(IPv4Topology& topology)
 {
-    using namespace xmlutils;
+    using namespace utils::xmlutils;
 
     std::set<InterfaceInfo *> interfacesSeen;
     cXMLElementList interfaceElements = configuration->getChildrenByTagName("interface");

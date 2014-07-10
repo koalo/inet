@@ -133,7 +133,7 @@ MatrixCloudDelayer::~MatrixCloudDelayer()
 
 void MatrixCloudDelayer::initialize(int stage)
 {
-    using namespace xmlutils;
+    using namespace utils::xmlutils;
 
     CloudDelayerBase::initialize(stage);
 

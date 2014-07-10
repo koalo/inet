@@ -24,7 +24,7 @@ namespace inet {
 
 Define_Module(SimpleClassifier);
 
-using namespace xmlutils;
+using namespace utils::xmlutils;
 
 void SimpleClassifier::initialize(int stage)
 {

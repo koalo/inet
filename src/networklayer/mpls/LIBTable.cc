@@ -104,7 +104,7 @@ void LIBTable::removeLibEntry(int inLabel)
 
 void LIBTable::readTableFromXML(const cXMLElement *libtable)
 {
-    using namespace xmlutils;
+    using namespace utils::xmlutils;
 
     ASSERT(libtable);
     ASSERT(!strcmp(libtable->getTagName(), "libtable"));

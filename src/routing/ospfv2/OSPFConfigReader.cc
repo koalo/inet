@@ -39,7 +39,7 @@ namespace inet {
 
 namespace ospf {
 
-using namespace xmlutils;
+using namespace utils::xmlutils;
 
 OSPFConfigReader::OSPFConfigReader(cModule *ospfModule, IInterfaceTable *ift) : ospfModule(ospfModule), ift(ift)
 {
