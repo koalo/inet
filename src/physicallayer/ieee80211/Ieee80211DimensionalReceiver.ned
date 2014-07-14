@@ -17,14 +17,15 @@
 
 package inet.physicallayer.ieee80211;
 
-import inet.physicallayer.dimensional.DimensionalRadioMedium;
+import inet.physicallayer.dimensional.DimensionalReceiver;
 
-module Ieee80211RadioMedium extends DimensionalRadioMedium
+module Ieee80211DimensionalReceiver extends DimensionalReceiver
 {
     parameters:
-        // TODO: move to addRadio, query radios for these parameters
-        carrierFrequency = default(2.4GHz);
-        minReceptionPower = default(-85dBm);
-        minInterferencePower = default(-110dBm);
-        backgroundNoise.power = default(-110dBm);
+        string opMode @enum("b","g","a","p");
+        string preambleMode @enum("long", "short");
+        string errorModel @enum("yans","nist") = default("nist");
+        bool autoHeaderSize = default(false);
+        string berTableFile = default("");
+        @class(Ieee80211DimensionalReceiver);
 }

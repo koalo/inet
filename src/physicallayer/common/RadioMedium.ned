@@ -55,7 +55,7 @@ module RadioMedium like IRadioMedium
         bool macAddressFilter = default(false); // when enabled the radio medium doesn't send radio frames to a radio if it the destination mac address differs 
 
         // logging parameters
-        bool recordCommunicationLog = default(false);
+        bool recordCommunicationLog = default(true);
 
         // graphics parameters
         bool displayCommunication = default(false);

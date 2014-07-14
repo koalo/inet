@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2013 OpenSim Ltd
+// Copyright (C) 2013 OpenSim Ltd.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -15,16 +15,13 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //
 
-package inet.physicallayer.ieee80211;
+#include "Ieee80211DimensionalTransmission.h"
 
-import inet.physicallayer.dimensional.DimensionalRadioMedium;
+namespace inet {
 
-module Ieee80211RadioMedium extends DimensionalRadioMedium
-{
-    parameters:
-        // TODO: move to addRadio, query radios for these parameters
-        carrierFrequency = default(2.4GHz);
-        minReceptionPower = default(-85dBm);
-        minInterferencePower = default(-110dBm);
-        backgroundNoise.power = default(-110dBm);
-}
+namespace physicallayer {
+
+} // namespace physicallayer
+
+} // namespace inet
+

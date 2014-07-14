@@ -17,9 +17,9 @@
 
 package inet.physicallayer.ieee80211;
 
-import inet.physicallayer.scalar.ScalarRadio;
+import inet.physicallayer.dimensional.DimensionalRadio;
 
-module Ieee80211Radio extends ScalarRadio
+module Ieee80211Radio extends DimensionalRadio
 {
     parameters:
         int channelNumber = default(0);
@@ -27,11 +27,11 @@ module Ieee80211Radio extends ScalarRadio
         string preambleMode @enum("long", "short") = default("long");
         carrierFrequency = default(2.412GHz);
         bandwidth = default(2MHz);
-        transmitterType = default("Ieee80211ScalarTransmitter");
+        transmitterType = default("Ieee80211DimensionalTransmitter");
         transmitter.bitrate = default(11Mbps);
         transmitter.headerBitLength = default(192b);
         transmitter.power = default(20mW);
-        receiverType = default("Ieee80211ScalarReceiver");
+        receiverType = default("Ieee80211DimensionalReceiver");
         receiver.sensitivity = default(-85dBm);
         receiver.energyDetection = default(-85dBm);
         receiver.snirThreshold = default(4dB);
