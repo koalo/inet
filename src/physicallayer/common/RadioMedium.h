@@ -23,6 +23,7 @@
 #include <fstream>
 #include "IRadioMedium.h"
 #include "IArrival.h"
+#include "IInterference.h"
 #include "IPropagation.h"
 #include "IAttenuation.h"
 #include "IBackgroundNoise.h"
@@ -53,6 +54,7 @@ class INET_API RadioMedium : public cSimpleModule, public cListener, public IRad
         const IArrival *arrival;
         const IListening *listening;
         const IReception *reception;
+        const IInterference *interference;
         const ISynchronizationDecision *synchronizationDecision;
         const IReceptionDecision *receptionDecision;
 
@@ -62,6 +64,7 @@ class INET_API RadioMedium : public cSimpleModule, public cListener, public IRad
             arrival(NULL),
             listening(NULL),
             reception(NULL),
+            interference(NULL),
             synchronizationDecision(NULL),
             receptionDecision(NULL)
         {}
@@ -303,6 +306,10 @@ class INET_API RadioMedium : public cSimpleModule, public cListener, public IRad
      */
     mutable long receptionComputationCount;
     /**
+     * Total number of interference computations.
+     */
+    mutable long interferenceComputationCount;
+    /**
      * Total number of synchronization decision computations.
      */
     mutable long synchronizationDecisionComputationCount;
@@ -322,6 +329,14 @@ class INET_API RadioMedium : public cSimpleModule, public cListener, public IRad
      * Total number of radio signal reception cache hits.
      */
     mutable long cacheReceptionHitCount;
+    /**
+     * Total number of radio signal interference cache queries.
+     */
+    mutable long cacheInterferenceGetCount;
+    /**
+     * Total number of radio signal interference cache hits.
+     */
+    mutable long cacheInterferenceHitCount;
     /**
      * Total number of radio signal synchronization decision cache queries.
      */
@@ -352,27 +367,31 @@ class INET_API RadioMedium : public cSimpleModule, public cListener, public IRad
     /** @name Cache */
     //@{
     virtual TransmissionCacheEntry *getTransmissionCacheEntry(const ITransmission *transmission) const;
-    virtual ReceptionCacheEntry *getReceptionCacheEntry(const IRadio *radio, const ITransmission *transmission) const;
+    virtual ReceptionCacheEntry *getReceptionCacheEntry(const IRadio *receiver, const ITransmission *transmission) const;
 
-    virtual const IArrival *getCachedArrival(const IRadio *radio, const ITransmission *transmission) const;
-    virtual void setCachedArrival(const IRadio *radio, const ITransmission *transmission, const IArrival *arrival) const;
-    virtual void removeCachedArrival(const IRadio *radio, const ITransmission *transmission) const;
+    virtual const IArrival *getCachedArrival(const IRadio *receiver, const ITransmission *transmission) const;
+    virtual void setCachedArrival(const IRadio *receiver, const ITransmission *transmission, const IArrival *arrival) const;
+    virtual void removeCachedArrival(const IRadio *receiver, const ITransmission *transmission) const;
 
-    virtual const IListening *getCachedListening(const IRadio *radio, const ITransmission *transmission) const;
-    virtual void setCachedListening(const IRadio *radio, const ITransmission *transmission, const IListening *listening) const;
-    virtual void removeCachedListening(const IRadio *radio, const ITransmission *transmission) const;
+    virtual const IListening *getCachedListening(const IRadio *receiver, const ITransmission *transmission) const;
+    virtual void setCachedListening(const IRadio *receiver, const ITransmission *transmission, const IListening *listening) const;
+    virtual void removeCachedListening(const IRadio *receiver, const ITransmission *transmission) const;
 
-    virtual const IReception *getCachedReception(const IRadio *radio, const ITransmission *transmission) const;
-    virtual void setCachedReception(const IRadio *radio, const ITransmission *transmission, const IReception *reception) const;
-    virtual void removeCachedReception(const IRadio *radio, const ITransmission *transmission) const;
+    virtual const IReception *getCachedReception(const IRadio *receiver, const ITransmission *transmission) const;
+    virtual void setCachedReception(const IRadio *receiver, const ITransmission *transmission, const IReception *reception) const;
+    virtual void removeCachedReception(const IRadio *receiver, const ITransmission *transmission) const;
 
-    virtual const ISynchronizationDecision *getCachedSynchronizationDecision(const IRadio *radio, const ITransmission *transmission) const;
-    virtual void setCachedSynchronizationDecision(const IRadio *radio, const ITransmission *transmission, const ISynchronizationDecision *decision) const;
-    virtual void removeCachedSynchronizationDecision(const IRadio *radio, const ITransmission *transmission) const;
+    virtual const IInterference *getCachedInterference(const IRadio *receiver, const ITransmission *transmission) const;
+    virtual void setCachedInterference(const IRadio *receiver, const ITransmission *transmission, const IInterference *interference) const;
+    virtual void removeCachedInterference(const IRadio *receiver, const ITransmission *transmission) const;
 
-    virtual const IReceptionDecision *getCachedReceptionDecision(const IRadio *radio, const ITransmission *transmission) const;
-    virtual void setCachedReceptionDecision(const IRadio *radio, const ITransmission *transmission, const IReceptionDecision *decision) const;
-    virtual void removeCachedReceptionDecision(const IRadio *radio, const ITransmission *transmission) const;
+    virtual const ISynchronizationDecision *getCachedSynchronizationDecision(const IRadio *receiver, const ITransmission *transmission) const;
+    virtual void setCachedSynchronizationDecision(const IRadio *receiver, const ITransmission *transmission, const ISynchronizationDecision *decision) const;
+    virtual void removeCachedSynchronizationDecision(const IRadio *receiver, const ITransmission *transmission) const;
+
+    virtual const IReceptionDecision *getCachedReceptionDecision(const IRadio *receiver, const ITransmission *transmission) const;
+    virtual void setCachedReceptionDecision(const IRadio *receiver, const ITransmission *transmission, const IReceptionDecision *decision) const;
+    virtual void removeCachedReceptionDecision(const IRadio *receiver, const ITransmission *transmission) const;
 
     virtual void invalidateCachedDecisions(const ITransmission *transmission);
     virtual void invalidateCachedDecision(const IReceptionDecision *decision);
@@ -430,16 +449,18 @@ class INET_API RadioMedium : public cSimpleModule, public cListener, public IRad
 
     virtual void removeNonInterferingTransmissions();
 
-    virtual const IReception *computeReception(const IRadio *radio, const ITransmission *transmission) const;
     virtual const std::vector<const IReception *> *computeInterferingReceptions(const IListening *listening, const std::vector<const ITransmission *> *transmissions) const;
     virtual const std::vector<const IReception *> *computeInterferingReceptions(const IReception *reception, const std::vector<const ITransmission *> *transmissions) const;
-    virtual const ISynchronizationDecision *computeSynchronizationDecision(const IRadio *radio, const IListening *listening, const ITransmission *transmission, const std::vector<const ITransmission *> *transmissions) const;
-    virtual const IReceptionDecision *computeReceptionDecision(const IRadio *radio, const IListening *listening, const ITransmission *transmission, const std::vector<const ITransmission *> *transmissions) const;
-    virtual const IListeningDecision *computeListeningDecision(const IRadio *radio, const IListening *listening, const std::vector<const ITransmission *> *transmissions) const;
+    virtual const IReception *computeReception(const IRadio *receiver, const ITransmission *transmission) const;
+    virtual const IInterference *computeInterference(const IRadio *receiver, const IListening *listening, const ITransmission *transmission, const std::vector<const ITransmission *> *transmissions) const;
+    virtual const ISynchronizationDecision *computeSynchronizationDecision(const IRadio *receiver, const IListening *listening, const ITransmission *transmission, const std::vector<const ITransmission *> *transmissions) const;
+    virtual const IReceptionDecision *computeReceptionDecision(const IRadio *receiver, const IListening *listening, const ITransmission *transmission, const std::vector<const ITransmission *> *transmissions) const;
+    virtual const IListeningDecision *computeListeningDecision(const IRadio *receiver, const IListening *listening, const std::vector<const ITransmission *> *transmissions) const;
 
-    virtual const IReception *getReception(const IRadio *radio, const ITransmission *transmission) const;
-    virtual const ISynchronizationDecision *getSynchronizationDecision(const IRadio *radio, const IListening *listening, const ITransmission *transmission) const;
-    virtual const IReceptionDecision *getReceptionDecision(const IRadio *radio, const IListening *listening, const ITransmission *transmission) const;
+    virtual const IReception *getReception(const IRadio *receiver, const ITransmission *transmission) const;
+    virtual const IInterference *getInterference(const IRadio *receiver, const IListening *listening, const ITransmission *transmission) const;
+    virtual const ISynchronizationDecision *getSynchronizationDecision(const IRadio *receiver, const IListening *listening, const ITransmission *transmission) const;
+    virtual const IReceptionDecision *getReceptionDecision(const IRadio *receiver, const IListening *listening, const ITransmission *transmission) const;
     //@}
 
     /** @name Graphics */
@@ -473,7 +494,7 @@ class INET_API RadioMedium : public cSimpleModule, public cListener, public IRad
     virtual const ISynchronizationDecision *synchronizePacket(const IRadio *receiver, IRadioFrame *radioFrame);
     virtual cPacket *receivePacket(const IRadio *receiver, IRadioFrame *radioFrame);
 
-    virtual const IListeningDecision *listenOnMedium(const IRadio *radio, const IListening *listening) const;
+    virtual const IListeningDecision *listenOnMedium(const IRadio *receiver, const IListening *listening) const;
 
     virtual bool isSynchronizationAttempted(const IRadio *receiver, const ITransmission *transmission) const;
     virtual bool isReceptionAttempted(const IRadio *receiver, const ITransmission *transmission) const;
