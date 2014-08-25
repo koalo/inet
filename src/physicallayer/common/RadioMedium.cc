@@ -61,7 +61,7 @@ RadioMedium::RadioMedium() :
     baseTransmissionId(0),
     neighborCache(NULL),
     communicationLayer(NULL),
-    communcationTrail(NULL),
+    communicationTrail(NULL),
     transmissionCount(0),
     sendCount(0),
     receptionComputationCount(0),
@@ -140,8 +140,8 @@ void RadioMedium::initialize(int stage)
         }
         leaveCommunicationTrail = par("leaveCommunicationTrail");
         if (leaveCommunicationTrail) {
-            communcationTrail = new TrailFigure(100, "communication trail");
-            canvas->addFigure(communcationTrail, canvas->findFigure("submodules"));
+            communicationTrail = new TrailFigure(100, "communication trail");
+            canvas->addFigure(communicationTrail, canvas->findFigure("submodules"));
         }
         updateCanvasInterval = par("updateCanvasInterval");
     }
@@ -795,7 +795,7 @@ cPacket *RadioMedium::receivePacket(const IRadio *radio, IRadioFrame *radioFrame
         communicationFigure->setEnd(end);
         communicationFigure->setLineColor(cFigure::BLUE);
         communicationFigure->setEndArrowHead(cFigure::ARROW_SIMPLE);
-        communcationTrail->addFigure(communicationFigure);
+        communicationTrail->addFigure(communicationFigure);
     }
     if (displayCommunication)
         updateCanvas();
