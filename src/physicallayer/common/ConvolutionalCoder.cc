@@ -482,7 +482,6 @@ BitVector ConvolutionalCoder::traversePath(const TrellisGraphNode& bestNode, Tre
 
 BitVector ConvolutionalCoder::decode(const BitVector& encodedBits, const char *decodingMode) const
 {
-    clock_t t0 = clock();
     BitVector isPunctured;
     BitVector depuncturedEncodedBits = depuncturing(encodedBits, isPunctured);
     unsigned int encodedBitsSize = depuncturedEncodedBits.getSize();
@@ -496,7 +495,6 @@ BitVector ConvolutionalCoder::decode(const BitVector& encodedBits, const char *d
     else
         throw cRuntimeError("Unknown decodingMode = %s decodingMode", decodingMode);
     TrellisGraphNode **trellisGraph;
-    clock_t t2 = clock();
     trellisGraph = new TrellisGraphNode*[numberOfStates];
     for (int i = 0; i != numberOfStates; i++)
     {
@@ -535,12 +533,10 @@ BitVector ConvolutionalCoder::decode(const BitVector& encodedBits, const char *d
     if (!isTruncatedMode && bestNode.symbol == -1)
         throw cRuntimeError("None of the paths in the trellis graph lead to the all-zeros state");
     BitVector decodedMsg = traversePath(bestNode, trellisGraph);
-    EV_DETAIL << "Recovered message: " << decodedMsg
+    EV_DETAIL << "Recovered message: " << decodedMsg << endl
     << " Number of errors: " << bestNode.numberOfErrors
     << " Cumulative error (Hamming distance): " << bestNode.comulativeHammingDistance
     << " End state: " << bestNode.state << endl;
-    t2 = clock();
-    printf("Used %g CPU seconds\n",(t2 - t0) / (double)CLOCKS_PER_SEC);
     return decodedMsg;
 }
 
