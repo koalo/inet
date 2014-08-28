@@ -39,7 +39,7 @@ std::ostream& operator<<(std::ostream& out, const ShortBitVector& bitVector)
             out << "1";
         else
             out << "0";
-        for (int i = 1; i < bitVector.getSize(); i++)
+        for (unsigned int i = 1; i < bitVector.getSize(); i++)
         {
             if (bitVector.getBit(i))
                 out << " 1";
@@ -87,19 +87,6 @@ void ShortBitVector::stringToBitVector(const char *str)
     }
 }
 
-int ShortBitVector::computeHammingDistance(const ShortBitVector& u) const
-{
-    if (u.isUndef() || isUndef())
-        throw cRuntimeError("You can't compute the Hamming distance between undefined BitVectors");
-    if (getSize() != u.getSize())
-        throw cRuntimeError("You can't compute Hamming distance between two vectors with different sizes");
-    int hammingDistance = 0;
-    for (unsigned int i = 0; i < getSize(); i++)
-        if (u.getBit(i) != getBit(i))
-            hammingDistance++;
-    return hammingDistance;
-}
-
 ShortBitVector::ShortBitVector(unsigned int num)
 {
     undef = false;
@@ -132,19 +119,6 @@ bool ShortBitVector::operator==(const ShortBitVector& rhs) const
 bool ShortBitVector::operator!=(const ShortBitVector& rhs) const
 {
     return !(rhs == *this);
-}
-
-unsigned int ShortBitVector::reverseToDecimal() const
-{
-    unsigned int dec = 0;
-    unsigned int powerOfTwo = 1;
-    for (int i = getSize() - 1; i >= 0; i--)
-    {
-        if (getBit(i))
-            dec += powerOfTwo;
-        powerOfTwo *= 2;
-    }
-    return dec;
 }
 
 ShortBitVector::ShortBitVector(unsigned int num, unsigned int fixedSize)
