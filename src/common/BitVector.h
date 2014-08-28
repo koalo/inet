@@ -39,14 +39,13 @@ class BitVector
 
     public:
         unsigned int toDecimal() const;
-        void rightShift();
+        unsigned int reverseToDecimal() const;
         void appendBit(bool value);
         void appendBit(bool value, int n);
         void setBit(int pos, bool value);
         void toggleBit(int pos);
         bool getBit(int pos) const;
         bool isUndef() const { return undef; }
-        bool getBitAllowNegativePos(int pos) const;
         bool getBitAllowOutOfRange(int pos) const;
         unsigned int getSize() const { return size; }
         int computeHammingDistance(const BitVector& u) const;

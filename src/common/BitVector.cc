@@ -95,15 +95,6 @@ void BitVector::appendBit(bool value, int n)
         appendBit(value);
 }
 
-bool BitVector::getBitAllowNegativePos(int pos) const
-{
-    if (undef)
-        throw cRuntimeError("You can't get bits from an undefined BitVector");
-    if (pos < 0)
-        return false;
-    return getBit(pos);
-}
-
 bool BitVector::getBitAllowOutOfRange(int pos) const
 {
     if (undef)
@@ -155,6 +146,20 @@ unsigned int BitVector::toDecimal() const
         throw cRuntimeError("You can't compute the decimal value of an undefined BitVector");
     unsigned int dec = 0;
     unsigned int powerOfTwo = 1;
+    for (unsigned int i = 0; i < getSize(); i++)
+    {
+        if (getBit(i))
+            dec += powerOfTwo;
+        powerOfTwo *= 2;
+    }
+    return dec;
+}
+unsigned int BitVector::reverseToDecimal() const
+{
+    if (undef)
+        throw cRuntimeError("You can't compute the decimal value of an undefined BitVector");
+    unsigned int dec = 0;
+    unsigned int powerOfTwo = 1;
     for (int i = getSize() - 1; i >= 0; i--)
     {
         if (getBit(i))
@@ -175,15 +180,6 @@ int BitVector::computeHammingDistance(const BitVector& u) const
         if (u.getBit(i) != getBit(i))
             hammingDistance++;
     return hammingDistance;
-}
-
-void BitVector::rightShift()
-{
-    if (undef)
-        throw cRuntimeError("You can't shift an undefined BitVector");
-    for (int i = getSize() - 1; i >= 1; i--)
-        setBit(i, getBit(i-1));
-    setBit(0, false);
 }
 
 BitVector::BitVector(unsigned int num)
