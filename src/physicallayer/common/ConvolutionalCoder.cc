@@ -408,10 +408,12 @@ void ConvolutionalCoder::printTransferFunctionMatrix() const
 
 inline unsigned int ConvolutionalCoder::computeHammingDistance(const ShortBitVector& u, const ShortBitVector& countedUBits, const ShortBitVector& w)
 {
+#ifndef NDEBUG
     if (u.isUndef() || w.isUndef())
         throw cRuntimeError("You can't compute the Hamming distance between undefined BitVectors");
     if (u.getSize() != w.getSize())
         throw cRuntimeError("You can't compute Hamming distance between two vectors with different sizes");
+#endif
     unsigned int hammingDistance = u.toDecimal() ^ w.toDecimal();
     hammingDistance = hammingDistance & countedUBits.toDecimal();
     hammingDistance = hammingDistance - ((hammingDistance >> 1) & 0x55555555);
