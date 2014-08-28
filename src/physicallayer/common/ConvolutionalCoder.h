@@ -74,8 +74,6 @@ class ConvolutionalCoder : public cSimpleModule
                     symbol(symbol), state(state), prevState(prevState), comulativeHammingDistance(hammingDistance), numberOfErrors(numberOfErrors), depth(depth) {};
         };
 
-        typedef std::queue<TrellisGraphNode> TrellisGraph;
-
     protected:
         unsigned int codeRateParamaterK, codeRateParamaterN; // these define the k/n code rate
         unsigned int codeRatePuncturingK, codeRatePuncturingN; // the k/n code rate after puncturing
