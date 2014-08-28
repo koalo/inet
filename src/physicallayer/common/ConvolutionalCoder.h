@@ -132,12 +132,18 @@ class ConvolutionalCoder : public cSimpleModule
          * set to true thus the encoding process will end in all-zeros state.
          */
         BitVector encode(const BitVector& informationBits, bool endInAllZeros) const;
+
         /*
          * There are two decoding modes:
          *  - "truncated" : The trellis graph traceback path always starts in the all-zeros state and ends with the best metric.
          *  - "terminated": The trellis graph traceback path always starts and ends in the all-zeros state.
          */
         BitVector decode(const BitVector& encodedBits, const char *decodingMode) const;
+
+        /*
+         * Getters for the encoder's/decoder's parameters
+         */
+        unsigned int getMemorySizeSum() const { return memorySizeSum; }
 };
 
 } /* namespace physicallayer */
