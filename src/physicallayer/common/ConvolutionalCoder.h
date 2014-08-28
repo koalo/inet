@@ -104,7 +104,7 @@ class ConvolutionalCoder : public cSimpleModule
         BitVector puncturing(const BitVector& informationBits) const;
         BitVector depuncturing(const BitVector& decodedBits, BitVector& isPunctured) const;
         BitVector getPuncturedIndices(unsigned int length) const;
-        unsigned int computeHammingDistance(const ShortBitVector& u, const ShortBitVector& excludedUBits, const ShortBitVector& w) const;
+        static inline unsigned int computeHammingDistance(const ShortBitVector& u, const ShortBitVector& excludedUBits, const ShortBitVector& w);
         void computeBestPath(TrellisGraphNode **bestPaths, unsigned int time, const ShortBitVector& outputSymbol, const ShortBitVector& excludedFromHammingDistance) const;
         bool isCompletelyDecoded(unsigned int encodedLength, unsigned int decodedLength) const;
         void initParameters();

@@ -406,7 +406,7 @@ void ConvolutionalCoder::printTransferFunctionMatrix() const
     }
 }
 
-unsigned int ConvolutionalCoder::computeHammingDistance(const ShortBitVector& u, const ShortBitVector& countedUBits, const ShortBitVector& w) const
+inline unsigned int ConvolutionalCoder::computeHammingDistance(const ShortBitVector& u, const ShortBitVector& countedUBits, const ShortBitVector& w)
 {
     if (u.isUndef() || w.isUndef())
         throw cRuntimeError("You can't compute the Hamming distance between undefined BitVectors");
