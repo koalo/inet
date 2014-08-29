@@ -174,6 +174,13 @@ void ConvolutionalCoder::memoryAllocations()
     decimalToInputSymbol = new ShortBitVector[numberOfInputSymbols];
     stateTransitions = new int*[numberOfStates];
     inputSymbols = new int*[numberOfStates];
+    hammingDistanceLookupTable = new unsigned char**[numberOfOutputSymbols];
+    for (int i = 0; i < numberOfOutputSymbols; i++)
+    {
+        hammingDistanceLookupTable[i] = new unsigned char*[numberOfOutputSymbols];
+        for (int j = 0; j < numberOfOutputSymbols; j++)
+            hammingDistanceLookupTable[i][j] = new unsigned char[numberOfOutputSymbols];
+    }
     for (int i = 0; i < numberOfStates; i++)
     {
         stateTransitions[i] = new int[numberOfInputSymbols];
@@ -213,6 +220,24 @@ void ConvolutionalCoder::computeMemorySizeSum()
         memorySizeSum += memorySizes.at(i);
 }
 
+void ConvolutionalCoder::computeHammingDistanceLookupTable()
+{
+    for (int i = 0; i < numberOfOutputSymbols; i++)
+    {
+        for (int j = 0; j  < numberOfOutputSymbols; j++)
+        {
+            for (int k = 0; k < numberOfOutputSymbols; k++)
+            {
+                unsigned int hammingDistance = i ^ j;
+                hammingDistance = hammingDistance & k;
+                hammingDistance = hammingDistance - ((hammingDistance >> 1) & 0x55555555);
+                hammingDistance = (hammingDistance & 0x33333333) + ((hammingDistance >> 2) & 0x33333333);
+                hammingDistanceLookupTable[i][j][k] = (((hammingDistance + (hammingDistance >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
+            }
+        }
+    }
+}
+
 void ConvolutionalCoder::initParameters()
 {
     computeMemorySizes();
@@ -223,6 +248,7 @@ void ConvolutionalCoder::initParameters()
     computeOutputAndInputSymbols();
     computeStateTransitions();
     computeOutputSymbolCache();
+    computeHammingDistanceLookupTable();
 }
 
 BitVector ConvolutionalCoder::encode(const BitVector& informationBits, bool endInAllZeros) const
@@ -402,21 +428,6 @@ void ConvolutionalCoder::printTransferFunctionMatrix() const
     }
 }
 
-inline unsigned int ConvolutionalCoder::computeHammingDistance(const ShortBitVector& u, const ShortBitVector& countedUBits, const ShortBitVector& w)
-{
-#ifndef NDEBUG
-    if (u.isUndef() || w.isUndef())
-        throw cRuntimeError("You can't compute the Hamming distance between undefined BitVectors");
-    if (u.getSize() != w.getSize())
-        throw cRuntimeError("You can't compute Hamming distance between two vectors with different sizes");
-#endif
-    unsigned int hammingDistance = u.toDecimal() ^ w.toDecimal();
-    hammingDistance = hammingDistance & countedUBits.toDecimal();
-    hammingDistance = hammingDistance - ((hammingDistance >> 1) & 0x55555555);
-    hammingDistance = (hammingDistance & 0x33333333) + ((hammingDistance >> 2) & 0x33333333);
-    return (((hammingDistance + (hammingDistance >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
-}
-
 void ConvolutionalCoder::computeOutputSymbolCache()
 {
     for (int i = 0; i != numberOfOutputSymbols; i++)
@@ -540,6 +551,9 @@ BitVector ConvolutionalCoder::decode(const BitVector& encodedBits, const char *d
 
 ConvolutionalCoder::~ConvolutionalCoder()
 {
+    for (int i = 0; i < numberOfOutputSymbols; i++)
+        for (int j = 0; j < numberOfOutputSymbols; j++)
+            delete[] hammingDistanceLookupTable[i][j];
     for (int i = 0; i < numberOfStates; i++)
     {
         delete[] stateTransitions[i];

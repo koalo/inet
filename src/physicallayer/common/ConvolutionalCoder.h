@@ -91,6 +91,7 @@ class ConvolutionalCoder : public cSimpleModule
         int **stateTransitions; // maps a (state, inputSymbol) pair to the corresponding next state
         ShortBitVector *outputSymbolCache;
         std::vector<std::vector<TrellisGraphNode> > bestPaths;
+        unsigned char ***hammingDistanceLookupTable;
 
     protected:
         virtual int numInitStages() const { return NUM_INIT_STAGES; }
@@ -104,11 +105,21 @@ class ConvolutionalCoder : public cSimpleModule
         BitVector puncturing(const BitVector& informationBits) const;
         BitVector depuncturing(const BitVector& decodedBits, BitVector& isPunctured) const;
         BitVector getPuncturedIndices(unsigned int length) const;
-        static inline unsigned int computeHammingDistance(const ShortBitVector& u, const ShortBitVector& excludedUBits, const ShortBitVector& w);
+        inline unsigned int computeHammingDistance(const ShortBitVector& u, const ShortBitVector& excludedBits, const ShortBitVector& w) const
+        {
+#ifndef NDEBUG
+            if (u.isUndef() || w.isUndef())
+                throw cRuntimeError("You can't compute the Hamming distance between undefined BitVectors");
+            if (u.getSize() != w.getSize())
+                throw cRuntimeError("You can't compute Hamming distance between two vectors with different sizes");
+#endif
+            return hammingDistanceLookupTable[u.toDecimal()][w.toDecimal()][excludedBits.toDecimal()];
+        }
         void computeBestPath(TrellisGraphNode **bestPaths, unsigned int time, const ShortBitVector& outputSymbol, const ShortBitVector& excludedFromHammingDistance) const;
         bool isCompletelyDecoded(unsigned int encodedLength, unsigned int decodedLength) const;
         void initParameters();
         void memoryAllocations();
+        void computeHammingDistanceLookupTable();
         void computeMemorySizes();
         void computeMemorySizeSum();
         void computeNumberOfStates();
@@ -143,6 +154,7 @@ class ConvolutionalCoder : public cSimpleModule
          * Getters for the encoder's/decoder's parameters
          */
         unsigned int getMemorySizeSum() const { return memorySizeSum; }
+
         ~ConvolutionalCoder();
 };
 
