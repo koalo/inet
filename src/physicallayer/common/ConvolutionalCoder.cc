@@ -250,6 +250,7 @@ void ConvolutionalCoder::initParameters()
 
 BitVector ConvolutionalCoder::encode(const BitVector& informationBits, bool endInAllZeros) const
 {
+    EV_DETAIL << "Encoding the following bits: " << informationBits << endl;
     BitVector paddedInformationBits = informationBits;
     if (endInAllZeros)
         paddedInformationBits.appendBit(false, memorySizeSum);
@@ -268,7 +269,9 @@ BitVector ConvolutionalCoder::encode(const BitVector& informationBits, bool endI
         for (unsigned int j = 0; j < encodedSymbol.getSize(); j++)
             encodedInformationBits.appendBit(encodedSymbol.getBit(j));
     }
-    return puncturing(encodedInformationBits);
+    BitVector puncturedEncodedInformationBits = puncturing(encodedInformationBits);
+    EV_DETAIL << "The encoded bits are: " << puncturedEncodedInformationBits << endl;
+    return puncturedEncodedInformationBits;
 }
 
 void ConvolutionalCoder::printOutputs() const
