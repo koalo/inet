@@ -552,14 +552,21 @@ BitVector ConvolutionalCoder::decode(const BitVector& encodedBits, const char *d
 ConvolutionalCoder::~ConvolutionalCoder()
 {
     for (int i = 0; i < numberOfOutputSymbols; i++)
+    {
         for (int j = 0; j < numberOfOutputSymbols; j++)
             delete[] hammingDistanceLookupTable[i][j];
+        delete[] hammingDistanceLookupTable[i];
+    }
+    delete[] hammingDistanceLookupTable;
     for (int i = 0; i < numberOfStates; i++)
     {
         delete[] stateTransitions[i];
         delete[] outputSymbols[i];
         delete[] inputSymbols[i];
     }
+    delete[] stateTransitions;
+    delete[] outputSymbols;
+    delete[] inputSymbols;
     delete[] decimalToOutputSymbol;
     delete[] decimalToInputSymbol;
 }
