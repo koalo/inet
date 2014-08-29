@@ -24,9 +24,7 @@ const ShortBitVector ShortBitVector::UNDEF = ShortBitVector();
 
 ShortBitVector::ShortBitVector()
 {
-#ifndef NDEBUG
     undef = true;
-#endif
     size = 0;
     bitVector = 0;
 }
@@ -50,7 +48,9 @@ std::ostream& operator<<(std::ostream& out, const ShortBitVector& bitVector)
             else
                 out << " 0";
         }
+#ifndef NDEBUG
     }
+#endif
     return out;
 }
 
@@ -73,9 +73,7 @@ std::string ShortBitVector::toString() const
 
 ShortBitVector::ShortBitVector(const char* str)
 {
-#ifndef NDEBUG
     undef = false;
-#endif
     size = 0;
     bitVector = 0;
     stringToBitVector(str);
@@ -83,9 +81,7 @@ ShortBitVector::ShortBitVector(const char* str)
 
 ShortBitVector::ShortBitVector(unsigned int num)
 {
-#ifndef NDEBUG
     undef = false;
-#endif
     if (num < 0)
         throw cRuntimeError("num = %d must be a positive integer", num);
     if (num == 0)
@@ -97,9 +93,7 @@ ShortBitVector::ShortBitVector(unsigned int num)
 
 ShortBitVector::ShortBitVector(unsigned int num, unsigned int fixedSize)
 {
-#ifndef NDEBUG
     undef = false;
-#endif
     if (fixedSize > MAX_LENGTH)
         throw cRuntimeError("fixedSize = %d must be less then 32", fixedSize);
     size = fixedSize;

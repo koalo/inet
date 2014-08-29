@@ -34,9 +34,7 @@ class ShortBitVector
 
     protected:
         unsigned int bitVector;
-#ifndef NDEBUG
         bool undef;
-#endif
         int size;
     protected:
         inline void stringToBitVector(const char *str)
@@ -54,9 +52,7 @@ class ShortBitVector
         }
         inline void copy(const ShortBitVector& other)
         {
-#ifndef NDEBUG
             undef = other.undef;
-#endif
             size = other.size;
             bitVector = other.bitVector;
         }
