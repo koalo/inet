@@ -34,16 +34,40 @@ class ShortBitVector
 
     protected:
         unsigned int bitVector;
+#ifndef NDEBUG
         bool undef;
+#endif
         int size;
-        void stringToBitVector(const char *str);
-        void copy(const ShortBitVector& other);
+    protected:
+        inline void stringToBitVector(const char *str)
+        {
+            int strSize = strlen(str);
+            for (int i = strSize - 1; i >= 0; i--)
+            {
+                if (str[i] == '1')
+                    appendBit(true);
+                else if (str[i] == '0')
+                    appendBit(false);
+                else
+                    throw cRuntimeError("str must represent a binary number");
+            }
+        }
+        inline void copy(const ShortBitVector& other)
+        {
+#ifndef NDEBUG
+            undef = other.undef;
+#endif
+            size = other.size;
+            bitVector = other.bitVector;
+        }
 
     public:
         inline unsigned int toDecimal() const
         {
+#ifndef NDEBUG
             if (undef)
                 throw cRuntimeError("You can't compute the decimal value of an undefined ShortBitVector");
+#endif
             return bitVector;
         }
         inline unsigned int reverseToDecimal() const
@@ -60,14 +84,18 @@ class ShortBitVector
         }
         inline void rightShift(int with)
         {
+#ifndef NDEBUG
             if (undef)
                 throw cRuntimeError("You can't shift an undefined ShortBitVector");
+#endif
             bitVector = bitVector >> with;
         }
         inline void leftShift(int with)
         {
+#ifndef NDEBUG
             if (undef)
                 throw cRuntimeError("You can't shift an undefined ShortBitVector");
+#endif
             bitVector = bitVector << with;
         }
         inline void appendBit(bool value)
@@ -81,8 +109,10 @@ class ShortBitVector
         }
         inline void setBit(int pos, bool value)
         {
+#ifndef NDEBUG
             if (pos >= MAX_LENGTH)
                 throw cRuntimeError("Out of range with bit position: %d", pos);
+#endif
             undef = false;
             if (pos + 1 > size)
                 size = pos + 1;
@@ -93,33 +123,41 @@ class ShortBitVector
         }
         inline void toggleBit(int pos)
         {
+#ifndef NDEBUG
             if (undef)
                 throw cRuntimeError("You can't toggle bits in an undefined ShortBitVector");
             if (pos >= size)
                 throw cRuntimeError("Out of range with bit position %d", pos);
+#endif
             bitVector ^= 1 << pos;
         }
         inline bool getBit(int pos) const
         {
+#ifndef NDEBUG
             if (undef)
                 throw cRuntimeError("You can't get bits from an undefined ShortBitVector");
             if (pos >= size)
                 throw cRuntimeError("Out of range with bit position %d", pos);
+#endif
             return bitVector & (1 << pos);
         }
         inline bool isUndef() const { return undef; }
         inline bool getBitAllowNegativePos(int pos) const
         {
+#ifndef NDEBUG
             if (undef)
                 throw cRuntimeError("You can't get bits from an undefined ShortBitVector");
+#endif
             if (pos < 0)
                 return false;
             return getBit(pos);
         }
         inline bool getBitAllowOutOfRange(int pos) const
         {
+#ifndef NDEBUG
             if (undef)
                 throw cRuntimeError("You can't get bits from an undefined ShortBitVector");
+#endif
             if (pos >= size)
                 return false;
             return getBit(pos);
@@ -127,19 +165,39 @@ class ShortBitVector
         inline unsigned int getSize() const { return size; }
         inline unsigned int computeHammingDistance(const ShortBitVector& u) const
         {
+#ifndef NDEBUG
             if (u.isUndef() || isUndef())
                 throw cRuntimeError("You can't compute the Hamming distance between undefined BitVectors");
             if (getSize() != u.getSize())
                 throw cRuntimeError("You can't compute Hamming distance between two vectors with different sizes");
+#endif
             unsigned int hammingDistance = bitVector ^ u.toDecimal();
             hammingDistance = hammingDistance - ((hammingDistance >> 1) & 0x55555555);
             hammingDistance = (hammingDistance & 0x33333333) + ((hammingDistance >> 2) & 0x33333333);
             return (((hammingDistance + (hammingDistance >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
         }
         friend std::ostream& operator<<(std::ostream& out, const ShortBitVector& bitVector);
-        ShortBitVector& operator=(const ShortBitVector& rhs);
-        bool operator==(const ShortBitVector& rhs) const;
-        bool operator!=(const ShortBitVector& rhs) const;
+        inline ShortBitVector& operator=(const ShortBitVector& rhs)
+        {
+            if (this == &rhs)
+                return *this;
+            copy(rhs);
+            return *this;
+        }
+        inline bool operator==(const ShortBitVector& rhs) const
+        {
+#ifndef NDEBUG
+            if (rhs.isUndef() && isUndef())
+                return true;
+            if (rhs.isUndef() || isUndef())
+                throw cRuntimeError("You can't compare undefined BitVectors");
+#endif
+            return rhs.bitVector == bitVector;
+        }
+        inline bool operator!=(const ShortBitVector& rhs) const
+        {
+            return !(rhs == *this);
+        }
         std::string toString() const;
         ShortBitVector();
         ShortBitVector(const char *str);

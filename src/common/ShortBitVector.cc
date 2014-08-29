@@ -24,17 +24,21 @@ const ShortBitVector ShortBitVector::UNDEF = ShortBitVector();
 
 ShortBitVector::ShortBitVector()
 {
+#ifndef NDEBUG
     undef = true;
+#endif
     size = 0;
     bitVector = 0;
 }
 
 std::ostream& operator<<(std::ostream& out, const ShortBitVector& bitVector)
 {
+#ifndef NDEBUG
     if (bitVector.isUndef())
         out << "**UNDEFINED BITVECTOR**";
     else
     {
+#endif
         if (bitVector.getBit(0))
             out << "1";
         else
@@ -52,8 +56,10 @@ std::ostream& operator<<(std::ostream& out, const ShortBitVector& bitVector)
 
 std::string ShortBitVector::toString() const
 {
+#ifndef NDEBUG
     if (undef)
         throw cRuntimeError("You can't convert an undefined ShortBitVector to a string");
+#endif
     std::string str;
     for (unsigned int i = getSize() - 1; i >= 0; i--)
     {
@@ -67,29 +73,19 @@ std::string ShortBitVector::toString() const
 
 ShortBitVector::ShortBitVector(const char* str)
 {
+#ifndef NDEBUG
     undef = false;
+#endif
     size = 0;
     bitVector = 0;
     stringToBitVector(str);
 }
 
-void ShortBitVector::stringToBitVector(const char *str)
-{
-    int strSize = strlen(str);
-    for (int i = strSize - 1; i >= 0; i--)
-    {
-        if (str[i] == '1')
-            appendBit(true);
-        else if (str[i] == '0')
-            appendBit(false);
-        else
-            throw cRuntimeError("str must represent a binary number");
-    }
-}
-
 ShortBitVector::ShortBitVector(unsigned int num)
 {
+#ifndef NDEBUG
     undef = false;
+#endif
     if (num < 0)
         throw cRuntimeError("num = %d must be a positive integer", num);
     if (num == 0)
@@ -99,44 +95,17 @@ ShortBitVector::ShortBitVector(unsigned int num)
     bitVector = num;
 }
 
-ShortBitVector& ShortBitVector::operator=(const ShortBitVector& rhs)
-{
-    if (this == &rhs)
-        return *this;
-    copy(rhs);
-    return *this;
-}
-
-bool ShortBitVector::operator==(const ShortBitVector& rhs) const
-{
-    if (rhs.isUndef() && isUndef())
-        return true;
-    if (rhs.isUndef() || isUndef())
-        throw cRuntimeError("You can't compare undefined BitVectors");
-    return rhs.bitVector == bitVector;
-}
-
-bool ShortBitVector::operator!=(const ShortBitVector& rhs) const
-{
-    return !(rhs == *this);
-}
-
 ShortBitVector::ShortBitVector(unsigned int num, unsigned int fixedSize)
 {
+#ifndef NDEBUG
     undef = false;
+#endif
     if (fixedSize > MAX_LENGTH)
         throw cRuntimeError("fixedSize = %d must be less then 32", fixedSize);
     size = fixedSize;
     if (num < 0)
         throw cRuntimeError("num = %d must be a positive integer", num);
     bitVector = num;
-}
-
-void ShortBitVector::copy(const ShortBitVector& other)
-{
-    undef = other.undef;
-    size = other.size;
-    bitVector = other.bitVector;
 }
 
 } /* namespace inet */
