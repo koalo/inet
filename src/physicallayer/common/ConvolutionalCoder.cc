@@ -176,6 +176,28 @@ void ConvolutionalCoder::computeOutputAndInputSymbols()
     }
 }
 
+void ConvolutionalCoder::memoryAllocations()
+{
+    outputSymbolCache = new ShortBitVector[numberOfOutputSymbols];
+    outputSymbols = new ShortBitVector*[numberOfStates];
+    decimalToInputSymbol.resize(numberOfInputSymbols);
+    stateTransitions = new int*[numberOfStates];
+    inputSymbols = new int*[numberOfStates];
+    for (int i = 0; i < numberOfStates; i++)
+    {
+        stateTransitions[i] = new int[numberOfInputSymbols];
+        inputSymbols[i] = new int[numberOfOutputSymbols];
+        outputSymbols[i] = new ShortBitVector[numberOfInputSymbols];
+        for (int j = 0; j < numberOfInputSymbols; j++)
+        {
+            stateTransitions[i][j] = -1;
+            outputSymbols[i][j] = ShortBitVector::UNDEF;
+        }
+        for (int j = 0; j < numberOfOutputSymbols; j++)
+            inputSymbols[i][j] = -1;
+    }
+}
+
 void ConvolutionalCoder::computeMemorySizes()
 {
     for (unsigned int i = 0; i < constraintLengths.size(); i++)
@@ -206,24 +228,7 @@ void ConvolutionalCoder::initParameters()
     computeMemorySizeSum();
     computeNumberOfStates();
     computeNumberOfInputAndOutputSymbols();
-    outputSymbolCache = new ShortBitVector[numberOfOutputSymbols];
-    outputSymbols = new ShortBitVector*[numberOfStates];
-    decimalToInputSymbol.resize(numberOfInputSymbols);
-    stateTransitions = new int*[numberOfStates];
-    inputSymbols = new int*[numberOfStates];
-    for (int i = 0; i < numberOfStates; i++)
-    {
-        stateTransitions[i] = new int[numberOfInputSymbols];
-        inputSymbols[i] = new int[numberOfOutputSymbols];
-        outputSymbols[i] = new ShortBitVector[numberOfInputSymbols];
-        for (int j = 0; j < numberOfInputSymbols; j++)
-        {
-            stateTransitions[i][j] = -1;
-            outputSymbols[i][j] = ShortBitVector::UNDEF;
-        }
-        for (int j = 0; j < numberOfOutputSymbols; j++)
-            inputSymbols[i][j] = -1;
-    }
+    memoryAllocations();
     computeOutputAndInputSymbols();
     computeStateTransitions();
     computeOutputSymbolCache();
@@ -540,6 +545,17 @@ BitVector ConvolutionalCoder::decode(const BitVector& encodedBits, const char *d
     << " Cumulative error (Hamming distance): " << bestNode.comulativeHammingDistance
     << " End state: " << bestNode.state << endl;
     return decodedMsg;
+}
+
+ConvolutionalCoder::~ConvolutionalCoder()
+{
+    for (int i = 0; i < numberOfStates; i++)
+    {
+        delete[] stateTransitions[i];
+        delete[] outputSymbols[i];
+        delete[] inputSymbols[i];
+    }
+    delete[] outputSymbolCache;
 }
 
 } /* namespace physicallayer */

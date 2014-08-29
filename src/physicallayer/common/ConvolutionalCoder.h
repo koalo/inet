@@ -108,6 +108,7 @@ class ConvolutionalCoder : public cSimpleModule
         void computeBestPath(TrellisGraphNode **bestPaths, unsigned int time, const ShortBitVector& outputSymbol, const ShortBitVector& excludedFromHammingDistance) const;
         bool isCompletelyDecoded(unsigned int encodedLength, unsigned int decodedLength) const;
         void initParameters();
+        void memoryAllocations();
         void computeMemorySizes();
         void computeMemorySizeSum();
         void computeNumberOfStates();
@@ -142,6 +143,7 @@ class ConvolutionalCoder : public cSimpleModule
          * Getters for the encoder's/decoder's parameters
          */
         unsigned int getMemorySizeSum() const { return memorySizeSum; }
+        ~ConvolutionalCoder();
 };
 
 } /* namespace physicallayer */
