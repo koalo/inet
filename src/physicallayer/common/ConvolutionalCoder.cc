@@ -36,7 +36,7 @@ void ConvolutionalCoder::initialize(int stage)
         parseVector(strConstraintLengthVector, constraintLengths);
         std::vector<std::vector<int> > pMatrix;
         parseMatrix(strPuncturingMatrix, pMatrix);
-        convertToBitVectorMatrix(pMatrix, puncturingMatrix);
+        convertToShortBitVectorMatrix(pMatrix, puncturingMatrix);
         std::vector<std::vector<int> > transferFMatrix;
         parseMatrix(strTransferFunctionMatrix, transferFMatrix);
         codeRateParamaterK = transferFMatrix.size();
@@ -365,12 +365,12 @@ void ConvolutionalCoder::parseVector(const char* strVector, std::vector<int>& ve
         vector.push_back(atoi(tokenizer.nextToken()));
 }
 
-void ConvolutionalCoder::convertToBitVectorMatrix(std::vector<std::vector<int> >& matrix, std::vector<BitVector>& boolMatrix) const
+void ConvolutionalCoder::convertToShortBitVectorMatrix(std::vector<std::vector<int> >& matrix, std::vector<ShortBitVector>& boolMatrix) const
 {
     for (unsigned int i = 0; i < matrix.size(); i++)
     {
         std::vector<int> matrixRow = matrix.at(i);
-        BitVector row;
+        ShortBitVector row;
         for (unsigned int j = 0; j < matrixRow.size(); j++)
         {
             if (matrixRow.at(j) == 1)

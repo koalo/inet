@@ -84,7 +84,7 @@ class ConvolutionalCoder : public cSimpleModule
         int numberOfInputSymbols; // 2^k, where k is the parameter from k/n
         int numberOfOutputSymbols; // 2^n where n is the parameter from k/n
         ShortBitVectorMatrix transferFunctionMatrix; // matrix of the generator polynomials
-        std::vector<BitVector> puncturingMatrix; // defines the puncturing method
+        std::vector<ShortBitVector> puncturingMatrix; // defines the puncturing method
         int **inputSymbols; // maps a (state, outputSymbol) pair to the corresponding input symbol
         ShortBitVector **outputSymbols; // maps a (state, inputSymbol) pair to the corresponding output symbol
         ShortBitVector *decimalToInputSymbol;
@@ -132,7 +132,7 @@ class ConvolutionalCoder : public cSimpleModule
         void printTransferFunctionMatrix() const;
         void parseMatrix(const char *strMatrix, std::vector<std::vector<int> >& matrix) const;
         void parseVector(const char *strVector, std::vector<int>& vector) const;
-        void convertToBitVectorMatrix(std::vector<std::vector<int> >& matrix, std::vector<BitVector>& boolMatrix) const;
+        void convertToShortBitVectorMatrix(std::vector<std::vector<int> >& matrix, std::vector<ShortBitVector>& boolMatrix) const;
         ShortBitVector octalToBinary(int octalNum, int fixedSize) const;
         BitVector traversePath(const TrellisGraphNode& bestNode, TrellisGraphNode **bestPaths) const;
     public:
