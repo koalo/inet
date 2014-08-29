@@ -135,6 +135,7 @@ class ConvolutionalCoder : public cSimpleModule
         void convertToShortBitVectorMatrix(std::vector<std::vector<int> >& matrix, std::vector<ShortBitVector>& boolMatrix) const;
         ShortBitVector octalToBinary(int octalNum, int fixedSize) const;
         BitVector traversePath(const TrellisGraphNode& bestNode, TrellisGraphNode **bestPaths) const;
+
     public:
         /*
          * The encoding process works in accordance with the industry-standards and starts in the all-zeros state.
@@ -154,6 +155,18 @@ class ConvolutionalCoder : public cSimpleModule
          * Getters for the encoder's/decoder's parameters
          */
         unsigned int getMemorySizeSum() const { return memorySizeSum; }
+        const std::vector<int>& getConstraintLengthVector() const { return constraintLengths; }
+        const ShortBitVectorMatrix& getTransferFunctionMatrix() const { return transferFunctionMatrix; }
+        const std::vector<ShortBitVector>& getPuncturingMatrix() const { return puncturingMatrix; }
+        int getNumberOfStates() const { return numberOfStates; }
+        int getNumberOfOutputSymbols() const { return numberOfOutputSymbols; }
+        int getNumberOfInputSymbols() const { return numberOfInputSymbols; }
+
+        /*
+         * Getters for the code's state transition table and output table
+         */
+        const int** getStateTransitionTable() const { return (const int**)stateTransitions; }
+        const int** getOutputTable() const { return (const int**)inputSymbols; }
 
         ~ConvolutionalCoder();
 };
