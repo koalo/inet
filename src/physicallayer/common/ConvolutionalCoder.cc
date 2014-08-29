@@ -49,10 +49,7 @@ void ConvolutionalCoder::initialize(int stage)
         if (puncturingMatrix.size() != codeRateParamaterN)
             throw cRuntimeError("Puncturing matrix must be a n-by-arbitrary bool matrix");
         setTransferFunctionMatrix(transferFMatrix);
-        printTransferFunctionMatrix();
         initParameters();
-        printOutputs();
-        printStateTransitions();
     }
 }
 
