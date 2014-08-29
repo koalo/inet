@@ -87,7 +87,7 @@ class ConvolutionalCoder : public cSimpleModule
         std::vector<BitVector> puncturingMatrix; // defines the puncturing method
         int **inputSymbols; // maps a (state, outputSymbol) pair to the corresponding input symbol
         ShortBitVector **outputSymbols; // maps a (state, inputSymbol) pair to the corresponding output symbol
-        std::vector<ShortBitVector> decimalToInputSymbol;
+        ShortBitVector *decimalToInputSymbol;
         int **stateTransitions; // maps a (state, inputSymbol) pair to the corresponding next state
         ShortBitVector *outputSymbolCache;
         std::vector<std::vector<TrellisGraphNode> > bestPaths;

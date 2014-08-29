@@ -180,7 +180,7 @@ void ConvolutionalCoder::memoryAllocations()
 {
     outputSymbolCache = new ShortBitVector[numberOfOutputSymbols];
     outputSymbols = new ShortBitVector*[numberOfStates];
-    decimalToInputSymbol.resize(numberOfInputSymbols);
+    decimalToInputSymbol = new ShortBitVector[numberOfInputSymbols];
     stateTransitions = new int*[numberOfStates];
     inputSymbols = new int*[numberOfStates];
     for (int i = 0; i < numberOfStates; i++)
@@ -556,6 +556,7 @@ ConvolutionalCoder::~ConvolutionalCoder()
         delete[] inputSymbols[i];
     }
     delete[] outputSymbolCache;
+    delete[] decimalToInputSymbol;
 }
 
 } /* namespace physicallayer */
