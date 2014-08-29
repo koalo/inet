@@ -87,11 +87,11 @@ class ConvolutionalCoder : public cSimpleModule
         std::vector<ShortBitVector> puncturingMatrix; // defines the puncturing method
         int **inputSymbols; // maps a (state, outputSymbol) pair to the corresponding input symbol
         ShortBitVector **outputSymbols; // maps a (state, inputSymbol) pair to the corresponding output symbol
-        ShortBitVector *decimalToInputSymbol;
+        ShortBitVector *decimalToInputSymbol; // maps an inputSymbol (in decimal) to its ShortBitVector representation
+        ShortBitVector *decimalToOutputSymbol; // maps an outputSymbol (in decimal) to its ShortBitVector representation
         int **stateTransitions; // maps a (state, inputSymbol) pair to the corresponding next state
-        ShortBitVector *outputSymbolCache;
-        std::vector<std::vector<TrellisGraphNode> > bestPaths;
-        unsigned char ***hammingDistanceLookupTable;
+        unsigned char ***hammingDistanceLookupTable; // lookup table for Hamming distances, the three dimensions are: [outputSymbol, outputSymbol, excludedBits]
+        std::vector<std::vector<TrellisGraphNode> > trellisGraph; // the decoder's trellis graph
 
     protected:
         virtual int numInitStages() const { return NUM_INIT_STAGES; }
@@ -115,7 +115,7 @@ class ConvolutionalCoder : public cSimpleModule
 #endif
             return hammingDistanceLookupTable[u.toDecimal()][w.toDecimal()][excludedBits.toDecimal()];
         }
-        void computeBestPath(TrellisGraphNode **bestPaths, unsigned int time, const ShortBitVector& outputSymbol, const ShortBitVector& excludedFromHammingDistance) const;
+        void updateTrellisGraph(TrellisGraphNode **trellisGraph, unsigned int time, const ShortBitVector& outputSymbol, const ShortBitVector& excludedFromHammingDistance) const;
         bool isCompletelyDecoded(unsigned int encodedLength, unsigned int decodedLength) const;
         void initParameters();
         void memoryAllocations();
@@ -126,7 +126,7 @@ class ConvolutionalCoder : public cSimpleModule
         void computeNumberOfInputAndOutputSymbols();
         void computeStateTransitions();
         void computeOutputAndInputSymbols();
-        void computeOutputSymbolCache();
+        void computeDecimalToOutputSymbolVector();
         void printStateTransitions() const;
         void printOutputs() const;
         void printTransferFunctionMatrix() const;

@@ -166,7 +166,7 @@ void ConvolutionalCoder::computeOutputAndInputSymbols()
 
 void ConvolutionalCoder::memoryAllocations()
 {
-    outputSymbolCache = new ShortBitVector[numberOfOutputSymbols];
+    decimalToOutputSymbol = new ShortBitVector[numberOfOutputSymbols];
     outputSymbols = new ShortBitVector*[numberOfStates];
     decimalToInputSymbol = new ShortBitVector[numberOfInputSymbols];
     stateTransitions = new int*[numberOfStates];
@@ -244,7 +244,7 @@ void ConvolutionalCoder::initParameters()
     memoryAllocations();
     computeOutputAndInputSymbols();
     computeStateTransitions();
-    computeOutputSymbolCache();
+    computeDecimalToOutputSymbolVector();
     computeHammingDistanceLookupTable();
 }
 
@@ -425,32 +425,32 @@ void ConvolutionalCoder::printTransferFunctionMatrix() const
     }
 }
 
-void ConvolutionalCoder::computeOutputSymbolCache()
+void ConvolutionalCoder::computeDecimalToOutputSymbolVector()
 {
     for (int i = 0; i != numberOfOutputSymbols; i++)
     {
         ShortBitVector outputSymbol(i, codeRateParamaterN);
-        outputSymbolCache[outputSymbol.reverseToDecimal()] = outputSymbol;
+        decimalToOutputSymbol[outputSymbol.reverseToDecimal()] = outputSymbol;
     }
 }
 
-void ConvolutionalCoder::computeBestPath(TrellisGraphNode **bestPaths, unsigned int time, const ShortBitVector& outputSymbol, const ShortBitVector& excludedFromHammingDistance) const
+void ConvolutionalCoder::updateTrellisGraph(TrellisGraphNode **trellisGraph, unsigned int time, const ShortBitVector& outputSymbol, const ShortBitVector& excludedFromHammingDistance) const
 {
     for (int prevState = 0; prevState != numberOfStates; prevState++)
     {
-        const TrellisGraphNode& node = bestPaths[prevState][time];
+        const TrellisGraphNode& node = trellisGraph[prevState][time];
         for (int j = 0; j != numberOfOutputSymbols && node.state != -1; j++)
         {
             int feasibleDecodedSymbol = inputSymbols[prevState][j];
             if (feasibleDecodedSymbol != -1)
             {
-                const ShortBitVector& otherOutputSymbol = outputSymbolCache[j];
+                const ShortBitVector& otherOutputSymbol = decimalToOutputSymbol[j];
                 int hammingDistance = computeHammingDistance(outputSymbol, excludedFromHammingDistance, otherOutputSymbol);
                 int newState = stateTransitions[prevState][feasibleDecodedSymbol];
                 int cumulativeHammingDistance = hammingDistance;
                 if (node.comulativeHammingDistance != INT32_MAX)
                     cumulativeHammingDistance += node.comulativeHammingDistance;
-                TrellisGraphNode& best = bestPaths[newState][time+1];
+                TrellisGraphNode& best = trellisGraph[newState][time+1];
                 if (cumulativeHammingDistance < best.comulativeHammingDistance)
                 {
                     best.state = newState;
@@ -517,7 +517,7 @@ BitVector ConvolutionalCoder::decode(const BitVector& encodedBits, const char *d
     unsigned int time = 0;
     while (!nextOutputSymbol.isUndef())
     {
-        computeBestPath(trellisGraph, time, nextOutputSymbol, countsOnHammingDistance);
+        updateTrellisGraph(trellisGraph, time, nextOutputSymbol, countsOnHammingDistance);
         time++;
         countsOnHammingDistance = ShortBitVector();
         countsOnHammingDistance.appendBit(true, codeRateParamaterN);
@@ -557,7 +557,7 @@ ConvolutionalCoder::~ConvolutionalCoder()
         delete[] outputSymbols[i];
         delete[] inputSymbols[i];
     }
-    delete[] outputSymbolCache;
+    delete[] decimalToOutputSymbol;
     delete[] decimalToInputSymbol;
 }
 
