@@ -53,15 +53,6 @@ void ConvolutionalCoder::initialize(int stage)
         initParameters();
         printOutputs();
         printStateTransitions();
-//        BitVector infBits("110111011100");
-//        BitVector encodedBits = encode(infBits, false);
-//        if (encodedBits != BitVector("100100111001111110"))
-//            throw cRuntimeError("error encode");
-//        std::cout << "Encoded:     " << encodedBits << endl;
-//        BitVector dec = decode(encodedBits, "truncated");
-//        std::cout << "decoded: " << dec << endl;
-//        if (dec != infBits)
-//            throw cRuntimeError("error decode");
     }
 }
 
