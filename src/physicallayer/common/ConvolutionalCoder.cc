@@ -302,7 +302,6 @@ void ConvolutionalCoder::printStateTransitions() const
 
 void ConvolutionalCoder::computeStateTransitions()
 {
-    std::cout << "compute state transition" << endl;
     for (int decState = 0; decState != numberOfStates; decState++)
     {
         ShortBitVector state(decState, memorySizeSum);
