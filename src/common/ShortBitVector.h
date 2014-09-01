@@ -40,7 +40,7 @@ class ShortBitVector
         inline void stringToBitVector(const char *str)
         {
             int strSize = strlen(str);
-            for (int i = strSize - 1; i >= 0; i--)
+            for (int i = 0; i < strSize; i++)
             {
                 if (str[i] == '1')
                     appendBit(true);

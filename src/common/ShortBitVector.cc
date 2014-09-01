@@ -61,7 +61,7 @@ std::string ShortBitVector::toString() const
         throw cRuntimeError("You can't convert an undefined ShortBitVector to a string");
 #endif
     std::string str;
-    for (unsigned int i = getSize() - 1; i >= 0; i--)
+    for (unsigned int i = 0; i < getSize(); i++)
     {
         if (getBit(i))
             str += "1";
