@@ -53,12 +53,6 @@ void ConvolutionalCoder::initialize(int stage)
     }
 }
 
-
-inline bool ConvolutionalCoder::eXOR(bool alpha, bool beta) const
-{
-    return (alpha || beta) && !(alpha && beta);
-}
-
 BitVector ConvolutionalCoder::getPuncturedIndices(unsigned int length) const
 {
     BitVector isPunctured;

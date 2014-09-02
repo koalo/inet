@@ -97,7 +97,10 @@ class ConvolutionalCoder : public cSimpleModule
         virtual int numInitStages() const { return NUM_INIT_STAGES; }
         virtual void initialize(int stage);
         virtual void handleMessage(cMessage *msg) { throw cRuntimeError("This module doesn't handle self messages"); }
-        inline bool eXOR(bool alpha, bool beta) const;
+        inline bool eXOR(bool alpha, bool beta) const
+        {
+            return (alpha || beta) && !(alpha && beta);
+        }
         void setTransferFunctionMatrix(std::vector<std::vector<int> >& transferFMatrix);
         ShortBitVector inputSymbolToOutputSymbol(const ShortBitVector& state, const ShortBitVector& inputSymbol) const;
         bool modulo2Adder(const ShortBitVector& shiftRegisters, const ShortBitVector& generatorPolynomial) const;
