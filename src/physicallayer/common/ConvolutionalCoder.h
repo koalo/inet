@@ -75,6 +75,7 @@ class ConvolutionalCoder : public cSimpleModule
         };
 
     protected:
+        const char *mode;
         unsigned int codeRateParamaterK, codeRateParamaterN; // these define the k/n code rate
         unsigned int codeRatePuncturingK, codeRatePuncturingN; // the k/n code rate after puncturing
         int memorySizeSum; // sum of memorySizes
@@ -140,19 +141,9 @@ class ConvolutionalCoder : public cSimpleModule
         BitVector traversePath(const TrellisGraphNode& bestNode, TrellisGraphNode **bestPaths) const;
 
     public:
-        /*
-         * The encoding process works in accordance with the industry-standards and starts in the all-zeros state.
-         * We also append memorySizeSum pieces of 0 bits to the end of the informationBits if endInAllZeros flag was
-         * set to true thus the encoding process will end in all-zeros state.
-         */
-        BitVector encode(const BitVector& informationBits, bool endInAllZeros) const;
 
-        /*
-         * There are two decoding modes:
-         *  - "truncated" : The trellis graph traceback path always starts in the all-zeros state and ends with the best metric.
-         *  - "terminated": The trellis graph traceback path always starts and ends in the all-zeros state.
-         */
-        BitVector decode(const BitVector& encodedBits, const char *decodingMode) const;
+        BitVector encode(const BitVector& informationBits) const;
+        BitVector decode(const BitVector& encodedBits) const;
 
         /*
          * Getters for the encoder's/decoder's parameters

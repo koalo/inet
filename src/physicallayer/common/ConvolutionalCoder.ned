@@ -45,15 +45,28 @@ package inet.physicallayer.common;
 // Constraint length (integer) vector
 // ==================================
 //
-// The constraint length is a 1-by-k vector that specifies the delay for the encoder's k
-// input bit streams.
+// The constraint length is a 1-by-k vector that specifies the delay for the
+// encoder's k input bit streams.
 //
-// The default settings define the standard 1/2 convolutional encoder used by IEEE802.11 PHY.
+// The default settings define the standard 1/2 convolutional encoder used by
+// IEEE802.11 PHY.
+//
+// Encoding/decoding mode
+// ======================
+//
+// There are two modes:
+//  - "truncated" : The trellis graph traceback path always starts in the all-zeros state
+//					and ends with the best metric.
+//  - "terminated": The trellis graph traceback path always starts and ends in the all-zeros
+//					state.
+// The encoding process works in accordance with the industry-standards and starts
+// in the all-zeros state.
 //
 module ConvolutionalCoder
 {
     parameters:
         string transferFunctionMatrix = default("133 171");
+        string mode = default("truncated");
         string puncturingMatrix = default("1;1");
         int punctureK = default(1);
         int punctureN = default(2);

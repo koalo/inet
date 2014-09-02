@@ -31,6 +31,9 @@ void ConvolutionalCoder::initialize(int stage)
         const char *strTransferFunctionMatrix = par("transferFunctionMatrix");
         const char *strPuncturingMatrix = par("puncturingMatrix");
         const char *strConstraintLengthVector = par("constraintLengthVector");
+        mode = par("mode");
+        if (strcmp(mode, "terminated") && strcmp(mode, "truncated"))
+            throw cRuntimeError("Unknown (= %s ) coding mode", mode);
         codeRatePuncturingK = par("punctureK");
         codeRatePuncturingN = par("punctureN");
         parseVector(strConstraintLengthVector, constraintLengths);
@@ -242,21 +245,18 @@ void ConvolutionalCoder::initParameters()
     computeHammingDistanceLookupTable();
 }
 
-BitVector ConvolutionalCoder::encode(const BitVector& informationBits, bool endInAllZeros) const
+BitVector ConvolutionalCoder::encode(const BitVector& informationBits) const
 {
     EV_DETAIL << "Encoding the following bits: " << informationBits << endl;
-    BitVector paddedInformationBits = informationBits;
-    if (endInAllZeros)
-        paddedInformationBits.appendBit(false, memorySizeSum);
-    if (paddedInformationBits.getSize() % codeRateParamaterK)
+    if (informationBits.getSize() % codeRateParamaterK)
         throw cRuntimeError("Length of informationBits must be a multiple of codeRateParamaterK = %d", codeRateParamaterK);
     BitVector encodedInformationBits;
     int state = 0;
-    for (unsigned int i = 0; i < paddedInformationBits.getSize(); i += codeRateParamaterK)
+    for (unsigned int i = 0; i < informationBits.getSize(); i += codeRateParamaterK)
     {
         ShortBitVector inputSymbol;
         for (unsigned int j = i; j < i + codeRateParamaterK; j++)
-            inputSymbol.appendBit(paddedInformationBits.getBit(j));
+            inputSymbol.appendBit(informationBits.getBit(j));
         int inputSymbolDec = inputSymbol.reverseToDecimal();
         const ShortBitVector& encodedSymbol = outputSymbols[state][inputSymbolDec];
         state = stateTransitions[state][inputSymbolDec];
@@ -482,7 +482,7 @@ BitVector ConvolutionalCoder::traversePath(const TrellisGraphNode& bestNode, Tre
     return decodedBits;
 }
 
-BitVector ConvolutionalCoder::decode(const BitVector& encodedBits, const char *decodingMode) const
+BitVector ConvolutionalCoder::decode(const BitVector& encodedBits) const
 {
     BitVector isPunctured;
     BitVector depuncturedEncodedBits = depuncturing(encodedBits, isPunctured);
@@ -490,12 +490,12 @@ BitVector ConvolutionalCoder::decode(const BitVector& encodedBits, const char *d
     if (encodedBitsSize % codeRateParamaterN != 0)
         throw cRuntimeError("Length of encodedBits must be a multiple of codeRateParamaterN = %d", codeRateParamaterN);
     bool isTruncatedMode = false;
-    if (!strcmp(decodingMode, "truncated"))
+    if (!strcmp(mode, "truncated"))
         isTruncatedMode = true;
-    else if(!strcmp(decodingMode, "terminated"))
+    else if(!strcmp(mode, "terminated"))
         isTruncatedMode = false;
     else
-        throw cRuntimeError("Unknown decodingMode = %s decodingMode", decodingMode);
+        throw cRuntimeError("Unknown decodingMode = %s decodingMode", mode);
     TrellisGraphNode **trellisGraph;
     trellisGraph = new TrellisGraphNode*[numberOfStates];
     for (int i = 0; i != numberOfStates; i++)
