@@ -28,6 +28,9 @@
 #include "inet/networklayer/generic/GenericNetworkProtocolInterfaceData.h"
 #include "inet/common/PatternMatcher.h"
 #include "inet/common/ModuleAccess.h"
+#include "inet/physicallayer/contract/IRadio.h"
+#include "inet/physicallayer/contract/IRadioMedium.h"
+#include "inet/physicallayer/common/Interference.h"
 
 namespace inet {
 
@@ -255,11 +258,57 @@ void GenericNetworkConfigurator::extractWirelessTopology(GenericTopology& topolo
             InterfaceInfo *interfaceInfoI = linkInfo->interfaceInfos.at(i);
             for (int j = i + 1; j < (int)linkInfo->interfaceInfos.size(); j++) {
                 InterfaceInfo *interfaceInfoJ = linkInfo->interfaceInfos.at(j);
+                double weight = 1;
+
+                // Get the BER between the two interfaces
+                // For this, a dummy transmission is created by one interface and the
+                // ReceptionIndication (including the BER) is calculated by the other interface.
+                cModule *interfaceModuleI = interfaceInfoI->interfaceEntry->getInterfaceModule();
+                cModule *interfaceModuleJ = interfaceInfoJ->interfaceEntry->getInterfaceModule();
+                if(interfaceModuleI && interfaceModuleJ) {
+                    physicallayer::IRadio *transmitterRadio = ModuleAccess<physicallayer::IRadio>("radio").getIfExists(interfaceModuleI);
+                    physicallayer::IRadio *receiverRadio = ModuleAccess<physicallayer::IRadio>("radio").getIfExists(interfaceModuleJ);
+                    if(transmitterRadio && receiverRadio) {
+                        const physicallayer::IRadioMedium *medium = receiverRadio->getMedium();
+                        cPacket *macFrame = new cPacket();
+                        const physicallayer::ITransmission *transmission = transmitterRadio->getTransmitter()->createTransmission(transmitterRadio, macFrame, simTime());
+                        const physicallayer::IArrival *arrival = medium->getPropagation()->computeArrival(transmission, receiverRadio->getAntenna()->getMobility());
+                        const physicallayer::IListening *listening = receiverRadio->getReceiver()->createListening(receiverRadio, arrival->getStartTime(), arrival->getEndTime(), arrival->getStartPosition(), arrival->getEndPosition());
+                        const physicallayer::INoise *noise = medium->getBackgroundNoise()->computeNoise(listening);
+                        const physicallayer::IReception *reception = medium->getAnalogModel()->computeReception(receiverRadio, transmission, arrival);
+                        const physicallayer::IInterference *interference = new physicallayer::Interference(noise, new std::vector<const physicallayer::IReception *>());
+                        const physicallayer::ISNIR *snir = medium->getAnalogModel()->computeSNIR(reception, noise);
+                        const physicallayer::IReceptionDecision *decision = receiverRadio->getReceiver()->computeReceptionDecision(listening, reception, interference, snir);
+                        const physicallayer::ReceptionIndication *indication = decision->getIndication();
+                        double bitErrorRate;
+                        if(!indication) {
+                            // no reception possible
+                            bitErrorRate = 1;
+                        }
+                        else {
+                            bitErrorRate = indication->getBitErrorRate();
+                        }
+
+                        delete indication;
+                        delete decision;
+                        delete interference;
+                        delete reception;
+                        delete listening;
+                        delete arrival;
+                        delete transmission;
+
+                        // we want to have a minimum BER product along the path
+                        weight = -log(1-bitErrorRate);
+                    }
+                }
+
                 Link *link = new Link();
+                link->setWeight(weight);
                 link->sourceInterfaceInfo = interfaceInfoI;
                 link->destinationInterfaceInfo = interfaceInfoJ;
                 topology.addLink(link, interfaceInfoI->node, interfaceInfoJ->node);
                 link = new Link();
+                link->setWeight(weight);
                 link->sourceInterfaceInfo = interfaceInfoJ;
                 link->destinationInterfaceInfo = interfaceInfoI;
                 topology.addLink(link, interfaceInfoJ->node, interfaceInfoI->node);
@@ -438,7 +487,7 @@ void GenericNetworkConfigurator::addStaticRoutes(GenericTopology& topology)
         // calculate shortest paths from everywhere to sourceNode
         // we are going to use the paths in reverse direction (assuming all links are bidirectional)
         long begin = clock();
-        topology.calculateUnweightedSingleShortestPathsTo(sourceNode);
+        topology.calculateWeightedSingleShortestPathsTo(sourceNode);
         calculateShortestPathsDuration += clock() - begin;
 
         // add a route to all destinations in the network
