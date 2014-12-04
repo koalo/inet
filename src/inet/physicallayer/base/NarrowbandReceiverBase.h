@@ -41,7 +41,7 @@ class INET_API NarrowbandReceiverBase : public SNIRReceiverBase
 
     virtual bool computeIsReceptionPossible(const ITransmission *transmission) const;
     virtual bool computeIsReceptionPossible(const IListening *listening, const IReception *reception) const;
-    virtual bool computeIsReceptionSuccessful(const IListening *listening, const IReception *reception, const IInterference *interference) const;
+    virtual bool computeIsReceptionSuccessful(const IListening *listening, const IReception *reception, const IInterference *interference, const ISNIR *snir) const;
     virtual const ReceptionIndication *computeReceptionIndication(const ISNIR *snir) const;
 
   public:
@@ -55,7 +55,7 @@ class INET_API NarrowbandReceiverBase : public SNIRReceiverBase
     virtual const IListening *createListening(const IRadio *radio, const simtime_t startTime, const simtime_t endTime, const Coord startPosition, const Coord endPosition) const;
 
     virtual const IListeningDecision *computeListeningDecision(const IListening *listening, const IInterference *interference) const;
-    virtual const IReceptionDecision *computeReceptionDecision(const IListening *listening, const IReception *reception, const IInterference *interference) const;
+    virtual const IReceptionDecision *computeReceptionDecision(const IListening *listening, const IReception *reception, const IInterference *interference, const ISNIR *snir) const;
 
     virtual const IModulation *getModulation() const { return modulation; }
 

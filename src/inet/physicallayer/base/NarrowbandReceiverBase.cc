@@ -123,13 +123,9 @@ const IListeningDecision *NarrowbandReceiverBase::computeListeningDecision(const
     return new ListeningDecision(listening, isListeningPossible);
 }
 
-bool NarrowbandReceiverBase::computeIsReceptionSuccessful(const IListening *listening, const IReception *reception, const IInterference *interference) const
+bool NarrowbandReceiverBase::computeIsReceptionSuccessful(const IListening *listening, const IReception *reception, const IInterference *interference, const ISNIR *snir) const
 {
-    const ITransmission *transmission = reception->getTransmission();
-    const IRadio *receiver = reception->getReceiver();
-    const IRadioMedium *medium = receiver->getMedium();
-    const ISNIR *snir = medium->getSNIR(receiver, transmission);
-    if (!SNIRReceiverBase::computeIsReceptionSuccessful(listening, reception, interference))
+    if (!SNIRReceiverBase::computeIsReceptionSuccessful(listening, reception, interference, snir))
         return false;
     else if (!errorModel)
         return true;
@@ -155,12 +151,12 @@ const ReceptionIndication *NarrowbandReceiverBase::computeReceptionIndication(co
     return indication;
 }
 
-const IReceptionDecision *NarrowbandReceiverBase::computeReceptionDecision(const IListening *listening, const IReception *reception, const IInterference *interference) const
+const IReceptionDecision *NarrowbandReceiverBase::computeReceptionDecision(const IListening *listening, const IReception *reception, const IInterference *interference, const ISNIR *snir) const
 {
     const BandListening *bandListening = check_and_cast<const BandListening *>(listening);
     const NarrowbandReceptionBase *narrowbandReception = check_and_cast<const NarrowbandReceptionBase *>(reception);
     if (bandListening->getCarrierFrequency() == narrowbandReception->getCarrierFrequency() && bandListening->getBandwidth() == narrowbandReception->getBandwidth())
-        return SNIRReceiverBase::computeReceptionDecision(listening, reception, interference);
+        return SNIRReceiverBase::computeReceptionDecision(listening, reception, interference, snir);
     else
         return new ReceptionDecision(reception, new ReceptionIndication(), false, false, false);
 }
