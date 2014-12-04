@@ -447,7 +447,7 @@ void Topology::calculateWeightedSingleShortestPathsTo(Node *_target)
                 continue;
 
             double linkWeight = dest->getLinkIn(i)->getWeight();
-            ASSERT(linkWeight > 0.0);
+            ASSERT(linkWeight >= 0.0);
 
             double newdist = dest->dist + linkWeight;
             if (dest != target)
