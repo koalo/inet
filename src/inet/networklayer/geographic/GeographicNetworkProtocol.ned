@@ -15,13 +15,26 @@
 
 package inet.networklayer.geographic;
 
-import inet.networklayer.generic.GenericNetworkProtocol;
+//import inet.networklayer.generic.GenericNetworkProtocol;
 
 //
 // TODO auto-generated module
 //
-simple GeographicNetworkProtocol extends GenericNetworkProtocol
+simple GeographicNetworkProtocol //extends GenericNetworkProtocol
 {
     parameters:
         string neighborTableModule;
+        string interfaceTableModule;   // The path to the InterfaceTable module
+        string routingTableModule;
+        string arpModule;
+        double procDelay @unit("s") = default(0s);
+        int hopLimit = default(32);
+        @display("i=block/routing");
+    gates:
+        input transportIn[] @labels(GenericNetworkProtocolControlInfo/down,TCPSegment,UDPPacket);
+        output transportOut[] @labels(GenericNetworkProtocolControlInfo/up,TCPSegment,UDPPacket);
+        input arpIn;
+        output arpOut;
+        input queueIn[] @labels(GenericDatagram);
+        output queueOut[] @labels(GenericDatagram);
 }

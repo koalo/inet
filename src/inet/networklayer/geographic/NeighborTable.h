@@ -8,10 +8,21 @@
 #ifndef NEIGHBORINGTABLE_H_
 #define NEIGHBORINGTABLE_H_
 
-class NeighborTable {
+#include "inet/common/INETDefs.h"
+
+namespace inet {
+
+class INET_API NeighborTable : public cSimpleModule {
 public:
     NeighborTable();
     virtual ~NeighborTable();
+
+protected:
+    virtual int numInitStages() const { return NUM_INIT_STAGES; }
+    virtual void initialize(int stage);
 };
+
+}
+
 #endif /* NEIGHBORINGTABLE_H_ */
 

@@ -21,6 +21,7 @@ import inet.applications.generic.IPvXTrafGen;
 import inet.transportlayer.dummy.DummyTransport;
 import inet.node.inet.StandardHost;
 import inet.linklayer.ieee802154.Ieee802154NarrowbandNic;
+import inet.networklayer.geographic.NeighborTable;
 
 
 //
@@ -47,6 +48,10 @@ module IEEE802154ExampleHost extends StandardHost
     submodules:
         trafficgen: IPvXTrafGen {
             @display("p=149,287");
+        }
+        
+        neighborTable: NeighborTable { // <neighborTableType> like ...
+            @display("p=149,300");
         }
 
     connections:
