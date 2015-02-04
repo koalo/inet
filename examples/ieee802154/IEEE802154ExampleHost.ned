@@ -30,6 +30,9 @@ import inet.linklayer.ieee802154.Ieee802154NarrowbandNic;
 module IEEE802154ExampleHost extends StandardHost
 {
     parameters:
+        string neighborTableType = default("NeighborTable");
+        *.neighborTableModule = default(neighborTableType != "" ? absPath(".neighborTable") : "");
+        
         numRadios = default(1);
         wlan[0].typename = default("Ieee802154NarrowbandNic");
 
