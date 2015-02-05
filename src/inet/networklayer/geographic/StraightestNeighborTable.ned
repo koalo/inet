@@ -1,5 +1,4 @@
 //
-// Copyright (C) 2012 Opensim Ltd.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -20,7 +19,7 @@ package inet.networklayer.geographic;
 //
 // This module stores neighboring nodes
 //
-simple NeighborTable
+simple StraightestNeighborTable like INeighborTable
 {
     parameters:
         @display("i=block/table");

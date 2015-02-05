@@ -26,7 +26,7 @@ GeographicNetworkProtocol::~GeographicNetworkProtocol() {
 void GeographicNetworkProtocol::initialize() {
     GenericNetworkProtocol::initialize();
     EV_INFO << "GeographicNWProtocol -> initialize" << endl;
-    neighborTable = getModuleFromPar<NeighborTable>(par("neighborTableModule"), this);
+    neighborTable = getModuleFromPar<INeighborTable>(par("neighborTableModule"), this);
 }
 
 

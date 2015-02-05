@@ -9,14 +9,14 @@
 #define GEOGRAPHICNETWORKPROTOCOL_H_
 
 #include "inet/networklayer/generic/GenericNetworkProtocol.h"
-#include "inet/networklayer/geographic/NeighborTable.h"
+#include "inet/networklayer/geographic/INeighborTable.h"
 
 namespace inet {
 
 class INET_API GeographicNetworkProtocol: public GenericNetworkProtocol {
 
 protected:
-    NeighborTable *neighborTable;
+    INeighborTable *neighborTable;
 
 public:
     GeographicNetworkProtocol();

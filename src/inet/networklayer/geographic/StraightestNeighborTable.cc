@@ -5,29 +5,27 @@
  *      Author: luebkert
  */
 
-#include <sstream>
-
-#include "inet/networklayer/geographic/NeighborTable.h"
+#include "inet/networklayer/geographic/StraightestNeighborTable.h"
 
 #include "inet/common/ModuleAccess.h"
 
 namespace inet {
 
-Define_Module(NeighborTable);
+Define_Module(StraightestNeighborTable);
 
-NeighborTable::NeighborTable() {
+StraightestNeighborTable::StraightestNeighborTable() {
     // TODO Auto-generated constructor stub
 }
 
-NeighborTable::~NeighborTable() {
+StraightestNeighborTable::~StraightestNeighborTable() {
     // TODO Auto-generated destructor stub
 }
 
 
-void NeighborTable::initialize(int stage)
+void StraightestNeighborTable::initialize(int stage)
 {
     cSimpleModule::initialize(stage);
-    EV_INFO << "NeighborTable" << endl;
+    EV_INFO << "StraightestNeighborTable" << endl;
 
     if (stage == INITSTAGE_LOCAL) {
 

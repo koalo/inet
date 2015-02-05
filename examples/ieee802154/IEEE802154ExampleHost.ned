@@ -18,10 +18,10 @@
 package inet.examples.ieee802154;
 
 import inet.applications.generic.IPvXTrafGen;
-import inet.transportlayer.dummy.DummyTransport;
+//import inet.transportlayer.dummy.DummyTransport;
 import inet.node.inet.StandardHost;
 import inet.linklayer.ieee802154.Ieee802154NarrowbandNic;
-import inet.networklayer.geographic.NeighborTable;
+import inet.networklayer.geographic.INeighborTable;
 
 
 //
@@ -50,7 +50,7 @@ module IEEE802154ExampleHost extends StandardHost
             @display("p=149,287");
         }
         
-        neighborTable: NeighborTable { // <neighborTableType> like ...
+        neighborTable: <neighborTableType> like INeighborTable {
             @display("p=149,300");
         }
 
