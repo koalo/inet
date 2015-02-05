@@ -27,6 +27,7 @@
 #include "inet/networklayer/common/IRoutingTable.h"
 #include "inet/networklayer/common/L3AddressResolver.h"
 #include "inet/common/PatternMatcher.h"
+#include "inet/networklayer/geographic/INeighborTable.h"
 
 namespace inet {
 
@@ -49,10 +50,11 @@ class INET_API NetworkConfiguratorBase : public cSimpleModule, public L3AddressR
         cModule *module;
         IInterfaceTable *interfaceTable;
         IRoutingTable *routingTable;
+        INeighborTable *neighborTable;
         std::vector<InterfaceInfo *> interfaceInfos;
 
       public:
-        Node(cModule *module) : inet::Topology::Node(module->getId()) { this->module = module; interfaceTable = NULL; routingTable = NULL; }
+        Node(cModule *module) : inet::Topology::Node(module->getId()) { this->module = module; interfaceTable = NULL; routingTable = NULL; neighborTable = NULL; }
     };
 
     /**

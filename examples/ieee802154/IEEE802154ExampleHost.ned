@@ -33,7 +33,7 @@ module IEEE802154ExampleHost extends StandardHost
     parameters:
         string neighborTableType = default("NeighborTable");
         *.neighborTableModule = default(neighborTableType != "" ? absPath(".neighborTable") : "");
-        
+
         numRadios = default(1);
         wlan[0].typename = default("Ieee802154NarrowbandNic");
 
@@ -49,9 +49,9 @@ module IEEE802154ExampleHost extends StandardHost
         trafficgen: IPvXTrafGen {
             @display("p=149,287");
         }
-        
+
         neighborTable: <neighborTableType> like INeighborTable {
-            @display("p=149,300");
+            @display("p=117,231");
         }
 
     connections:
