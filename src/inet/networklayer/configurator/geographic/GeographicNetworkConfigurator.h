@@ -17,6 +17,7 @@
 #define GEOGRAPHICNETWORKCONFIGURATOR_H_
 
 #include "inet/networklayer/configurator/base/NetworkConfiguratorBase.h"
+#include "inet/networklayer/generic/GenericRoutingTable.h"
 
 namespace inet {
 
@@ -37,6 +38,12 @@ class INET_API GeographicNetworkConfigurator: public NetworkConfiguratorBase {
        *
        */
       virtual void addStaticNeighbors(Topology& topology);
+
+
+      /**
+       * TODO make this obsolete, is needed to extractTopology, beacuse "isBridgeNode()" checks for routingTable
+       */
+      virtual IRoutingTable *findRoutingTable(Node *node);
 };
 
 } /* namespace inet */

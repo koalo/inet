@@ -39,6 +39,12 @@ void GeographicNetworkConfigurator::initialize(int stage)
     }
 }
 
+
+IRoutingTable *GeographicNetworkConfigurator::findRoutingTable(Node *node)
+{
+    return L3AddressResolver().findGenericRoutingTableOf(node->module);
+}
+
 void GeographicNetworkConfigurator::addStaticNeighbors(Topology& topology) {
     EV_INFO << "STATIC NEIGHBORS" << endl;
     for (int i = 0; i < topology.getNumNodes(); i++) {
@@ -50,12 +56,17 @@ void GeographicNetworkConfigurator::addStaticNeighbors(Topology& topology) {
         INeighborTable *nt = dynamic_cast<INeighborTable *>(nodeModule->getSubmodule("neighborTable"));
         if (!nt)
             nt = dynamic_cast<INeighborTable *>(nodeModule->getModuleByPath(".neighborTable.geographic"));
+
+        if(!nt)
+            continue;
+
         node->neighborTable = nt;
 
-        EV_INFO << "addStaticNeighbors to " << nt << endl;
+        EV_INFO << "addStaticNeighbors (" << node->getNumOutLinks() << ") to " << nt << endl;
+        for (int j = 0; j < node->getNumOutLinks(); j++) {
+            EV_INFO << " -> " << node->getLinkOut(j)->getRemoteNode()->getModuleId() << endl;
+        }
 
-        if (!node->interfaceTable)
-            continue;
 
     }
 }
