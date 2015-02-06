@@ -29,8 +29,15 @@ void GeographicNetworkProtocol::initialize() {
 
 
 void GeographicNetworkProtocol::routePacket(GenericDatagram *datagram, const InterfaceEntry *destIE, const L3Address& nextHop, bool fromHL) {
-    EV_INFO << "Geographic Routing!" << endl;
-    GenericNetworkProtocol::routePacket(datagram, destIE, nextHop, fromHL);
+    // TODO get dest coord from datagram? --> create GeographicDatagram!
+    // TODO get srcCoord from datagram??
+    // TODO set output interface (destIE) -> needs to be in neighborTable or somewhat
+    Coord srcCoord;
+    Coord destCoord;
+    InterfaceEntry *outIE = interfaceTable->getInterface(0);  // TODO make this more professional!
+    L3Address nextNeighbor = *neighborTable->getNextHop(srcCoord, destCoord);
+    EV_INFO << "Geographic Routing! " << destIE << " " << nextNeighbor << " " << !nextNeighbor.isUnspecified() << endl;
+    GenericNetworkProtocol::routePacket(datagram, outIE, nextNeighbor, fromHL);
 }
 
 

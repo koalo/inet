@@ -36,7 +36,11 @@ void StraightestNeighborTable::addNeighbor(L3Address& addr, Coord& coord) {
 }
 
 L3Address* StraightestNeighborTable::getNextHop(Coord& src, Coord& dest) {
-    return nullptr;
+    L3Address *nextHop = nullptr;
+    for (auto& n : neighbors) {
+        nextHop =  &n.first;
+    }
+    return nextHop;
 }
 
 }
