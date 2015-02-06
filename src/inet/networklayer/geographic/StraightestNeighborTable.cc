@@ -13,23 +13,30 @@ namespace inet {
 
 Define_Module(StraightestNeighborTable);
 
-StraightestNeighborTable::StraightestNeighborTable() {
-    // TODO Auto-generated constructor stub
+StraightestNeighborTable::StraightestNeighborTable() :
+        position(nullptr)
+{
 }
 
 StraightestNeighborTable::~StraightestNeighborTable() {
-    // TODO Auto-generated destructor stub
+
 }
 
+void StraightestNeighborTable::setPosition(Coord *position) {
+    this->position = position;
+}
 
 void StraightestNeighborTable::initialize(int stage)
 {
     cSimpleModule::initialize(stage);
-    EV_INFO << "StraightestNeighborTable" << endl;
+}
 
-    if (stage == INITSTAGE_LOCAL) {
+void StraightestNeighborTable::addNeighbor(L3Address& addr, Coord& coord) {
+    neighbors.push_back(std::pair<L3Address, Coord>(addr, coord));
+}
 
-    }
+L3Address* StraightestNeighborTable::getNextHop(Coord& src, Coord& dest) {
+    return nullptr;
 }
 
 }

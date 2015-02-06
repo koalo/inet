@@ -15,7 +15,10 @@
 
 #include "inet/networklayer/configurator/geographic/GeographicNetworkConfigurator.h"
 #include "inet/networklayer/geographic/StraightestNeighborTable.h"
+#include "inet/networklayer/generic/GenericNetworkProtocolInterfaceData.h"
+#include "inet/physicallayer/contract/IRadio.h"
 #include "inet/common/INETDefs.h"
+#include <math.h>
 
 namespace inet {
 
@@ -61,10 +64,37 @@ void GeographicNetworkConfigurator::addStaticNeighbors(Topology& topology) {
             continue;
 
         node->neighborTable = nt;
+        if (!node->interfaceTable)
+            continue;
 
-        EV_INFO << "addStaticNeighbors (" << node->getNumOutLinks() << ") to " << nt << endl;
+        // TODO make this more professional
+        Coord pos = check_and_cast<physicallayer::IRadio *>(node->interfaceTable->getInterface(0)->getNetworkInterfaceModule()->getSubmodule("radio"))->getAntenna()->getMobility()->getCurrentPosition();
+        node->neighborTable->setPosition(&pos);
+
+        EV_INFO << "addStaticNeighbors (" << node->getNumOutLinks() << ") to " << node->module->getFullPath() << " at " << pos << endl;
         for (int j = 0; j < node->getNumOutLinks(); j++) {
-            EV_INFO << " -> " << node->getLinkOut(j)->getRemoteNode()->getModuleId() << endl;
+            Topology::LinkOut *linkOut = node->getLinkOut(j);
+            ASSERT(linkOut->getLocalNode() == node);
+            Node *remoteNode = (Node *)linkOut->getRemoteNode();
+            if (!isinf(linkOut->getWeight())) {
+                EV_INFO << "     -> " << remoteNode->module->getFullPath() << " " << linkOut->getWeight();
+                IInterfaceTable *destinationInterfaceTable = remoteNode->interfaceTable;
+
+                for (int j = 0; j < destinationInterfaceTable->getNumInterfaces(); j++) {
+                    InterfaceEntry *destinationInterfaceEntry = destinationInterfaceTable->getInterface(j);
+                    if (!destinationInterfaceEntry->getGenericNetworkProtocolData())
+                        continue;
+                    L3Address destinationAddress = destinationInterfaceEntry->getGenericNetworkProtocolData()->getAddress();
+                    if (!destinationInterfaceEntry->isLoopback() && !destinationAddress.isUnspecified()) {
+                        cModule *receiverInterfaceModule = destinationInterfaceEntry->getNetworkInterfaceModule();
+                        physicallayer::IRadio *receiverRadio = check_and_cast<physicallayer::IRadio *>(receiverInterfaceModule->getSubmodule("radio"));
+                        Coord destPosition = receiverRadio->getAntenna()->getMobility()->getCurrentPosition();
+                        node->neighborTable->addNeighbor(destinationAddress, destPosition);
+                        EV_INFO << ";   " << destPosition; // destinationAddress.str();
+                    }
+                    EV_INFO << endl;
+                }
+            }
         }
 
 
