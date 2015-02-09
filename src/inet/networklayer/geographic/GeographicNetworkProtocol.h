@@ -26,6 +26,8 @@ protected:
     virtual void datagramPreRouting(GenericDatagram *datagram, const InterfaceEntry *inIE, const InterfaceEntry *destIE, const L3Address& nextHop);
     virtual void routePacket(GenericDatagram *datagram, const InterfaceEntry *destIE, const L3Address& nextHop, bool fromHL);
 
+    virtual GenericDatagram *encapsulate(cPacket *transportPacket, const InterfaceEntry *& destIE);
+
 protected:
     virtual void initialize();
 

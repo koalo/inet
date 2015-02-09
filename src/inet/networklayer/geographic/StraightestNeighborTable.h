@@ -16,7 +16,9 @@ namespace inet {
 class INET_API StraightestNeighborTable : public cSimpleModule, public INeighborTable {
 
 protected:
-    Coord *position;
+    Coord position;
+    InterfaceEntry *interfaceEntry;
+    std::map<L3Address, Coord> *addrCoordMap;
     std::vector<std::pair<L3Address, Coord>> neighbors;
 
 public:
@@ -24,7 +26,14 @@ public:
     virtual ~StraightestNeighborTable();
 
 
-    virtual void setPosition(Coord *position);
+    virtual void setPosition(Coord position);
+    virtual void setInterfaceEntry(InterfaceEntry *interfaceEntry);
+
+    virtual void setAddrCoordMap(std::map<L3Address, Coord>& map);
+    virtual Coord getCoordByAddr(L3Address&);
+
+    virtual Coord getPosition();
+    virtual InterfaceEntry* getInterfaceEntry();
 
     virtual int getNumNeighbors() { return neighbors.size(); }
 

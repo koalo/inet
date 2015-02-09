@@ -18,6 +18,8 @@
 
 #include "inet/networklayer/configurator/base/NetworkConfiguratorBase.h"
 #include "inet/networklayer/generic/GenericRoutingTable.h"
+#include "inet/common/geometry/common/Coord.h"
+#include "inet/networklayer/common/L3Address.h"
 
 namespace inet {
 
@@ -29,6 +31,7 @@ class INET_API GeographicNetworkConfigurator: public NetworkConfiguratorBase {
 
       // internal state
       Topology topology;
+      std::map<L3Address, Coord> addrCoordMap;
 
 
     protected:
@@ -44,6 +47,9 @@ class INET_API GeographicNetworkConfigurator: public NetworkConfiguratorBase {
        * TODO make this obsolete, is needed to extractTopology, beacuse "isBridgeNode()" checks for routingTable
        */
       virtual IRoutingTable *findRoutingTable(Node *node);
+
+    private:
+      Coord getNodeIEPosition(Node* node, int i_ie);
 };
 
 } /* namespace inet */

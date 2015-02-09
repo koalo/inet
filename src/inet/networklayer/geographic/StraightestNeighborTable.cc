@@ -13,17 +13,35 @@ namespace inet {
 
 Define_Module(StraightestNeighborTable);
 
-StraightestNeighborTable::StraightestNeighborTable() :
-        position(nullptr)
+StraightestNeighborTable::StraightestNeighborTable()
 {
 }
 
 StraightestNeighborTable::~StraightestNeighborTable() {
-
 }
 
-void StraightestNeighborTable::setPosition(Coord *position) {
+void StraightestNeighborTable::setPosition(Coord position) {
     this->position = position;
+}
+
+void StraightestNeighborTable::setInterfaceEntry(InterfaceEntry *interfaceEntry) {
+    this->interfaceEntry = interfaceEntry;
+}
+
+void StraightestNeighborTable::setAddrCoordMap(std::map<L3Address,Coord>& map) {
+    this->addrCoordMap = &map;
+}
+
+Coord StraightestNeighborTable::getCoordByAddr(L3Address& addr) {
+    return (*this->addrCoordMap)[addr];
+}
+
+Coord StraightestNeighborTable::getPosition() {
+    return this->position;
+}
+
+InterfaceEntry* StraightestNeighborTable::getInterfaceEntry() {
+    return this->interfaceEntry;
 }
 
 void StraightestNeighborTable::initialize(int stage)

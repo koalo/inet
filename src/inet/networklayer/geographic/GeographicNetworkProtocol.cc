@@ -6,6 +6,7 @@
  */
 
 #include "inet/networklayer/geographic/GeographicNetworkProtocol.h"
+#include "inet/networklayer/geographic/GeographicDatagram.h"
 #include "inet/common/ModuleAccess.h"
 
 namespace inet {
@@ -27,16 +28,26 @@ void GeographicNetworkProtocol::initialize() {
     neighborTable = getModuleFromPar<INeighborTable>(par("neighborTableModule"), this);
 }
 
+GenericDatagram* GeographicNetworkProtocol::encapsulate(cPacket *transportPacket, const InterfaceEntry *& destIE) {
+    GenericDatagram* genericDatagram = GenericNetworkProtocol::encapsulate(transportPacket, destIE);
+    GeographicDatagram* datagram = new GeographicDatagram(*genericDatagram);
+    L3Address srcAddr = datagram->getSourceAddress();
+    if (srcAddr.isUnspecified())
+        srcAddr = neighborTable->getInterfaceEntry()->getNetworkAddress(); // TODO same old problem with multiple IEs
+    L3Address destAddr = datagram->getDestinationAddress();
+    EV_INFO << "Geographic encapsulate: " << srcAddr << " @ " << neighborTable->getCoordByAddr(srcAddr) << endl;
+    datagram->setSourceCoord(neighborTable->getCoordByAddr(srcAddr));
+    datagram->setDestinationCoord(neighborTable->getCoordByAddr(destAddr));
+    return datagram;
+}
 
 void GeographicNetworkProtocol::routePacket(GenericDatagram *datagram, const InterfaceEntry *destIE, const L3Address& nextHop, bool fromHL) {
-    // TODO get dest coord from datagram? --> create GeographicDatagram!
-    // TODO get srcCoord from datagram??
-    // TODO set output interface (destIE) -> needs to be in neighborTable or somewhat
-    Coord srcCoord;
-    Coord destCoord;
-    InterfaceEntry *outIE = interfaceTable->getInterface(0);  // TODO make this more professional!
-    L3Address nextNeighbor = *neighborTable->getNextHop(srcCoord, destCoord);
-    EV_INFO << "Geographic Routing! " << destIE << " " << nextNeighbor << " " << !nextNeighbor.isUnspecified() << endl;
+    GeographicDatagram* geographicDatagram = static_cast<GeographicDatagram*>(datagram);
+    InterfaceEntry *outIE = neighborTable->getInterfaceEntry();
+
+    L3Address nextNeighbor = *neighborTable->getNextHop(geographicDatagram->getSrcCoord(), geographicDatagram->getDestCoord());
+
+    EV_INFO << "Geographic Routing @ " << neighborTable->getPosition() << " || src: " << geographicDatagram->getSrcCoord() << ", dest: " << geographicDatagram->getDestCoord() << endl;
     GenericNetworkProtocol::routePacket(datagram, outIE, nextNeighbor, fromHL);
 }
 

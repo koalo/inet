@@ -24,7 +24,6 @@ namespace inet {
 
 Define_Module(GeographicNetworkConfigurator);
 
-
 void GeographicNetworkConfigurator::initialize(int stage)
 {
     NetworkConfiguratorBase::initialize(stage);
@@ -48,8 +47,24 @@ IRoutingTable *GeographicNetworkConfigurator::findRoutingTable(Node *node)
     return L3AddressResolver().findGenericRoutingTableOf(node->module);
 }
 
+
+Coord GeographicNetworkConfigurator::getNodeIEPosition(Node *node, int i_ie) {
+    return check_and_cast<physicallayer::IRadio *>(node->interfaceTable->getInterface(i_ie)->getNetworkInterfaceModule()->getSubmodule("radio"))->getAntenna()->getMobility()->getCurrentPosition();
+}
+
+
 void GeographicNetworkConfigurator::addStaticNeighbors(Topology& topology) {
     EV_INFO << "STATIC NEIGHBORS" << endl;
+
+    // map addresses to coordinates and provide that to each neighborTable
+    for (int i = 0; i < topology.getNumNodes(); i++) {
+        Node *node = (Node *)topology.getNode(i);
+        // TODO make this more professional: use all interfaces!
+        L3Address addr = node->interfaceTable->getInterface(0)->getNetworkAddress();
+        addrCoordMap[addr] = getNodeIEPosition(node, 0);
+        EV_INFO << addr << " @ " << addrCoordMap[addr] << endl;
+    }
+
     for (int i = 0; i < topology.getNumNodes(); i++) {
         // extract source
         Node *node = (Node *)topology.getNode(i);
@@ -67,11 +82,13 @@ void GeographicNetworkConfigurator::addStaticNeighbors(Topology& topology) {
         if (!node->interfaceTable)
             continue;
 
-        // TODO make this more professional
-        Coord pos = check_and_cast<physicallayer::IRadio *>(node->interfaceTable->getInterface(0)->getNetworkInterfaceModule()->getSubmodule("radio"))->getAntenna()->getMobility()->getCurrentPosition();
-        node->neighborTable->setPosition(&pos);
+        // TODO make this more professional: use all interfaces!
+        Coord pos = getNodeIEPosition(node, 0);
+        node->neighborTable->setPosition(pos);
+        node->neighborTable->setInterfaceEntry(node->interfaceTable->getInterface(0));
+        node->neighborTable->setAddrCoordMap(addrCoordMap);
 
-        EV_INFO << "addStaticNeighbors (" << node->getNumOutLinks() << ") to " << node->module->getFullPath() << " at " << pos << endl;
+        EV_INFO << "addStaticNeighbors to " << node->module->getFullPath() << " at " << pos << endl;
         for (int j = 0; j < node->getNumOutLinks(); j++) {
             Topology::LinkOut *linkOut = node->getLinkOut(j);
             ASSERT(linkOut->getLocalNode() == node);
