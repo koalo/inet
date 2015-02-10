@@ -69,14 +69,10 @@ L3Address StraightestNeighborTable::getNextHop(Coord& src, Coord& dest) {
         Coord p = n.second;
         sqDistNext = dest.sqrdist(p);               // distance of neighbor n to destination
 
-        EV_DEBUG << "sqDist: " << sqDistNext << " < " << sqDistSelf << endl;
         if (sqDistNext < sqDistSelf) {              // only nodes which are closer to destination
             s = (c.x*(p.x-src.x) + c.y*(p.y-src.y)) / (c.squareLength());
-            EV_DEBUG << s << " | ";
             g = src + c*s;
-            EV_DEBUG << g << " | ";
             sqLineDistNext = g.sqrdist(p);          // distance of neighbor to straig line g
-            EV_DEBUG << sqLineDistNext << endl;
 
             if (sqLineDistNext < sqLineDistCur) {   // smallest distance to line
                 sqLineDistCur = sqLineDistNext;
