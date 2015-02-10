@@ -53,11 +53,38 @@ void StraightestNeighborTable::addNeighbor(L3Address& addr, Coord& coord) {
     neighbors.push_back(std::pair<L3Address, Coord>(addr, coord));
 }
 
-L3Address* StraightestNeighborTable::getNextHop(Coord& src, Coord& dest) {
-    L3Address *nextHop = nullptr;
+L3Address StraightestNeighborTable::getNextHop(Coord& src, Coord& dest) {
+    L3Address nextHop;
+    double sqDistSelf = position.sqrdist(dest);     // distance self to destination
+    double sqDistNext;
+    double sqLineDistNext;
+    double sqLineDistCur = INFINITY;
+                                                    // Straight line from src to dest
+    Coord c = dest - src;                           // distance vector c
+
+    double s;                                       // g(s) = src + s*c    s:scalar
+    Coord g;
+
     for (auto& n : neighbors) {
-        nextHop =  &n.first;
+        Coord p = n.second;
+        sqDistNext = dest.sqrdist(p);               // distance of neighbor n to destination
+
+        EV_DEBUG << "sqDist: " << sqDistNext << " < " << sqDistSelf << endl;
+        if (sqDistNext < sqDistSelf) {              // only nodes which are closer to destination
+            s = (c.x*(p.x-src.x) + c.y*(p.y-src.y)) / (c.squareLength());
+            EV_DEBUG << s << " | ";
+            g = src + c*s;
+            EV_DEBUG << g << " | ";
+            sqLineDistNext = g.sqrdist(p);          // distance of neighbor to straig line g
+            EV_DEBUG << sqLineDistNext << endl;
+
+            if (sqLineDistNext < sqLineDistCur) {   // smallest distance to line
+                sqLineDistCur = sqLineDistNext;
+                nextHop = n.first;
+            }
+        }
     }
+
     return nextHop;
 }
 

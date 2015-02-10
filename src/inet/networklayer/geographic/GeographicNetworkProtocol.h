@@ -2,7 +2,7 @@
  * GeographicNetworkProtocol.h
  *
  *  Created on: 03.02.2015
- *      Author: luebkert
+ *      Author: tonsense
  */
 
 #ifndef GEOGRAPHICNETWORKPROTOCOL_H_

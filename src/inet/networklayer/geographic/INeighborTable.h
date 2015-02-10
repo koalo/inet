@@ -32,7 +32,7 @@ public:
     virtual void addNeighbor(L3Address& addr, Coord& coord) = 0;
     virtual int getNumNeighbors() = 0;
 
-    virtual L3Address* getNextHop(Coord& src, Coord& dest) = 0;
+    virtual L3Address getNextHop(Coord& src, Coord& dest) = 0;
 
 };
 

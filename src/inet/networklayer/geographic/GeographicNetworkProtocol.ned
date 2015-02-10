@@ -35,6 +35,6 @@ simple GeographicNetworkProtocol //extends GenericNetworkProtocol
         output transportOut[] @labels(GenericNetworkProtocolControlInfo/up,TCPSegment,UDPPacket);
         input arpIn;
         output arpOut;
-        input queueIn[] @labels(GenericDatagram);
-        output queueOut[] @labels(GenericDatagram);
+        input queueIn[] @labels(GeographicDatagram);
+        output queueOut[] @labels(GeographicDatagram);
 }

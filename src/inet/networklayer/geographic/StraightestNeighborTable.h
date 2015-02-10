@@ -2,7 +2,7 @@
  * NeighboringTable.h
  *
  *  Created on: 03.02.2015
- *      Author: luebkert
+ *      Author: tonsense
  */
 
 #ifndef STRAIGHTESTNEIGHBORINGTABLE_H_
@@ -39,7 +39,7 @@ public:
 
     virtual void addNeighbor(L3Address& addr, Coord& coord);
 
-    virtual L3Address* getNextHop(Coord& src, Coord& dest);
+    virtual L3Address getNextHop(Coord& src, Coord& dest);
 
 protected:
     virtual int numInitStages() const { return NUM_INIT_STAGES; }
