@@ -22,7 +22,7 @@ import inet.networklayer.configurator.generic.GenericNetworkConfigurator;
 import inet.networklayer.configurator.geographic.GeographicNetworkConfigurator;
 import inet.physicallayer.ieee802154.Ieee802154NarrowbandScalarRadioMedium;
 
-network Net802154
+network Net802154Geographic
 {
     parameters:
         int numHosts;
@@ -38,7 +38,7 @@ network Net802154
                 @display("p=60,50");
         }
         
-        configurator: GenericNetworkConfigurator { //GenericNetworkConfigurator {
+        configurator: GeographicNetworkConfigurator { //GenericNetworkConfigurator {
             @display("p=140,50");
             linkWeightMode = default("errorRate");
         }

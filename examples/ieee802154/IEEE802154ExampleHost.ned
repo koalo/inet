@@ -31,7 +31,7 @@ import inet.networklayer.geographic.INeighborTable;
 module IEEE802154ExampleHost extends StandardHost
 {
     parameters:
-        string neighborTableType = default("NeighborTable");
+        string neighborTableType = default("StraightestNeighborTable");
         *.neighborTableModule = default(neighborTableType != "" ? absPath(".neighborTable") : "");
 
         numRadios = default(1);
