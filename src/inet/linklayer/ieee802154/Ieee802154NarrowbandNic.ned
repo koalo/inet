@@ -19,7 +19,7 @@
 package inet.linklayer.ieee802154;
 
 import inet.linklayer.IWirelessNic;
-import inet.linklayer.csma.CSMA;
+import inet.linklayer.csma.ICSMABase;
 import inet.physicallayer.contract.IRadio;
 
 module Ieee802154NarrowbandNic like IWirelessNic
@@ -27,6 +27,7 @@ module Ieee802154NarrowbandNic like IWirelessNic
     parameters:
         string interfaceTableModule;
         string radioType = default("Ieee802154NarrowbandScalarRadio");
+        string macType = default("CSMA");
         *.interfaceTableModule = default(absPath(interfaceTableModule));
         @display("i=block/ifcard");
     gates:
@@ -34,7 +35,7 @@ module Ieee802154NarrowbandNic like IWirelessNic
         output upperLayerOut;
         input radioIn @labels(IRadioFrame);
     submodules:
-        mac: CSMA {
+        mac: <macType> like ICSMABase {
             parameters:
                 @display("p=100,150");
 

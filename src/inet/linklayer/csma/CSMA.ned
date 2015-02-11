@@ -25,13 +25,13 @@
 package inet.linklayer.csma;
 
 import inet.linklayer.common.MACProtocolBase;
-import inet.linklayer.contract.IMACProtocol;
+import inet.linklayer.csma.ICSMABase;
 
 //
 // Generic CSMA protocol supporting Mac-ACKs as well as
 // constant, linear or exponential backoff times.
 //
-simple CSMA extends MACProtocolBase like IMACProtocol
+simple CSMA extends MACProtocolBase like ICSMABase
 {
     parameters:
         string address = default("auto"); // MAC address as hex string (12 hex digits), or
