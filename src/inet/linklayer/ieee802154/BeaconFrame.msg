@@ -16,35 +16,27 @@
 namespace inet;
 
 //
-// IEEE802.15.4e
-// Enhanced Beacon Frame
-// As defined in IEEE802.15.4e-2012 on page 64.
+// IEEE802.15.4 Beacon Frame Format (IEEE802.15.4-2011 page 61)
 //
-message EnhancedBeaconFrame {
-    
-    // MHR
-    int16_t FrameControl;
-    int8_t SequenceNumber;
-    
-    // - Addressing Fields
-        int16_t SourcePANIdentifier;
-        int64_t SourceAddress;
-    
-    // - AuxiliarySecurityHeader
-    	int8_t AuxiliarySecurityHeader[];
-    
-    // - Header IEs
-        int16_t Header__Length_ElementId_Type;
-        int8_t Header__IEContent[];
-    
-    // MAC Payload
-    // - Payload IEs
-        int16_t Header__Length_GroupID_Type;
-        int8_t Header__IEContent[];
-    
-    int8_t BeaconPayload[];
-    
-    // MFR
-    int16_t FCS;
-    
+
+
+struct SuperframeSpecification {
+    short beaconOrder;				// 4 bits
+    short superframeOrder;			// 4 bits
+    short finalCAPSlot;				// 4 bits
+    bool batteryLifeExtension;
+    bool reserved;
+    bool PANCoordinator;
+    bool associationPermit;
+}
+
+struct PendingAddressSpecification {
+    short numShortAddrs;			// 3 bits
+    bool reserved0;
+    short numExtAddrs;				// 3 bits
+    bool reserved1;
+}
+
+packet BeaconFrame {
+    // TODO
 }
