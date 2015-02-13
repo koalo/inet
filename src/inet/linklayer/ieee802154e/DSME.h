@@ -19,6 +19,9 @@
 #include <omnetpp.h>
 
 #include "inet/linklayer/csma/CSMA.h"
+#include "inet/linklayer/ieee802154e/DSME_PANDescriptor_m.h"
+#include "inet/linklayer/ieee802154e/BeaconBitmap.h"
+#include "inet/linklayer/ieee802154e/EnhancedBeacon.h"
 
 namespace inet {
 
@@ -28,9 +31,36 @@ namespace inet {
  */
 class DSME : public CSMA
 {
-  protected:
+protected:
+    bool isPANCoordinator;
+    bool isCoordinator;
+
+    SuperframeSpecification superframeSpec;
+    PendingAddressSpecification pendingAddressSpec;
+    DSMESuperframeSpecification dsmeSuperframeSpec;
+    TimeSyncSpecification timeSyncSpec;
+    BeaconBitmap beaconAllocation;
+    DSME_PANDescriptor PANDescriptor;
+
+    EnhancedBeacon *beaconFrame;
+
+    // timers
+    cMessage *beaconTimer;
+
+
+public:
+    DSME();
+    ~DSME();
+    virtual void initialize(int);
+
+    virtual void handleSelfMessage(cMessage *);
+
+protected:
     virtual void initialize();
 
+    virtual void sendDirect(cPacket *);
+    virtual void sendCSMA(cPacket *);
+    virtual void sendEnhancedBeacon();
 };
 
 } //namespace

@@ -21,7 +21,7 @@ import inet.networklayer.contract.INetworkLayer;
 
 
 //
-// This module provides the generic network layer.
+// This module provides the geographic network layer.
 //
 module GeographicNetworkLayer like INetworkLayer
 {

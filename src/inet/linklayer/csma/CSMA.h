@@ -314,7 +314,7 @@ class INET_API CSMA : public MACProtocolBase, public IMACProtocol
     void manageQueue();
     void updateMacState(t_mac_states newMacState);
 
-    void attachSignal(CSMAFrame *mac, simtime_t_cref startTime);
+    void attachSignal(cPacket *mac, simtime_t_cref startTime);
     void manageMissingAck(t_mac_event event, cMessage *msg);
     void startTimer(t_mac_timer timer);
 

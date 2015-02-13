@@ -374,7 +374,7 @@ void CSMA::clearQueue()
     macQueue.clear();
 }
 
-void CSMA::attachSignal(CSMAFrame *mac, simtime_t_cref startTime)
+void CSMA::attachSignal(cPacket *mac, simtime_t_cref startTime)
 {
     simtime_t duration = mac->getBitLength() / bitrate;
     mac->setDuration(duration);

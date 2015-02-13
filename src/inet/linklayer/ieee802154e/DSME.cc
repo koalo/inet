@@ -13,16 +13,72 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-#include "DSME.h"
+#include "inet/linklayer/ieee802154e/DSME.h"
 
 namespace inet {
 
 Define_Module(DSME);
 
-void DSME::initialize()
+DSME::DSME() :
+        beaconFrame(nullptr),
+        beaconTimer(nullptr)
 {
-    // TODO - Generated method body
 }
 
+DSME::~DSME() {
+    cancelAndDelete(beaconTimer);
+    if (beaconFrame)
+        delete beaconFrame;
+}
+
+void DSME::initialize()
+{
+    CSMA::initialized();
+}
+
+void DSME::initialize(int stage)
+{
+    CSMA::initialize(stage);
+
+    if (stage == INITSTAGE_LOCAL) {
+        // timers
+        beaconTimer = new cMessage("beacon-timer");
+
+    } else if (stage == INITSTAGE_LINK_LAYER) {
+        // TODO if coordinator
+        if(0 == getParentModule()->getParentModule()->getIndex())
+            scheduleAt(simTime() + 0.01, beaconTimer);  // TODO some magic time
+    }
+}
+
+void DSME::handleSelfMessage(cMessage *msg) {
+    if (msg == beaconTimer) {
+        sendEnhancedBeacon();
+    }
+    else
+        CSMA::handleSelfMessage(msg);
+}
+
+void DSME::sendDirect(cPacket *msg) {
+    radio->setRadioMode(IRadio::RADIO_MODE_TRANSMITTER);
+    attachSignal(msg, simTime() + aTurnaroundTime); // TODO turnaroundTime only on statechange, plus parameter is useless?
+    sendDown(msg);
+}
+
+void DSME::sendCSMA(cPacket *msg) {
+
+}
+
+void DSME::sendEnhancedBeacon() {
+    EV_DEBUG << "DSME its BEACON TIME" << endl;
+    if (beaconFrame != nullptr)
+        delete beaconFrame;
+    beaconFrame = new EnhancedBeacon();
+    beaconFrame->setBitLength(100);
+    sendDirect(beaconFrame);
+    beaconFrame = nullptr;
+    // schedule next beacon
+    scheduleAt(simTime() + 0.01, beaconTimer);
+}
 
 } //namespace
