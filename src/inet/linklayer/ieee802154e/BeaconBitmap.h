@@ -25,6 +25,12 @@ public:
     uint16_t SDIndex;           // current duration in beacon interval
     uint16_t SDBitmapLength;    // length of bitmap in bytes
     BitVector SDBitmap;         // bitmap
+
+    /**
+     * Get index of next free slot in bitmap.
+     * @return -1 if no slot found, valid index else
+     */
+    virtual int getFreeSlot();
 };
 
 } /* namespace inet */

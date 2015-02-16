@@ -21,6 +21,7 @@
 #include "inet/linklayer/csma/CSMA.h"
 #include "inet/linklayer/ieee802154e/DSME_PANDescriptor_m.h"
 #include "inet/linklayer/ieee802154e/BeaconBitmap.h"
+#include "inet/linklayer/ieee802154e/IEEE802154eMACFrame_m.h"
 #include "inet/linklayer/ieee802154e/EnhancedBeacon.h"
 
 namespace inet {
@@ -35,8 +36,12 @@ protected:
     bool isPANCoordinator;
     bool isCoordinator;
 
+    bool isAssociated;
+
     double baseSuperframeDuration;
     double beaconInterval;
+
+    unsigned numberSuperframes;
 
     SuperframeSpecification superframeSpec;
     PendingAddressSpecification pendingAddressSpec;
@@ -62,8 +67,10 @@ public:
 protected:
 
     virtual void sendDirect(cPacket *);
-    virtual void sendCSMA(cPacket *);
+    virtual void sendCSMA(IEEE802154eMACFrame_Base *);
     virtual void sendEnhancedBeacon();
+
+    virtual void handleEnhancedBeacon(EnhancedBeacon *);
 };
 
 } //namespace

@@ -23,6 +23,7 @@ EnhancedBeacon::EnhancedBeacon() :
         IEEE802154eMACFrame_Base(NAME)
 {
     destAddr_var.setBroadcast();
+    setBitLength(100);  // TODO exact length
 }
 
 } /* namespace inet */

@@ -13,17 +13,14 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-#include "inet/linklayer/ieee802154e/BeaconBitmap.h"
+namespace inet;
 
-namespace inet {
+//
+// IEEE802.15.4e-2012
+// 5.3.11.9 DSME-Beacon allocation notification command payload
+//
 
-int BeaconBitmap::getFreeSlot() {
-    for(unsigned int i=0; i<SDBitmap.getSize(); i++) {
-        if (!SDBitmap.getBit(i))
-            return i;
-    }
-
-    return -1;
+packet DSMEBeaconAllocationNotificationCmd {
+    byteLength = 2;
+    uint16_t beaconSDIndex;
 }
-
-} /* namespace inet */
