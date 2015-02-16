@@ -23,5 +23,19 @@ import inet.linklayer.csma.CSMA;
 //
 simple DSME extends CSMA
 {
-    @class(DSME);
+
+    parameters:
+        
+        double symbolsPerSecond = default(0.000016);		// IEEE802.15.4-2011 page 147
+        													// @2460MHz DSSS O-QPSK
+        
+        // see DSME_PANDescriptor.msg and BeaconFrame.msg
+        int beaconOrder = default(6);				// 4 bits
+    	int superframeOrder = default(3);			// 4 bits
+    	int multiSuperframeOrder = default(5);		// 3 bits
+    	
+    	int finalCAPSlot = default(6);				// 4 bits
+        
+    	@class(DSME);
+    
 }

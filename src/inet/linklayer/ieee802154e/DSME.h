@@ -35,6 +35,9 @@ protected:
     bool isPANCoordinator;
     bool isCoordinator;
 
+    double baseSuperframeDuration;
+    double beaconInterval;
+
     SuperframeSpecification superframeSpec;
     PendingAddressSpecification pendingAddressSpec;
     DSMESuperframeSpecification dsmeSuperframeSpec;
@@ -54,9 +57,9 @@ public:
     virtual void initialize(int);
 
     virtual void handleSelfMessage(cMessage *);
+    virtual void handleLowerPacket(cPacket *msg);
 
 protected:
-    virtual void initialize();
 
     virtual void sendDirect(cPacket *);
     virtual void sendCSMA(cPacket *);

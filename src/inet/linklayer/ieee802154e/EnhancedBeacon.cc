@@ -17,9 +17,12 @@
 
 namespace inet {
 
+const char *EnhancedBeacon::NAME = "enhanced-beacon";
+
 EnhancedBeacon::EnhancedBeacon() :
-        IEEE802154eMACFrame_Base("enhanced-beacon")
+        IEEE802154eMACFrame_Base(NAME)
 {
+    destAddr_var.setBroadcast();
 }
 
 } /* namespace inet */

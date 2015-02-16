@@ -31,23 +31,36 @@ DSME::~DSME() {
         delete beaconFrame;
 }
 
-void DSME::initialize()
-{
-    CSMA::initialized();
-}
 
 void DSME::initialize(int stage)
 {
+    cModule *host = getParentModule()->getParentModule();
+
     CSMA::initialize(stage);
 
     if (stage == INITSTAGE_LOCAL) {
+
+        // device specific
+        isPANCoordinator = host->par("isPANCoordinator");
+        isCoordinator = host->par("isCoordinator");
+
+        // DSME configuration
+        superframeSpec.beaconOrder = par("beaconOrder");
+        superframeSpec.superframeOrder = par("superframeOrder");
+        superframeSpec.finalCAPSlot = par("finalCAPSlot");
+        dsmeSuperframeSpec.multiSuperframeOrder = par("multiSuperframeOrder");
+
+        baseSuperframeDuration = 16*60 * par("symbolsPerSecond").doubleValue();     // 16 slots, 60 symbols per slot, symbols per second
+        beaconInterval = baseSuperframeDuration * (1 << superframeSpec.beaconOrder);
+        EV_DEBUG << "Beacon Interval: " << beaconInterval << endl;
+
         // timers
         beaconTimer = new cMessage("beacon-timer");
 
     } else if (stage == INITSTAGE_LINK_LAYER) {
-        // TODO if coordinator
-        if(0 == getParentModule()->getParentModule()->getIndex())
-            scheduleAt(simTime() + 0.01, beaconTimer);  // TODO some magic time
+        // PAN Coordinator starts network with beacon
+        if (isPANCoordinator)
+            scheduleAt(simTime() + beaconInterval, beaconTimer);  // TODO some magic time
     }
 }
 
@@ -57,6 +70,23 @@ void DSME::handleSelfMessage(cMessage *msg) {
     }
     else
         CSMA::handleSelfMessage(msg);
+}
+
+void DSME::handleLowerPacket(cPacket *msg) {
+    IEEE802154eMACFrame_Base *macPkt = static_cast<IEEE802154eMACFrame_Base *>(msg);
+    const MACAddress& src = macPkt->getSrcAddr();
+    const MACAddress& dest = macPkt->getDestAddr();
+
+    if(dest.isBroadcast()) {
+        if(strcmp(macPkt->getName(), EnhancedBeacon::NAME) == 0) {
+            EnhancedBeacon *beacon = static_cast<EnhancedBeacon *>(msg);
+            EV_DEBUG << "Received EnhancedBeacon" << endl;
+            return;
+        }
+    }
+
+    // if not handled yet handle with CSMA
+    CSMA::handleLowerPacket(msg);
 }
 
 void DSME::sendDirect(cPacket *msg) {
@@ -70,15 +100,15 @@ void DSME::sendCSMA(cPacket *msg) {
 }
 
 void DSME::sendEnhancedBeacon() {
-    EV_DEBUG << "DSME its BEACON TIME" << endl;
     if (beaconFrame != nullptr)
         delete beaconFrame;
     beaconFrame = new EnhancedBeacon();
     beaconFrame->setBitLength(100);
+    EV_DEBUG << "Send beacon " << beaconFrame->getDestAddr() << endl;
     sendDirect(beaconFrame);
     beaconFrame = nullptr;
     // schedule next beacon
-    scheduleAt(simTime() + 0.01, beaconTimer);
+    scheduleAt(simTime() + beaconInterval, beaconTimer);
 }
 
 } //namespace

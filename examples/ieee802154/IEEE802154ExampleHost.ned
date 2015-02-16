@@ -31,6 +31,9 @@ import inet.networklayer.geographic.INeighborTable;
 module IEEE802154ExampleHost extends StandardHost
 {
     parameters:
+        bool isPANCoordinator = default(false);
+        bool isCoordinator = default(isPANCoordinator);
+        
         string neighborTableType = default("StraightestNeighborTable");
         *.neighborTableModule = default(neighborTableType != "" ? absPath(".neighborTable") : "");
 

@@ -22,6 +22,9 @@ namespace inet {
 
 class EnhancedBeacon: public IEEE802154eMACFrame_Base {
 public:
+
+    static const char* NAME;
+
     EnhancedBeacon();
 
     virtual EnhancedBeacon *dup() const {return new EnhancedBeacon(*this);}

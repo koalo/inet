@@ -78,4 +78,5 @@ moduleinterface ICSMABase extends IMACProtocol
         double macMinBE;
         // maximum backoff exponent (for exponential backoff method only)
         double macMaxBE;
+        
 }

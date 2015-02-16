@@ -29,7 +29,7 @@ namespace inet;
 
 
 struct DSMESuperframeSpecification {
-    short multisuperframeOrder;				// 3 bits
+    short multiSuperframeOrder;				// 3 bits
     bool channelDiversityMode;
     bool GACKFlag;
     bool CAPReductionFlag;
