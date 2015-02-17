@@ -22,6 +22,7 @@
 #include "inet/linklayer/ieee802154e/DSME_PANDescriptor_m.h"
 #include "inet/linklayer/ieee802154e/BeaconBitmap.h"
 #include "inet/linklayer/ieee802154e/IEEE802154eMACFrame_m.h"
+#include "inet/linklayer/ieee802154e/IEEE802154eMACCmdFrame_m.h"
 #include "inet/linklayer/ieee802154e/EnhancedBeacon.h"
 
 namespace inet {
@@ -37,11 +38,16 @@ protected:
     bool isCoordinator;
 
     bool isAssociated;
+    bool isBeaconAllocated;
 
+    double slotDuration;
     double baseSuperframeDuration;
     double beaconInterval;
 
     unsigned numberSuperframes;
+
+    BeaconBitmap heardBeacons;
+    BeaconBitmap neighborHeardBeacons;
 
     SuperframeSpecification superframeSpec;
     PendingAddressSpecification pendingAddressSpec;
@@ -50,10 +56,14 @@ protected:
     BeaconBitmap beaconAllocation;
     DSME_PANDescriptor PANDescriptor;
 
+    // packets
     EnhancedBeacon *beaconFrame;
+    IEEE802154eMACFrame_Base *csmaFrame;
 
     // timers
-    cMessage *beaconTimer;
+    cMessage *beaconIntervalTimer;
+    cMessage *nextCSMASlotTimer;
+    cMessage *nextGTSSlotTimer;
 
 
 public:
@@ -66,11 +76,43 @@ public:
 
 protected:
 
+    /**
+     * Called after BeaconInterval
+     * May trigger another scan on some channel if no becons were heard.
+     * Otherwise device now knows on or more Coordinators and may start
+     * Association-/ Beacon- /Slot requests
+     */
+    virtual void endChannelScan();
+
+    /**
+     * Directly send packet without delay and without CSMA
+     */
     virtual void sendDirect(cPacket *);
+
+    /**
+     * Send packet directly using CSMA
+     */
     virtual void sendCSMA(IEEE802154eMACFrame_Base *);
+
+    /**
+     * Send an enhanced Beacon directly
+     */
     virtual void sendEnhancedBeacon();
 
+    /**
+     * Called on reception of an EnhancedBeacon
+     */
     virtual void handleEnhancedBeacon(EnhancedBeacon *);
+
+    /**
+     * Send beacon allocation notification
+     */
+    virtual void sendBeaconAllocationNotification(uint16_t beaconSDIndex, simtime_t beaconTimestamp);
+
+    /**
+     * Called on reception of an BeaconAllocationNotification
+     */
+    virtual void handleBeaconAllocation(IEEE802154eMACCmdFrame *);
 };
 
 } //namespace

@@ -205,6 +205,18 @@ BitVector& BitVector::operator=(const BitVector& rhs)
     return *this;
 }
 
+BitVector& BitVector::operator|=(const BitVector& rhs)
+{
+    if (this == &rhs)
+        return *this;
+    for (unsigned int i = 0; i < getSize(); i++)
+    {
+        if (rhs.getBit(i))
+            setBit(i, true);
+    }
+    return *this;
+}
+
 bool BitVector::operator==(const BitVector& rhs) const
 {
     if (rhs.isUndef() && isUndef())

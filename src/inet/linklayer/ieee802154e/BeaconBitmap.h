@@ -31,6 +31,11 @@ public:
      * @return -1 if no slot found, valid index else
      */
     virtual int getFreeSlot();
+
+    /**
+     * Count allocated slots
+     */
+    virtual uint16_t getAllocatedCount();
 };
 
 } /* namespace inet */

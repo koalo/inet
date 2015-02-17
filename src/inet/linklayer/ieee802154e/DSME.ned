@@ -26,9 +26,9 @@ simple DSME extends CSMA
 
     parameters:
         
-        double symbolsPerSecond = default(0.000016);		// IEEE802.15.4-2011 page 147
+        double secondsPerSymbol = default(0.000016);		// IEEE802.15.4-2011 page 147
         													// @2460MHz DSSS O-QPSK
-        int symbolsPerSlot = 60;
+        int baseSlotDuration = 60;							// symbols
         int slotsPerSuperframe = 16;
         
         // see DSME_PANDescriptor.msg and BeaconFrame.msg

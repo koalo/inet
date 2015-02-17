@@ -37,7 +37,7 @@ struct DSMESuperframeSpecification {
 }
 
 struct TimeSyncSpecification {
-    uint64_t beaconTimestamp;				// 6 bytes
+    simtime_t beaconTimestamp;				// 6 bytes
     uint16_t beaconOffsetTimestamp;			// 2 bytes
 }
 

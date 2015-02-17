@@ -17,13 +17,22 @@
 
 namespace inet {
 
-int BeaconBitmap::getFreeSlot() {
-    for(unsigned int i=0; i<SDBitmap.getSize(); i++) {
+int32_t BeaconBitmap::getFreeSlot() {
+    for(uint16_t i=0; i<SDBitmap.getSize(); i++) {
         if (!SDBitmap.getBit(i))
             return i;
     }
 
     return -1;
+}
+
+uint16_t BeaconBitmap::getAllocatedCount() {
+    uint16_t c = 0;
+    for(unsigned int i=0; i<SDBitmap.getSize(); i++) {
+        if (SDBitmap.getBit(i))
+            c++;
+    }
+    return c;
 }
 
 } /* namespace inet */
