@@ -17,6 +17,19 @@
 
 namespace inet {
 
+int32_t BeaconBitmap::getNextAllocated(uint16_t start) {
+    for(uint16_t i=start; i<SDBitmap.getSize(); i++) {
+        if (SDBitmap.getBit(i))
+            return i;
+    }
+    for(uint16_t i=0; i<start; i++) {
+        if (SDBitmap.getBit(i))
+            return i;
+    }
+
+    return -1;
+}
+
 int32_t BeaconBitmap::getFreeSlot() {
     for(uint16_t i=0; i<SDBitmap.getSize(); i++) {
         if (!SDBitmap.getBit(i))

@@ -42,10 +42,17 @@ protected:
 
     double slotDuration;
     double baseSuperframeDuration;
+    double superframeDuration;
     double beaconInterval;
 
+    unsigned numCSMASlots;
     unsigned numberSuperframes;
 
+    unsigned currentSlot;
+    unsigned slotsPerSuperframe;
+
+    simtime_t lastHeardBeaconTimestamp;
+    uint16_t lastHeardBeaconSDIndex;
     BeaconBitmap heardBeacons;
     BeaconBitmap neighborHeardBeacons;
 
@@ -62,8 +69,9 @@ protected:
 
     // timers
     cMessage *beaconIntervalTimer;
+    cMessage *nextSlotTimer;
     cMessage *nextCSMASlotTimer;
-    cMessage *nextGTSSlotTimer;
+    cMessage *nextGTSlotTimer;
 
 
 public:
@@ -85,9 +93,19 @@ protected:
     virtual void endChannelScan();
 
     /**
+     * Send packet at next available GTS
+     */
+    virtual void sendGTS(IEEE802154eMACFrame_Base *);
+
+    /**
      * Directly send packet without delay and without CSMA
      */
     virtual void sendDirect(cPacket *);
+
+    /**
+     * Send packet at next available CSMA slot
+     */
+    virtual void sendSlottedCSMA(IEEE802154eMACFrame_Base *);
 
     /**
      * Send packet directly using CSMA
@@ -107,7 +125,7 @@ protected:
     /**
      * Send beacon allocation notification
      */
-    virtual void sendBeaconAllocationNotification(uint16_t beaconSDIndex, simtime_t beaconTimestamp);
+    virtual void sendBeaconAllocationNotification(uint16_t beaconSDIndex);
 
     /**
      * Called on reception of an BeaconAllocationNotification

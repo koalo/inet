@@ -30,6 +30,7 @@ simple DSME extends CSMA
         													// @2460MHz DSSS O-QPSK
         int baseSlotDuration = 60;							// symbols
         int slotsPerSuperframe = 16;
+        int numCSMASlots = 8;
         
         // see DSME_PANDescriptor.msg and BeaconFrame.msg
         int beaconOrder = default(6);				// 4 bits

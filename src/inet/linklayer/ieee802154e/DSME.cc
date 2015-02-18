@@ -25,7 +25,10 @@ Define_Module(DSME);
 DSME::DSME() :
                         beaconFrame(nullptr),
                         csmaFrame(nullptr),
-                        beaconIntervalTimer(nullptr)
+                        beaconIntervalTimer(nullptr),
+                        nextSlotTimer(nullptr),
+                        nextCSMASlotTimer(nullptr),
+                        nextGTSlotTimer(nullptr)
 {
 }
 
@@ -56,13 +59,18 @@ void DSME::initialize(int stage)
         superframeSpec.finalCAPSlot = par("finalCAPSlot");
         dsmeSuperframeSpec.multiSuperframeOrder = par("multiSuperframeOrder");
 
-        slotDuration = par("baseSlotDuration").longValue() * par("secondsPerSymbol").doubleValue()
-                * (1 << superframeSpec.superframeOrder);                                            // IEEE802.15.4e-2012 p. 37
-        baseSuperframeDuration = par("slotsPerSuperframe").longValue() * slotDuration;
+        double baseSlotDuration = par("baseSlotDuration").longValue() * par("secondsPerSymbol").doubleValue();
+        slotDuration = baseSlotDuration * (1 << superframeSpec.superframeOrder);                    // IEEE802.15.4e-2012 p. 37
+        slotsPerSuperframe = par("slotsPerSuperframe");
+        numCSMASlots = par("numCSMASlots").longValue();
+        baseSuperframeDuration = slotsPerSuperframe * baseSlotDuration;
+        superframeDuration = slotDuration * slotsPerSuperframe;
         beaconInterval = baseSuperframeDuration * (1 << superframeSpec.beaconOrder);
         numberSuperframes = (1 << (superframeSpec.beaconOrder - superframeSpec.superframeOrder));   // 2^(BO-SO)
-        EV_DEBUG << "Beacon Interval: " << beaconInterval << " #SFrames: " << numberSuperframes;
-        EV << " SlotDuration: " << slotDuration << endl;
+
+        EV_DEBUG << "Beacon Interval: " << beaconInterval << " = #SFrames: " << numberSuperframes << " * '#Slots: ";
+        EV << slotsPerSuperframe << " * SlotDuration: " << slotDuration;
+        EV << "; baseSuperframeDuration: " << baseSuperframeDuration << ", superframeDuration: " << superframeDuration << endl;
 
         // Beacon management:
         // PAN Coordinator sends beacon every beaconInterval
@@ -71,8 +79,11 @@ void DSME::initialize(int stage)
         scheduleAt(simTime() + beaconInterval, beaconIntervalTimer);
 
         // slot scheduling
+        currentSlot = 0;
+        nextSlotTimer = new cMessage("next-slot-timer");
         nextCSMASlotTimer = new cMessage("csma-slot-timer");
-        nextGTSSlotTimer = new cMessage("gts-timer");
+        nextGTSlotTimer = new cMessage("gts-timer");
+        scheduleAt(simTime() + slotDuration, nextSlotTimer);
 
 
     } else if (stage == INITSTAGE_LINK_LAYER) {
@@ -86,6 +97,10 @@ void DSME::initialize(int stage)
             PANDescriptor.setBeaconBitmap(beaconAllocation);
             PANDescriptor.setBitLength(92 + numberSuperframes);
 
+        } else if (isCoordinator) {
+            beaconAllocation.SDBitmap.appendBit(false, numberSuperframes);
+            PANDescriptor.setBeaconBitmap(beaconAllocation);
+            PANDescriptor.setBitLength(92 + numberSuperframes);
         }
 
         // others scan network for beacons and remember beacon allocation included in enhanced beacons
@@ -95,7 +110,11 @@ void DSME::initialize(int stage)
 }
 
 void DSME::handleSelfMessage(cMessage *msg) {
-    if (msg == beaconIntervalTimer) {
+    if (msg == nextSlotTimer) {
+        //EV_DEBUG << "Current Slot: " << currentSlot << endl;
+        currentSlot = (currentSlot < slotsPerSuperframe) ? currentSlot + 1 : 0;
+        scheduleAt(simTime() + slotDuration, nextSlotTimer);
+    } else if (msg == beaconIntervalTimer) {
         // PAN Coordinator sends beacon every beaconInterval
         // Coordinators send beacons after allocating a slot
         if (isBeaconAllocated)
@@ -109,7 +128,7 @@ void DSME::handleSelfMessage(cMessage *msg) {
         // Slotted CSMA, send at beginning of next CSMA Slot
         if (csmaFrame != nullptr)
             sendCSMA(csmaFrame);
-    } else if (msg == nextGTSSlotTimer) {
+    } else if (msg == nextGTSlotTimer) {
         // TODO
     } else {
         // TODO reschedule any sending actions to beginning of CSMA slot
@@ -133,6 +152,8 @@ void DSME::handleLowerPacket(cPacket *msg) {
         }
     }
 
+    // TODO beaconCollision cancels event and isAlloc
+
     // if not handled yet handle with CSMA
     CSMA::handleLowerPacket(msg);
 }
@@ -151,11 +172,24 @@ void DSME::endChannelScan() {
     }
 }
 
+void DSME::sendGTS(IEEE802154eMACFrame_Base *msg) {
+
+}
 
 void DSME::sendDirect(cPacket *msg) {
     radio->setRadioMode(IRadio::RADIO_MODE_TRANSMITTER);
     attachSignal(msg, simTime() + aTurnaroundTime); // TODO turnaroundTime only on statechange, plus parameter is useless?
     sendDown(msg);
+}
+
+void DSME::sendSlottedCSMA(IEEE802154eMACFrame_Base *msg) {
+    // get next slot in superframe i or get next superframe
+    unsigned nextCSMASlot = (currentSlot < numCSMASlots) ? currentSlot + 1 : 1;     // beacon @ slot 0
+    simtime_t nextCSMASlotTime = lastHeardBeaconTimestamp + nextCSMASlot*slotDuration;
+    EV_DETAIL << "SendSlottedCSMA @ " << nextCSMASlot << " => " << nextCSMASlotTime << endl;
+    //int32_t i = heardBeacons.getNextAllocated(lastBeaconSDIndex);
+    scheduleAt(nextCSMASlotTime, nextCSMASlotTimer);
+    csmaFrame = msg;
 }
 
 void DSME::sendCSMA(IEEE802154eMACFrame_Base *msg) {
@@ -175,18 +209,30 @@ void DSME::sendEnhancedBeacon() {
     DSME_PANDescriptor *descr = new DSME_PANDescriptor(PANDescriptor);
     descr->getTimeSyncSpec().beaconTimestamp = simTime();
     beaconFrame->encapsulate(descr);
+
+    // schedule next beacon
+    scheduleAt(simTime() + beaconInterval, beaconIntervalTimer);
+
     EV_DETAIL << "Send EnhancedBeacon, bitmap: " << descr->getBeaconBitmap().SDBitmapLength << endl;
     sendDirect(beaconFrame);
     beaconFrame = nullptr;
-    // schedule next beacon
-    scheduleAt(simTime() + beaconInterval, beaconIntervalTimer);
+
+    // reschedule nextSlotTimer, otherwise rounding error!?
+    cancelEvent(nextSlotTimer);
+    scheduleAt(simTime() + slotDuration, nextSlotTimer);
 }
 
 
 void DSME::handleEnhancedBeacon(EnhancedBeacon *beacon) {
     DSME_PANDescriptor *descr = static_cast<DSME_PANDescriptor*>(beacon->decapsulate());
-    EV_DETAIL << "Received EnhancedBeacon @ " << descr->getBeaconBitmap().SDIndex << "(";
-    EV << descr->getTimeSyncSpec().beaconTimestamp << ")" << endl;
+    lastHeardBeaconTimestamp = descr->getTimeSyncSpec().beaconTimestamp;
+    lastHeardBeaconSDIndex = descr->getBeaconBitmap().SDIndex;
+    EV_DETAIL << "Received EnhancedBeacon @ " << lastHeardBeaconSDIndex << "(" << lastHeardBeaconTimestamp << ")" << endl;
+
+    // time sync -> reschedule nextSlotTimer
+    EV_DETAIL << "Timesync, next slot now @ " << lastHeardBeaconTimestamp + slotDuration << endl;
+    cancelEvent(nextSlotTimer);
+    scheduleAt(lastHeardBeaconTimestamp + slotDuration, nextSlotTimer);
 
     // update heardBeacons and neighborHeardBeacons
     heardBeacons.SDBitmap.setBit(descr->getBeaconBitmap().SDIndex, true);
@@ -197,28 +243,39 @@ void DSME::handleEnhancedBeacon(EnhancedBeacon *beacon) {
     // Coordinator device request free beacon slots
     if (isCoordinator && !isBeaconAllocated) {
         // Lookup free slot and broadcast beacon allocation request
-        int i = descr->getBeaconBitmap().getFreeSlot();
+        int32_t i = descr->getBeaconBitmap().getFreeSlot();
         EV_DEBUG << "Coordinator Beacon Allocation request @ " << i << endl;
         if (i >= 0) {
-            sendBeaconAllocationNotification(i, descr->getTimeSyncSpec().beaconTimestamp);
+            sendBeaconAllocationNotification(i);
         }
     }
 }
 
-void DSME::sendBeaconAllocationNotification(uint16_t beaconSDIndex, simtime_t beaconTimestamp) {
+void DSME::sendBeaconAllocationNotification(uint16_t beaconSDIndex) {
     IEEE802154eMACCmdFrame *beaconAllocCmd = new IEEE802154eMACCmdFrame("beacon-allocation-notification");
     DSMEBeaconAllocationNotificationCmd *cmd = new DSMEBeaconAllocationNotificationCmd("beacon-allocation-notification-payload");
     cmd->setBeaconSDIndex(beaconSDIndex);
     beaconAllocCmd->setCmdId(DSME_BEACON_ALLOCATION_NOTIFICATION);
     beaconAllocCmd->encapsulate(cmd);
     beaconAllocCmd->setDestAddr(MACAddress::BROADCAST_ADDRESS);
-    simtime_t nextSlotStart = beaconTimestamp + slotDuration;
-    EV_DEBUG << "Sending request @ " << nextSlotStart << ": " << beaconAllocCmd->getCmdId() << ": " << cmd->getBeaconSDIndex() << endl;
-    csmaFrame = beaconAllocCmd;
-    scheduleAt(nextSlotStart, nextCSMASlotTimer);
+    //simtime_t nextSlotStart = lastBeaconTimestamp + slotDuration;
+    EV_DEBUG << "Sending beaconAllocationRequest @ " << cmd->getBeaconSDIndex();
+
+    //scheduleAt(nextSlotStart, nextCSMASlotTimer);   // TODO let sendCSMA decide
+    sendSlottedCSMA(beaconAllocCmd);
+
+    // Update PANDDescrition
+    PANDescriptor.getBeaconBitmap().SDIndex = beaconSDIndex;
     isBeaconAllocated = true;
-    // TODO wait for collision response...
-    // TODO create EnhancedBeacon with DSMEPANDESCRIPTION!
+
+    // schedule BeaconInterval to allocated slot
+    cancelEvent(beaconIntervalTimer);
+    int16_t superframeOffset = (beaconSDIndex > lastHeardBeaconSDIndex)
+            ? beaconSDIndex - lastHeardBeaconSDIndex
+            : lastHeardBeaconSDIndex - beaconSDIndex;
+    simtime_t beaconStartTime = lastHeardBeaconTimestamp + superframeDuration * superframeOffset;
+    scheduleAt(beaconStartTime, beaconIntervalTimer);
+    EV << ", SFoffset: " << superframeOffset << " => beacon @ " << beaconStartTime << endl;
 }
 
 void DSME::handleBeaconAllocation(IEEE802154eMACCmdFrame *macCmd) {

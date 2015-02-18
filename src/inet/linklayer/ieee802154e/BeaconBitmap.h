@@ -27,10 +27,17 @@ public:
     BitVector SDBitmap;         // bitmap
 
     /**
+     * Get index of next allocated slot after start
+     * @param start first index to check
+     * @return -1 if no slot found, valid index else
+     */
+    virtual int32_t getNextAllocated(uint16_t start);
+
+    /**
      * Get index of next free slot in bitmap.
      * @return -1 if no slot found, valid index else
      */
-    virtual int getFreeSlot();
+    virtual int32_t getFreeSlot();
 
     /**
      * Count allocated slots
