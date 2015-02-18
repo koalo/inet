@@ -34,8 +34,13 @@ DSME::DSME() :
 
 DSME::~DSME() {
     cancelAndDelete(beaconIntervalTimer);
-    if (beaconFrame)
+    cancelAndDelete(nextSlotTimer);
+    cancelAndDelete(nextCSMASlotTimer);
+    cancelAndDelete(nextGTSlotTimer);
+    if (beaconFrame != nullptr)
         delete beaconFrame;
+    //if(csmaFrame != nullptr)
+    //    delete csmaFrame;     // FIXME this crashes when closing the simulation
 }
 
 
@@ -183,6 +188,9 @@ void DSME::sendDirect(cPacket *msg) {
 }
 
 void DSME::sendSlottedCSMA(IEEE802154eMACFrame_Base *msg) {
+    // TODO csmaFrame send successful?
+    if (csmaFrame != nullptr)
+        delete csmaFrame;
     // get next slot in superframe i or get next superframe
     unsigned nextCSMASlot = (currentSlot < numCSMASlots) ? currentSlot + 1 : 1;     // beacon @ slot 0
     simtime_t nextCSMASlotTime = lastHeardBeaconTimestamp + nextCSMASlot*slotDuration;
