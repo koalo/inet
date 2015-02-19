@@ -103,6 +103,11 @@ protected:
     virtual void sendDirect(cPacket *);
 
     /**
+     * Slotted CSMA-CA
+     */
+    //virtual simtime_t scheduleBackoff();
+
+    /**
      * Send packet at next available CSMA slot
      */
     virtual void sendSlottedCSMA(IEEE802154eMACFrame_Base *);

@@ -37,7 +37,10 @@ simple DSME extends CSMA
     	int superframeOrder = default(3);			// 4 bits
     	int multiSuperframeOrder = default(5);		// 3 bits
     	
-    	int finalCAPSlot = default(6);				// 4 bits
+    	int finalCAPSlot = default(8);				// 4 bits
+    	
+    	// Slotted CSMA-CA
+    	int contentionWindowLength = default(2);
         
     	@class(DSME);
     

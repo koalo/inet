@@ -136,8 +136,17 @@ void DSME::handleSelfMessage(cMessage *msg) {
     } else if (msg == nextGTSlotTimer) {
         // TODO
     } else {
-        // TODO reschedule any sending actions to beginning of CSMA slot
-        // TODO also handleUpperLayer
+        // TODO Assure slotted CSMA
+        // Perform 2 CCA at backoff period boundary
+        // then send at backoff boundary!?!
+        if (msg == ccaTimer) {
+            EV_DETAIL << "DSME slotted CSMA: TIMER_CCA at backoff period boundary" << endl;
+            // backoff period boundary is start time of next slot!?
+        }
+        // TODO perform CW count
+
+        // TODO also handleUpperLayer?
+        EV_DEBUG << "HandleSelf CSMA @ slot " << currentSlot << endl;
         CSMA::handleSelfMessage(msg);
     }
 }
@@ -160,6 +169,7 @@ void DSME::handleLowerPacket(cPacket *msg) {
     // TODO beaconCollision cancels event and isAlloc
 
     // if not handled yet handle with CSMA
+    EV_DEBUG << "HandleLower CSMA @ slot " << currentSlot << endl;
     CSMA::handleLowerPacket(msg);
 }
 
@@ -298,5 +308,6 @@ void DSME::handleBeaconAllocation(IEEE802154eMACCmdFrame *macCmd) {
         // TODO when to remove heardBeacons in case of collision elsewhere?
     }
 }
+
 
 } //namespace
