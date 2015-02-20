@@ -74,6 +74,10 @@ protected:
     cMessage *nextCSMASlotTimer;
     cMessage *nextGTSlotTimer;
 
+    // slotted csma uses contentionWindow
+    unsigned contentionWindow;
+    unsigned contentionWindowInit;
+
 
 public:
     DSME();

@@ -77,7 +77,10 @@ void DSME::initialize(int stage)
         EV << slotsPerSuperframe << " * SlotDuration: " << slotDuration;
         EV << "; baseSuperframeDuration: " << baseSuperframeDuration << ", superframeDuration: " << superframeDuration << endl;
 
-        // TODO backoffPeriod = slot duration!?
+        // Slotted CSMA
+        aUnitBackoffPeriod = slotDuration;
+        contentionWindowInit = par("contentionWindow");
+        contentionWindow = contentionWindowInit;
 
         // Beacon management:
         // PAN Coordinator sends beacon every beaconInterval
@@ -121,7 +124,7 @@ void DSME::handleSelfMessage(cMessage *msg) {
     if (msg == nextSlotTimer) {
         //EV_DEBUG << "Current Slot: " << currentSlot << endl;
         nextSlotTimestamp = simTime() + slotDuration;
-        currentSlot = (currentSlot < slotsPerSuperframe) ? currentSlot + 1 : 0;
+        currentSlot = (currentSlot < slotsPerSuperframe-1) ? currentSlot + 1 : 0;
         scheduleAt(nextSlotTimestamp, nextSlotTimer);
     } else if (msg == beaconIntervalTimer) {
         // PAN Coordinator sends beacon every beaconInterval
@@ -135,25 +138,43 @@ void DSME::handleSelfMessage(cMessage *msg) {
     } else if (msg == nextGTSlotTimer) {
         // TODO
     } else if (msg == ccaTimer) {
-        // TODO Assure slotted CSMA
-        // Perform 2 CCA at backoff period boundary
-        // then send at backoff boundary!?!
-
+        // slotted CSMA
+        // Perform CCA at backoff period boundary, 2 times (contentionWindow), then send at backoff boundary
         EV_DETAIL << "DSME slotted CSMA: TIMER_CCA at backoff period boundary" << endl;
-        // backoff period boundary is start time of next slot!?
+        // backoff period boundary is start time of next slot
         simtime_t nextCSMASlotTimestamp = getNextCSMASlot();
         scheduleAt(nextCSMASlotTimestamp, nextCSMASlotTimer);
     }
-    // TODO perform CW count
-    else if (msg == nextCSMASlotTimer) {
-        // Slotted CSMA: perform CCA at slot boundary
-        bool isIdle = radio->getReceptionState() == IRadio::RECEPTION_STATE_IDLE;
-        if (isIdle) {
-            // TODO do this 2 times, manipulate csma state
-            // then send direct at next slot!
+    else if (msg == nextCSMASlotTimer) { // TODO this is too much if/else, make a function or nicer state machine or ...
+        // Slotted CSMA: perform CCA at slot boundary or send directly if channel was idle long enough
+        EV_DETAIL << "DSME Slotted CSMA (" << currentSlot << "): ";
+        if (contentionWindow > 0) {
+            bool isIdle = radio->getReceptionState() == IRadio::RECEPTION_STATE_IDLE;
+            if (isIdle) {
+                // Do this 2 times (default), always at next CSMA slot
+                contentionWindow--;
+                simtime_t nextCSMASlotTimestamp = getNextCSMASlot();
+                if (contentionWindow > 0) {
+                    EV << "Cotention Window: " << contentionWindow << endl;
+                    scheduleAt(nextCSMASlotTimestamp + ccaDetectionTime, nextCSMASlotTimer); // TODO timestamp correct?
+                } else {
+                    // then send direct at next slot!
+                    EV << "Contention Windows where idle -> send next CSMA Slot!" << endl;
+                    scheduleAt(nextCSMASlotTimestamp, nextCSMASlotTimer);  // TODO timestamp correct?
+                }
+            } else {
+                // backoff again
+                EV << "Channel not Idle -> backoff" << endl;
+                contentionWindow = contentionWindowInit;
+                CSMA::handleSelfMessage(ccaTimer);
+            }
         } else {
-            // backoff again
+            EV << "Sending directly at slot boundary!" << endl;
+            // TODO dont do this ugly workaround, where CSMA statemachine is exploited
+            simtime_t tmp = aTurnaroundTime;
+            aTurnaroundTime = 0;
             CSMA::handleSelfMessage(ccaTimer);
+            aTurnaroundTime = tmp;
         }
     } else {
 
@@ -207,6 +228,7 @@ void DSME::sendDirect(cPacket *msg) {
     radio->setRadioMode(IRadio::RADIO_MODE_TRANSMITTER);
     attachSignal(msg, simTime() + aTurnaroundTime); // TODO turnaroundTime only on statechange, plus parameter is useless?
     sendDown(msg);
+    // TODO reset to receiving / IDLE?
 }
 
 /*/ TODO remove this
@@ -224,9 +246,10 @@ void DSME::sendSlottedCSMA(IEEE802154eMACFrame_Base *msg) {
 }*/
 
 simtime_t DSME::getNextCSMASlot() {
-    unsigned slotOffset = (currentSlot < numCSMASlots) ? 1 : slotsPerSuperframe - currentSlot + 1;
-    EV_DEBUG << "CurrentSlot: " << currentSlot << ", nextCSMASlot Offset: " << slotOffset << endl;
-    return nextSlotTimestamp + (slotOffset-1)*slotDuration;
+    unsigned slotOffset = (currentSlot < numCSMASlots) ? 1 : slotsPerSuperframe - currentSlot;
+    double offset = (slotOffset-1)*slotDuration;
+    EV_DEBUG << "CurrentSlot: " << currentSlot << ", nextCSMASlot Offset: " << slotOffset << " (" << offset << ")" << endl;
+    return nextSlotTimestamp + offset;
 }
 
 void DSME::sendCSMA(IEEE802154eMACFrame_Base *msg) {
@@ -296,7 +319,7 @@ void DSME::sendBeaconAllocationNotification(uint16_t beaconSDIndex) {
     beaconAllocCmd->encapsulate(cmd);
     beaconAllocCmd->setDestAddr(MACAddress::BROADCAST_ADDRESS);
     //simtime_t nextSlotStart = lastBeaconTimestamp + slotDuration;
-    EV_DEBUG << "Sending beaconAllocationRequest @ " << cmd->getBeaconSDIndex();
+    EV_DEBUG << "Sending beaconAllocationRequest @ " << cmd->getBeaconSDIndex() << endl;
 
     //scheduleAt(nextSlotStart, nextCSMASlotTimer);   // TODO let sendCSMA decide
     sendCSMA(beaconAllocCmd);
@@ -312,7 +335,7 @@ void DSME::sendBeaconAllocationNotification(uint16_t beaconSDIndex) {
             : lastHeardBeaconSDIndex - beaconSDIndex;
     simtime_t beaconStartTime = lastHeardBeaconTimestamp + superframeDuration * superframeOffset;
     scheduleAt(beaconStartTime, beaconIntervalTimer);
-    EV << ", SFoffset: " << superframeOffset << " => beacon @ " << beaconStartTime << endl;
+    EV_DEBUG << "BeaconAlloc SFoffset: " << superframeOffset << " => beacon @ " << beaconStartTime << endl;
 }
 
 void DSME::handleBeaconAllocation(IEEE802154eMACCmdFrame *macCmd) {
