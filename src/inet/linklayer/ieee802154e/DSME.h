@@ -49,6 +49,7 @@ protected:
     unsigned numberSuperframes;
 
     unsigned currentSlot;
+    simtime_t nextSlotTimestamp;
     unsigned slotsPerSuperframe;
 
     simtime_t lastHeardBeaconTimestamp;
@@ -110,7 +111,12 @@ protected:
     /**
      * Send packet at next available CSMA slot
      */
-    virtual void sendSlottedCSMA(IEEE802154eMACFrame_Base *);
+    //virtual void sendSlottedCSMA(IEEE802154eMACFrame_Base *);
+
+    /**
+     * Gets time of next CSMA slot
+     */
+    simtime_t getNextCSMASlot();
 
     /**
      * Send packet directly using CSMA

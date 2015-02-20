@@ -77,6 +77,8 @@ void DSME::initialize(int stage)
         EV << slotsPerSuperframe << " * SlotDuration: " << slotDuration;
         EV << "; baseSuperframeDuration: " << baseSuperframeDuration << ", superframeDuration: " << superframeDuration << endl;
 
+        // TODO backoffPeriod = slot duration!?
+
         // Beacon management:
         // PAN Coordinator sends beacon every beaconInterval
         // other devices scan for beacons for that duration
@@ -85,10 +87,11 @@ void DSME::initialize(int stage)
 
         // slot scheduling
         currentSlot = 0;
+        nextSlotTimestamp = simTime() + slotDuration;
         nextSlotTimer = new cMessage("next-slot-timer");
         nextCSMASlotTimer = new cMessage("csma-slot-timer");
         nextGTSlotTimer = new cMessage("gts-timer");
-        scheduleAt(simTime() + slotDuration, nextSlotTimer);
+        scheduleAt(nextSlotTimestamp, nextSlotTimer);
 
 
     } else if (stage == INITSTAGE_LINK_LAYER) {
@@ -117,8 +120,9 @@ void DSME::initialize(int stage)
 void DSME::handleSelfMessage(cMessage *msg) {
     if (msg == nextSlotTimer) {
         //EV_DEBUG << "Current Slot: " << currentSlot << endl;
+        nextSlotTimestamp = simTime() + slotDuration;
         currentSlot = (currentSlot < slotsPerSuperframe) ? currentSlot + 1 : 0;
-        scheduleAt(simTime() + slotDuration, nextSlotTimer);
+        scheduleAt(nextSlotTimestamp, nextSlotTimer);
     } else if (msg == beaconIntervalTimer) {
         // PAN Coordinator sends beacon every beaconInterval
         // Coordinators send beacons after allocating a slot
@@ -128,22 +132,30 @@ void DSME::handleSelfMessage(cMessage *msg) {
         // Unassociated devices have scanned for beaconInterval and may have heard beacons
         else if (!isAssociated)
             endChannelScan();
-    }
-    else if (msg == nextCSMASlotTimer) {
-        // Slotted CSMA, send at beginning of next CSMA Slot
-        if (csmaFrame != nullptr)
-            sendCSMA(csmaFrame);
     } else if (msg == nextGTSlotTimer) {
         // TODO
-    } else {
+    } else if (msg == ccaTimer) {
         // TODO Assure slotted CSMA
         // Perform 2 CCA at backoff period boundary
         // then send at backoff boundary!?!
-        if (msg == ccaTimer) {
-            EV_DETAIL << "DSME slotted CSMA: TIMER_CCA at backoff period boundary" << endl;
-            // backoff period boundary is start time of next slot!?
+
+        EV_DETAIL << "DSME slotted CSMA: TIMER_CCA at backoff period boundary" << endl;
+        // backoff period boundary is start time of next slot!?
+        simtime_t nextCSMASlotTimestamp = getNextCSMASlot();
+        scheduleAt(nextCSMASlotTimestamp, nextCSMASlotTimer);
+    }
+    // TODO perform CW count
+    else if (msg == nextCSMASlotTimer) {
+        // Slotted CSMA: perform CCA at slot boundary
+        bool isIdle = radio->getReceptionState() == IRadio::RECEPTION_STATE_IDLE;
+        if (isIdle) {
+            // TODO do this 2 times, manipulate csma state
+            // then send direct at next slot!
+        } else {
+            // backoff again
+            CSMA::handleSelfMessage(ccaTimer);
         }
-        // TODO perform CW count
+    } else {
 
         // TODO also handleUpperLayer?
         EV_DEBUG << "HandleSelf CSMA @ slot " << currentSlot << endl;
@@ -197,6 +209,7 @@ void DSME::sendDirect(cPacket *msg) {
     sendDown(msg);
 }
 
+/*/ TODO remove this
 void DSME::sendSlottedCSMA(IEEE802154eMACFrame_Base *msg) {
     // TODO csmaFrame send successful?
     if (csmaFrame != nullptr)
@@ -208,6 +221,12 @@ void DSME::sendSlottedCSMA(IEEE802154eMACFrame_Base *msg) {
     //int32_t i = heardBeacons.getNextAllocated(lastBeaconSDIndex);
     scheduleAt(nextCSMASlotTime, nextCSMASlotTimer);
     csmaFrame = msg;
+}*/
+
+simtime_t DSME::getNextCSMASlot() {
+    unsigned slotOffset = (currentSlot < numCSMASlots) ? 1 : slotsPerSuperframe - currentSlot + 1;
+    EV_DEBUG << "CurrentSlot: " << currentSlot << ", nextCSMASlot Offset: " << slotOffset << endl;
+    return nextSlotTimestamp + (slotOffset-1)*slotDuration;
 }
 
 void DSME::sendCSMA(IEEE802154eMACFrame_Base *msg) {
@@ -280,7 +299,7 @@ void DSME::sendBeaconAllocationNotification(uint16_t beaconSDIndex) {
     EV_DEBUG << "Sending beaconAllocationRequest @ " << cmd->getBeaconSDIndex();
 
     //scheduleAt(nextSlotStart, nextCSMASlotTimer);   // TODO let sendCSMA decide
-    sendSlottedCSMA(beaconAllocCmd);
+    sendCSMA(beaconAllocCmd);
 
     // Update PANDDescrition
     PANDescriptor.getBeaconBitmap().SDIndex = beaconSDIndex;
