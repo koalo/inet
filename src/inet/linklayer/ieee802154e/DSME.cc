@@ -167,6 +167,7 @@ void DSME::handleSelfMessage(cMessage *msg) {
                 EV << "Channel not Idle -> backoff" << endl;
                 contentionWindow = contentionWindowInit;
                 CSMA::handleSelfMessage(ccaTimer);
+                // TODO cancel BeaconInterval if Coordinator, also isAssociated=false!
             }
         } else {
             EV << "Sending directly at slot boundary!" << endl;
@@ -230,20 +231,6 @@ void DSME::sendDirect(cPacket *msg) {
     sendDown(msg);
     // TODO reset to receiving / IDLE?
 }
-
-/*/ TODO remove this
-void DSME::sendSlottedCSMA(IEEE802154eMACFrame_Base *msg) {
-    // TODO csmaFrame send successful?
-    if (csmaFrame != nullptr)
-        delete csmaFrame;
-    // get next slot in superframe i or get next superframe
-    unsigned nextCSMASlot = (currentSlot < numCSMASlots) ? currentSlot + 1 : 1;     // beacon @ slot 0
-    simtime_t nextCSMASlotTime = lastHeardBeaconTimestamp + nextCSMASlot*slotDuration;
-    EV_DETAIL << "SendSlottedCSMA @ " << nextCSMASlot << " => " << nextCSMASlotTime << endl;
-    //int32_t i = heardBeacons.getNextAllocated(lastBeaconSDIndex);
-    scheduleAt(nextCSMASlotTime, nextCSMASlotTimer);
-    csmaFrame = msg;
-}*/
 
 simtime_t DSME::getNextCSMASlot() {
     unsigned slotOffset = (currentSlot < numCSMASlots) ? 1 : slotsPerSuperframe - currentSlot;
