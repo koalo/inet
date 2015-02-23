@@ -17,6 +17,7 @@
 #include "inet/linklayer/contract/IMACProtocolControlInfo.h"
 #include "inet/linklayer/common/SimpleLinkLayerControlInfo.h"
 #include "inet/linklayer/ieee802154e/DSMEBeaconAllocationNotificationCmd_m.h"
+#include "inet/linklayer/ieee802154e/DSMEBeaconCollisionNotificationCmd_m.h"
 
 namespace inet {
 
@@ -57,6 +58,7 @@ void DSME::initialize(int stage)
         isCoordinator = host->par("isCoordinator");
         isAssociated = isPANCoordinator;
         isBeaconAllocated = isPANCoordinator;
+        isBeaconAllocationSent = isPANCoordinator;
 
         // DSME configuration
         superframeSpec.beaconOrder = par("beaconOrder");
@@ -146,38 +148,9 @@ void DSME::handleSelfMessage(cMessage *msg) {
         scheduleAt(nextCSMASlotTimestamp, nextCSMASlotTimer);
     }
     else if (msg == nextCSMASlotTimer) { // TODO this is too much if/else, make a function or nicer state machine or ...
-        // Slotted CSMA: perform CCA at slot boundary or send directly if channel was idle long enough
-        EV_DETAIL << "DSME Slotted CSMA (" << currentSlot << "): ";
-        if (contentionWindow > 0) {
-            bool isIdle = radio->getReceptionState() == IRadio::RECEPTION_STATE_IDLE;
-            if (isIdle) {
-                // Do this 2 times (default), always at next CSMA slot
-                contentionWindow--;
-                simtime_t nextCSMASlotTimestamp = getNextCSMASlot();
-                if (contentionWindow > 0) {
-                    EV << "Cotention Window: " << contentionWindow << endl;
-                    scheduleAt(nextCSMASlotTimestamp + ccaDetectionTime, nextCSMASlotTimer); // TODO timestamp correct?
-                } else {
-                    // then send direct at next slot!
-                    EV << "Contention Windows where idle -> send next CSMA Slot!" << endl;
-                    scheduleAt(nextCSMASlotTimestamp, nextCSMASlotTimer);  // TODO timestamp correct?
-                }
-            } else {
-                // backoff again
-                EV << "Channel not Idle -> backoff" << endl;
-                contentionWindow = contentionWindowInit;
-                CSMA::handleSelfMessage(ccaTimer);
-                // TODO cancel BeaconInterval if Coordinator, also isAssociated=false!
-            }
-        } else {
-            EV << "Sending directly at slot boundary!" << endl;
-            // TODO dont do this ugly workaround, where CSMA statemachine is exploited
-            simtime_t tmp = aTurnaroundTime;
-            aTurnaroundTime = 0;
-            CSMA::handleSelfMessage(ccaTimer);
-            aTurnaroundTime = tmp;
-        }
+        handleCSMASlot();
     } else {
+        // TODO handle discared messages, e.g. clear isBeaconAllocationSent
 
         // TODO also handleUpperLayer?
         EV_DEBUG << "HandleSelf CSMA @ slot " << currentSlot << endl;
@@ -194,13 +167,17 @@ void DSME::handleLowerPacket(cPacket *msg) {
         if(strcmp(macPkt->getName(), EnhancedBeacon::NAME) == 0) {
             EnhancedBeacon *beacon = static_cast<EnhancedBeacon *>(msg);
             return handleEnhancedBeacon(beacon);
-        } else if(strcmp(macPkt->getName(), "beacon-allocation-notification") == 0) { // TODO const
+        } else if(strcmp(macPkt->getName(), "beacon-allocation-notification") == 0) {
             IEEE802154eMACCmdFrame *macCmd = static_cast<IEEE802154eMACCmdFrame *>(macPkt->decapsulate()); // was send with CSMA
             return handleBeaconAllocation(macCmd);
         }
+    } else if (dest == address) {
+        EV_DETAIL << "DSME received packet for me: " << macPkt->getName() << endl;
+        if (strcmp(macPkt->getName(), "beacon-collision-notification") == 0) {
+            IEEE802154eMACCmdFrame *macCmd = static_cast<IEEE802154eMACCmdFrame *>(macPkt->decapsulate()); // was send with CSMA
+            return handleBeaconCollision(macCmd);
+        }
     }
-
-    // TODO beaconCollision cancels event and isAlloc
 
     // if not handled yet handle with CSMA
     EV_DEBUG << "HandleLower CSMA @ slot " << currentSlot << endl;
@@ -239,6 +216,42 @@ simtime_t DSME::getNextCSMASlot() {
     return nextSlotTimestamp + offset;
 }
 
+void DSME::handleCSMASlot() {
+    // Slotted CSMA: perform CCA at slot boundary or send directly if channel was idle long enough
+    EV_DETAIL << "DSME Slotted CSMA (" << currentSlot << "): ";
+    if (contentionWindow > 0) {
+        bool isIdle = radio->getReceptionState() == IRadio::RECEPTION_STATE_IDLE;
+        if (isIdle) {
+            // Do this 2 times (default), always at next CSMA slot
+            contentionWindow--;
+            simtime_t nextCSMASlotTimestamp = getNextCSMASlot();
+            if (contentionWindow > 0) {
+                EV << "Cotention Window: " << contentionWindow << endl;
+                scheduleAt(nextCSMASlotTimestamp + ccaDetectionTime, nextCSMASlotTimer); // TODO timestamp correct?
+            } else {
+                // then send direct at next slot!
+                EV << "Contention Windows where idle -> send next CSMA Slot!" << endl;
+                scheduleAt(nextCSMASlotTimestamp, nextCSMASlotTimer);  // TODO timestamp correct?
+            }
+        } else {
+            // backoff again
+            EV << "Channel not Idle -> backoff" << endl;
+            contentionWindow = contentionWindowInit;
+            CSMA::handleSelfMessage(ccaTimer);
+        }
+    } else {
+        EV << "Sending directly at slot boundary!" << endl;
+        // TODO dont do this ugly workaround, where CSMA statemachine is exploited
+        simtime_t tmp = aTurnaroundTime;
+        aTurnaroundTime = 0;
+        CSMA::handleSelfMessage(ccaTimer);
+        aTurnaroundTime = tmp;
+        // message was sent, do some status updates and reset contentionWindow
+        onCSMASent();
+        contentionWindow = contentionWindowInit;
+    }
+}
+
 void DSME::sendCSMA(IEEE802154eMACFrame_Base *msg) {
     headerLength = 0;                               // otherwise CSMA adds 72 bits
     useMACAcks = false;                             // handle ACKs ourself
@@ -247,6 +260,18 @@ void DSME::sendCSMA(IEEE802154eMACFrame_Base *msg) {
     cCtrlInfo->setDest(msg->getDestAddr());
     msg->setControlInfo(cCtrlInfo);
     CSMA::handleUpperPacket(msg);
+}
+
+void DSME::onCSMASent() {
+    EV_DEBUG << "DSME onCSMASent: ";
+    if (isCoordinator && isBeaconAllocationSent) {
+        EV << "Coordinator now assumes beacon is allocated" << endl;
+        isBeaconAllocated = true;
+        isBeaconAllocationSent = false;
+        // beacon interval is already scheduled
+    } else {
+        EV << "nothing to do" << endl;
+    }
 }
 
 void DSME::sendEnhancedBeacon() {
@@ -288,14 +313,18 @@ void DSME::handleEnhancedBeacon(EnhancedBeacon *beacon) {
     EV << "neighborsBeacons: " << neighborHeardBeacons.getAllocatedCount() << endl;
 
     // Coordinator device request free beacon slots
-    if (isCoordinator && !isBeaconAllocated) {
-        // Lookup free slot and broadcast beacon allocation request
-        int32_t i = descr->getBeaconBitmap().getFreeSlot();
+    if (isCoordinator && !isBeaconAllocationSent) {
+        // Lookup free slot within all neighbors and broadcast beacon allocation request
+        BeaconBitmap allBeacons = heardBeacons;
+        allBeacons.SDBitmap |= neighborHeardBeacons.SDBitmap;
+        int32_t i = allBeacons.getFreeSlot();
         EV_DEBUG << "Coordinator Beacon Allocation request @ " << i << endl;
         if (i >= 0) {
             sendBeaconAllocationNotification(i);
         }
     }
+
+    // TODO if isAllocationsent and allocated Index now is allocated -> cancel!
 }
 
 void DSME::sendBeaconAllocationNotification(uint16_t beaconSDIndex) {
@@ -304,16 +333,16 @@ void DSME::sendBeaconAllocationNotification(uint16_t beaconSDIndex) {
     cmd->setBeaconSDIndex(beaconSDIndex);
     beaconAllocCmd->setCmdId(DSME_BEACON_ALLOCATION_NOTIFICATION);
     beaconAllocCmd->encapsulate(cmd);
+    beaconAllocCmd->setSrcAddr(address);
     beaconAllocCmd->setDestAddr(MACAddress::BROADCAST_ADDRESS);
-    //simtime_t nextSlotStart = lastBeaconTimestamp + slotDuration;
+
     EV_DEBUG << "Sending beaconAllocationRequest @ " << cmd->getBeaconSDIndex() << endl;
 
-    //scheduleAt(nextSlotStart, nextCSMASlotTimer);   // TODO let sendCSMA decide
     sendCSMA(beaconAllocCmd);
+    isBeaconAllocationSent = true;
 
     // Update PANDDescrition
     PANDescriptor.getBeaconBitmap().SDIndex = beaconSDIndex;
-    isBeaconAllocated = true;
 
     // schedule BeaconInterval to allocated slot
     cancelEvent(beaconIntervalTimer);
@@ -331,11 +360,32 @@ void DSME::handleBeaconAllocation(IEEE802154eMACCmdFrame *macCmd) {
     EV_DEBUG << "HURRAY THERE IS A NEW COORDINATOR @ " << beaconAlloc->getBeaconSDIndex() << endl;
     if (heardBeacons.SDBitmap.getBit(beaconAlloc->getBeaconSDIndex())) {
         EV_DETAIL << "Beacon Slot is not free -> collision !" << endl;
+        sendBeaconCollisionNotification(beaconAlloc->getBeaconSDIndex(), macCmd->getSrcAddr());
     } else {
         heardBeacons.SDBitmap.setBit(beaconAlloc->getBeaconSDIndex(), true);
         EV_DETAIL << "HeardBeacons: " << heardBeacons.getAllocatedCount() << endl;
         // TODO when to remove heardBeacons in case of collision elsewhere?
     }
+}
+
+void DSME::sendBeaconCollisionNotification(uint16_t beaconSDIndex, MACAddress addr) {
+    IEEE802154eMACCmdFrame *beaconCollisionCmd = new IEEE802154eMACCmdFrame("beacon-collision-notification");
+    DSMEBeaconCollisionNotificationCmd *cmd = new DSMEBeaconCollisionNotificationCmd("beacon-collision-notification-payload");
+    cmd->setBeaconSDIndex(beaconSDIndex);
+    beaconCollisionCmd->setCmdId(DSME_BEACON_COLLISION_NOTIFICATION);
+    beaconCollisionCmd->encapsulate(cmd);
+    beaconCollisionCmd->setDestAddr(addr);
+
+    EV_DEBUG << "Sending beaconCollisionNotification @ " << cmd->getBeaconSDIndex() << " To: " << addr << endl;
+
+    sendCSMA(beaconCollisionCmd);
+}
+
+void DSME::handleBeaconCollision(IEEE802154eMACCmdFrame *macCmd) {
+    DSMEBeaconCollisionNotificationCmd *cmd = static_cast<DSMEBeaconCollisionNotificationCmd*>(macCmd->decapsulate());
+    EV_DETAIL << "DSME handleBeaconCollision: removing beacon schedule @ " << cmd->getBeaconSDIndex();
+    isBeaconAllocated = false;
+    neighborHeardBeacons.SDBitmap.setBit(cmd->getBeaconSDIndex(), true);
 }
 
 

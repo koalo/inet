@@ -38,6 +38,7 @@ protected:
     bool isCoordinator;
 
     bool isAssociated;
+    bool isBeaconAllocationSent;
     bool isBeaconAllocated;
 
     double slotDuration;
@@ -108,19 +109,25 @@ protected:
     virtual void sendDirect(cPacket *);
 
     /**
-     * Send packet at next available CSMA slot
-     */
-    //virtual void sendSlottedCSMA(IEEE802154eMACFrame_Base *);
-
-    /**
      * Gets time of next CSMA slot
      */
     simtime_t getNextCSMASlot();
 
     /**
+     * Handle start of CSMA Slot for slotted-CSMA,
+     * perform CCA or directly send message
+     */
+    void handleCSMASlot();
+
+    /**
      * Send packet directly using CSMA
      */
     virtual void sendCSMA(IEEE802154eMACFrame_Base *);
+
+    /**
+     * Gets called when CSMA Message was sent down to the PHY
+     */
+    virtual void onCSMASent();
 
     /**
      * Send an enhanced Beacon directly
@@ -141,6 +148,18 @@ protected:
      * Called on reception of an BeaconAllocationNotification
      */
     virtual void handleBeaconAllocation(IEEE802154eMACCmdFrame *);
+
+    /**
+     * Send beacon collision notification
+     */
+    virtual void sendBeaconCollisionNotification(uint16_t beaconSDIndex, MACAddress addr);
+
+    /**
+     * Handle reception of beacon collision notification.
+     * Update beacon allocation
+     */
+    virtual void handleBeaconCollision(IEEE802154eMACCmdFrame *);
+
 };
 
 } //namespace
