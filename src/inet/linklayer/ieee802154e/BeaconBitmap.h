@@ -37,7 +37,13 @@ public:
      * Get index of next free slot in bitmap.
      * @return -1 if no slot found, valid index else
      */
-    virtual int32_t getFreeSlot();
+    virtual int32_t getNextFreeSlot();
+
+    /**
+     * Get index of random free slot in bitmap.
+     * @return -1 if no slot found, valid index else
+     */
+    virtual int32_t getRandomFreeSlot();
 
     /**
      * Count allocated slots

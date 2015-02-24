@@ -332,6 +332,10 @@ void DSME::handleEnhancedBeacon(EnhancedBeacon *beacon) {
     // update heardBeacons and neighborHeardBeacons
     heardBeacons.SDBitmap.setBit(descr->getBeaconBitmap().SDIndex, true);
     neighborHeardBeacons.SDBitmap |= descr->getBeaconBitmap().SDBitmap;
+    if (isCoordinator) {
+        PANDescriptor.getBeaconBitmap().SDBitmap.setBit(descr->getBeaconBitmap().SDIndex, true);
+    }
+
     EV_DEBUG << "heardBeacons: " << heardBeacons.getAllocatedCount() << ": " << heardBeacons.SDBitmap.toString() << ", ";
     EV << "neighborsBeacons: " << neighborHeardBeacons.getAllocatedCount() << ": " << neighborHeardBeacons.SDBitmap.toString() << endl;
 
@@ -341,8 +345,8 @@ void DSME::handleEnhancedBeacon(EnhancedBeacon *beacon) {
         BeaconBitmap allBeacons = heardBeacons;
         allBeacons.SDBitmap |= neighborHeardBeacons.SDBitmap;
         // TODO get random free slot
-        int32_t i = allBeacons.getFreeSlot();
-        EV_DEBUG << "Coordinator Beacon Allocation request @ " << i << endl;
+        int32_t i = allBeacons.getRandomFreeSlot();
+        EV_DEBUG << "Coordinator Beacon Allocation request @ random=" << i << endl;
         if (i >= 0) {
             sendBeaconAllocationNotification(i);
         }
@@ -391,6 +395,9 @@ void DSME::handleBeaconAllocation(IEEE802154eMACCmdFrame *macCmd) {
         EV_DETAIL << "HeardBeacons: " << heardBeacons.getAllocatedCount() << endl;
         // TODO when to remove heardBeacons in case of collision elsewhere?
     }
+
+    // TODO Coordinator which has sent allocation notification to same slot should cancel if possible
+
 }
 
 void DSME::sendBeaconCollisionNotification(uint16_t beaconSDIndex, MACAddress addr) {

@@ -30,8 +30,22 @@ int32_t BeaconBitmap::getNextAllocated(uint16_t start) {
     return -1;
 }
 
-int32_t BeaconBitmap::getFreeSlot() {
+int32_t BeaconBitmap::getNextFreeSlot() {
     for(uint16_t i=0; i<SDBitmap.getSize(); i++) {
+        if (!SDBitmap.getBit(i))
+            return i;
+    }
+
+    return -1;
+}
+
+int32_t BeaconBitmap::getRandomFreeSlot() {
+    uint16_t start = intuniform(0, SDBitmap.getSize()-1);
+    for(uint16_t i=start; i<SDBitmap.getSize(); i++) {
+        if (!SDBitmap.getBit(i))
+            return i;
+    }
+    for(uint16_t i=0; i<start; i++) {
         if (!SDBitmap.getBit(i))
             return i;
     }
