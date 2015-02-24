@@ -111,6 +111,7 @@ void DSME::initialize(int stage)
             PANDescriptor.setBitLength(92 + numberSuperframes);
 
         } else if (isCoordinator) {
+            beaconAllocation.SDBitmapLength = numberSuperframes;
             beaconAllocation.SDBitmap.appendBit(false, numberSuperframes);
             PANDescriptor.setBeaconBitmap(beaconAllocation);
             PANDescriptor.setBitLength(92 + numberSuperframes);
@@ -285,7 +286,8 @@ void DSME::sendEnhancedBeacon() {
     // schedule next beacon
     scheduleAt(simTime() + beaconInterval, beaconIntervalTimer);
 
-    EV_DETAIL << "Send EnhancedBeacon, bitmap: " << descr->getBeaconBitmap().SDBitmapLength << endl;
+    EV_DETAIL << "Send EnhancedBeacon, bitmap: " << descr->getBeaconBitmap().SDBitmapLength;
+    EV << ": " << descr->getBeaconBitmap().SDBitmap.toString() << endl;
     sendDirect(beaconFrame);
     beaconFrame = nullptr;
 
@@ -309,14 +311,15 @@ void DSME::handleEnhancedBeacon(EnhancedBeacon *beacon) {
     // update heardBeacons and neighborHeardBeacons
     heardBeacons.SDBitmap.setBit(descr->getBeaconBitmap().SDIndex, true);
     neighborHeardBeacons.SDBitmap |= descr->getBeaconBitmap().SDBitmap;
-    EV_DEBUG << "heardBeacons: " << heardBeacons.getAllocatedCount() << ", ";
-    EV << "neighborsBeacons: " << neighborHeardBeacons.getAllocatedCount() << endl;
+    EV_DEBUG << "heardBeacons: " << heardBeacons.getAllocatedCount() << ": " << heardBeacons.SDBitmap.toString() << ", ";
+    EV << "neighborsBeacons: " << neighborHeardBeacons.getAllocatedCount() << ": " << neighborHeardBeacons.SDBitmap.toString() << endl;
 
     // Coordinator device request free beacon slots
-    if (isCoordinator && !isBeaconAllocationSent) {
+    if (isCoordinator && !isBeaconAllocated && !isBeaconAllocationSent) {
         // Lookup free slot within all neighbors and broadcast beacon allocation request
         BeaconBitmap allBeacons = heardBeacons;
         allBeacons.SDBitmap |= neighborHeardBeacons.SDBitmap;
+        // TODO get random free slot
         int32_t i = allBeacons.getFreeSlot();
         EV_DEBUG << "Coordinator Beacon Allocation request @ " << i << endl;
         if (i >= 0) {
@@ -343,6 +346,7 @@ void DSME::sendBeaconAllocationNotification(uint16_t beaconSDIndex) {
 
     // Update PANDDescrition
     PANDescriptor.getBeaconBitmap().SDIndex = beaconSDIndex;
+    beaconAllocation.SDBitmap = heardBeacons.SDBitmap;      // TODO need both bitmaps??
 
     // schedule BeaconInterval to allocated slot
     cancelEvent(beaconIntervalTimer);
@@ -355,7 +359,7 @@ void DSME::sendBeaconAllocationNotification(uint16_t beaconSDIndex) {
 }
 
 void DSME::handleBeaconAllocation(IEEE802154eMACCmdFrame *macCmd) {
-    // TODO check beacon slot allocation, notify if collision
+    // TODO check if self has sent allocation to same slot -> abort CSMA transmission
     DSMEBeaconAllocationNotificationCmd *beaconAlloc = static_cast<DSMEBeaconAllocationNotificationCmd*>(macCmd->decapsulate());
     EV_DEBUG << "HURRAY THERE IS A NEW COORDINATOR @ " << beaconAlloc->getBeaconSDIndex() << endl;
     if (heardBeacons.SDBitmap.getBit(beaconAlloc->getBeaconSDIndex())) {
