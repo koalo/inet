@@ -87,6 +87,7 @@ public:
 
     virtual void handleSelfMessage(cMessage *);
     virtual void handleLowerPacket(cPacket *msg);
+    virtual void receiveSignal(cComponent *source, simsignal_t signalID, long value);
 
 protected:
 

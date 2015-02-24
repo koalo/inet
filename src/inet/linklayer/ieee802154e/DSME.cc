@@ -185,6 +185,27 @@ void DSME::handleLowerPacket(cPacket *msg) {
     CSMA::handleLowerPacket(msg);
 }
 
+// See CSMA.cc
+void DSME::receiveSignal(cComponent *source, simsignal_t signalID, long value) {
+    Enter_Method_Silent();
+    if (signalID == IRadio::transmissionStateChangedSignal) {
+        IRadio::TransmissionState newRadioTransmissionState = (IRadio::TransmissionState)value;
+        if (transmissionState == IRadio::TRANSMISSION_STATE_TRANSMITTING && newRadioTransmissionState == IRadio::TRANSMISSION_STATE_IDLE) {
+            if (macState == IDLE_1) { // capture transmission end when sent without CSMA state machine
+                EV_DEBUG << "DSME-CSMA: Transmission over" << endl;
+                radio->setRadioMode(IRadio::RADIO_MODE_RECEIVER);
+            } else {
+                // KLUDGE: we used to get a cMessage from the radio (the identity was not important)
+                executeMac(EV_FRAME_TRANSMITTED, new cMessage("Transmission over"));
+            }
+        }
+        transmissionState = newRadioTransmissionState;
+    }
+}
+
+
+
+
 
 void DSME::endChannelScan() {
     EV_DETAIL << "EndChannelScan: ";
@@ -346,7 +367,7 @@ void DSME::sendBeaconAllocationNotification(uint16_t beaconSDIndex) {
 
     // Update PANDDescrition
     PANDescriptor.getBeaconBitmap().SDIndex = beaconSDIndex;
-    beaconAllocation.SDBitmap = heardBeacons.SDBitmap;      // TODO need both bitmaps??
+    PANDescriptor.getBeaconBitmap().SDBitmap = heardBeacons.SDBitmap;      // TODO remove allocationbitmap?
 
     // schedule BeaconInterval to allocated slot
     cancelEvent(beaconIntervalTimer);
