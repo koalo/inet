@@ -21,6 +21,8 @@
 #include "inet/linklayer/csma/CSMA.h"
 #include "inet/linklayer/ieee802154e/DSME_PANDescriptor_m.h"
 #include "inet/linklayer/ieee802154e/BeaconBitmap.h"
+#include "inet/linklayer/ieee802154e/GTS.h"
+#include "inet/linklayer/ieee802154e/SlotAllocationBitmap.h"
 #include "inet/linklayer/ieee802154e/IEEE802154eMACFrame_m.h"
 #include "inet/linklayer/ieee802154e/IEEE802154eMACCmdFrame_m.h"
 #include "inet/linklayer/ieee802154e/EnhancedBeacon.h"
@@ -65,6 +67,10 @@ protected:
     BeaconBitmap beaconAllocation;
     DSME_PANDescriptor PANDescriptor;
 
+    // Guaranteed Time Slots
+    std::pair<MACAddress, std::set<GTS>> allocatedGTSs;
+    SlotAllocationBitmap occupiedGTSs;
+
     // packets
     EnhancedBeacon *beaconFrame;
     IEEE802154eMACFrame_Base *csmaFrame;
@@ -86,8 +92,17 @@ public:
     virtual void initialize(int);
 
     virtual void handleSelfMessage(cMessage *);
+    virtual void handleUpperPacket(cPacket *);
     virtual void handleLowerPacket(cPacket *msg);
     virtual void receiveSignal(cComponent *source, simsignal_t signalID, long value);
+
+    /**
+     * Allocate new GTS Slots to specified Address
+     * @param num amount of slots to allocate
+     * @param direction 0 -> TX, 1 -> RX
+     * @param addr address to allocate slots for
+     */
+    virtual void allocateGTSlots(uint8_t numSlots, bool direction, MACAddress addr);
 
 protected:
 
@@ -103,6 +118,12 @@ protected:
      * Send packet at next available GTS
      */
     virtual void sendGTS(IEEE802154eMACFrame_Base *);
+
+    /**
+     * Gets time and channel of next GTSlot for address
+     * @param addr Address to send to
+     */
+    GTS getNextGTSlot(MACAddress addr);
 
     /**
      * Directly send packet without delay and without CSMA
@@ -123,7 +144,7 @@ protected:
     /**
      * Send packet directly using CSMA
      */
-    virtual void sendCSMA(IEEE802154eMACFrame_Base *);
+    virtual void sendCSMA(IEEE802154eMACFrame_Base *, bool requestACK);
 
     /**
      * Gets called when CSMA Message was sent down to the PHY

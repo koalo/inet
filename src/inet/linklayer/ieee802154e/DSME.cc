@@ -125,7 +125,6 @@ void DSME::initialize(int stage)
 
 void DSME::handleSelfMessage(cMessage *msg) {
     if (msg == nextSlotTimer) {
-        //EV_DEBUG << "Current Slot: " << currentSlot << endl;
         nextSlotTimestamp = simTime() + slotDuration;
         currentSlot = (currentSlot < slotsPerSuperframe-1) ? currentSlot + 1 : 0;
         scheduleAt(nextSlotTimestamp, nextSlotTimer);
@@ -153,7 +152,6 @@ void DSME::handleSelfMessage(cMessage *msg) {
     } else {
         // TODO handle discared messages, e.g. clear isBeaconAllocationSent
 
-        // TODO also handleUpperLayer?
         EV_DEBUG << "HandleSelf CSMA @ slot " << currentSlot << endl;
         CSMA::handleSelfMessage(msg);
     }
@@ -183,6 +181,10 @@ void DSME::handleLowerPacket(cPacket *msg) {
     // if not handled yet handle with CSMA
     EV_DEBUG << "HandleLower CSMA @ slot " << currentSlot << endl;
     CSMA::handleLowerPacket(msg);
+}
+
+void DSME::handleUpperPacket(cPacket *) {
+    EV_DETAIL << "DSME packet from upper layer -> send with GTS!" << endl;
 }
 
 // See CSMA.cc
@@ -274,9 +276,9 @@ void DSME::handleCSMASlot() {
     }
 }
 
-void DSME::sendCSMA(IEEE802154eMACFrame_Base *msg) {
+void DSME::sendCSMA(IEEE802154eMACFrame_Base *msg, bool requestACK = false) {
     headerLength = 0;                               // otherwise CSMA adds 72 bits
-    useMACAcks = false;                             // handle ACKs ourself
+    useMACAcks = requestACK;
     // simulate upperlayer dest addr to CSMA
     SimpleLinkLayerControlInfo *const cCtrlInfo = new SimpleLinkLayerControlInfo();
     cCtrlInfo->setDest(msg->getDestAddr());
@@ -344,10 +346,9 @@ void DSME::handleEnhancedBeacon(EnhancedBeacon *beacon) {
         // Lookup free slot within all neighbors and broadcast beacon allocation request
         BeaconBitmap allBeacons = heardBeacons;
         allBeacons.SDBitmap |= neighborHeardBeacons.SDBitmap;
-        // TODO get random free slot
         int32_t i = allBeacons.getRandomFreeSlot();
-        EV_DEBUG << "Coordinator Beacon Allocation request @ random=" << i << endl;
         if (i >= 0) {
+            EV_DEBUG << "Coordinator Beacon Allocation request @ random=" << i << endl;
             sendBeaconAllocationNotification(i);
         }
     }
@@ -410,7 +411,7 @@ void DSME::sendBeaconCollisionNotification(uint16_t beaconSDIndex, MACAddress ad
 
     EV_DEBUG << "Sending beaconCollisionNotification @ " << cmd->getBeaconSDIndex() << " To: " << addr << endl;
 
-    sendCSMA(beaconCollisionCmd);
+    sendCSMA(beaconCollisionCmd, true);
 }
 
 void DSME::handleBeaconCollision(IEEE802154eMACCmdFrame *macCmd) {
