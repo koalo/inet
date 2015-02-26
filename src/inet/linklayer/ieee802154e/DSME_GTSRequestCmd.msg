@@ -51,7 +51,7 @@ struct DSME_SAB_Specification {
 }
 
 packet DSME_GTSRequestCmd {
-    byteLength = 4 + 14;
+    byteLength = 4 + 3 + 14;
     
     DSME_GTS_Management gtsManagement;
     
@@ -59,4 +59,5 @@ packet DSME_GTSRequestCmd {
     uint16_t preferredSuperframeID;
     uint8_t preferredSlotID;
     
+    DSME_SAB_Specification SABSpec;
 }

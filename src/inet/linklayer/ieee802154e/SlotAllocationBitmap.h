@@ -39,6 +39,8 @@ public:
      */
     GTS getRandomFreeGTS(uint8_t superframeID);
 
+    uint8_t getSubBlockLength();
+
 protected:
     GTS getGTS(uint8_t superframeID, uint8_t slotID);
 };

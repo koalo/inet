@@ -55,4 +55,8 @@ GTS SlotAllocationBitmap::getGTS(uint8_t superframeID, uint8_t offset) {
     return GTS(superframeID, offset/numSlots, offset%numSlots);
 }
 
+uint8_t SlotAllocationBitmap::getSubBlockLength() {
+    return subBlockLength;
+}
+
 } /* namespace inet */

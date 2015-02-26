@@ -42,6 +42,9 @@ DSME::~DSME() {
         delete beaconFrame;
     //if(csmaFrame != nullptr)
     //    delete csmaFrame;     // FIXME this crashes when closing the simulation
+    for (auto it = GTSQueue.begin(); it != GTSQueue.end(); ++it) {
+        delete (*it);
+    }
 }
 
 
@@ -127,6 +130,9 @@ void DSME::handleSelfMessage(cMessage *msg) {
     if (msg == nextSlotTimer) {
         nextSlotTimestamp = simTime() + slotDuration;
         currentSlot = (currentSlot < slotsPerSuperframe-1) ? currentSlot + 1 : 0;
+        // TODO check GTS Slot allocation, switch to channel for RX
+        // TODO or transmit from GTSQueue
+        // TODO switch back to common channel
         scheduleAt(nextSlotTimestamp, nextSlotTimer);
     } else if (msg == beaconIntervalTimer) {
         // PAN Coordinator sends beacon every beaconInterval
@@ -138,7 +144,7 @@ void DSME::handleSelfMessage(cMessage *msg) {
         else if (!isAssociated)
             endChannelScan();
     } else if (msg == nextGTSlotTimer) {
-        // TODO
+        // TODO remove?
     } else if (msg == ccaTimer) {
         // slotted CSMA
         // Perform CCA at backoff period boundary, 2 times (contentionWindow), then send at backoff boundary
@@ -183,8 +189,17 @@ void DSME::handleLowerPacket(cPacket *msg) {
     CSMA::handleLowerPacket(msg);
 }
 
-void DSME::handleUpperPacket(cPacket *) {
+void DSME::handleUpperPacket(cPacket *msg) {
     EV_DETAIL << "DSME packet from upper layer -> send with GTS!" << endl;
+    // 1) lookup if slot to destination exist
+    // 2) check if queue already contains a message to same destination
+    // request a slot if one of the above is true (TODO make it configurable)
+    IMACProtocolControlInfo *const cInfo = check_and_cast<IMACProtocolControlInfo *>(msg->removeControlInfo());
+    allocateGTSlots(1, false, cInfo->getDestinationAddress());
+
+    // create DSME MAC Packet containing given packet
+    // push into queue
+
 }
 
 // See CSMA.cc
@@ -221,6 +236,45 @@ void DSME::endChannelScan() {
         isAssociated = true;
     }
 }
+
+
+
+
+void DSME::allocateGTSlots(uint8_t numSlots, bool direction, MACAddress addr) {
+    // select random slot
+    // TODO crashes here!
+    /*GTS randomGTS = occupiedGTSs.getRandomFreeGTS();  // TODO get for nearby superframe
+    // create request command
+    DSME_GTS_Management man;
+    man.type = ALLOCATION;
+    man.direction = direction;
+    man.prioritizedChannelAccess = false;
+    DSME_SAB_Specification sabSpec;
+    sabSpec.subBlockLength = occupiedGTSs.getSubBlockLength();
+    sabSpec.subBlockIndex = randomGTS.superframeID;            // TODO subBlockIndex bitwise?!
+    sabSpec.subBlock = occupiedGTSs.getSubBlock(randomGTS.superframeID);
+
+    /*DSME_GTSRequestCmd *req = new DSME_GTSRequestCmd("gts-request-allocation");
+    req->setGtsManagement(man); // TODO pointer new?
+    req->setSABSpec(sabSpec);   //
+    req->setNumSlots(numSlots);
+    req->setPreferredSuperframeID(randomGTS.superframeID);
+    req->setPreferredSlotID(randomGTS.slotID);
+
+    sendGTSRequest(req, addr);*/
+}
+
+void DSME::sendGTSRequest(DSME_GTSRequestCmd* gtsRequest, MACAddress addr) {
+    IEEE802154eMACCmdFrame *macCmd = new IEEE802154eMACCmdFrame("gts-request-cmd");
+    macCmd->setCmdId(DSME_GTS_REQUEST);
+    macCmd->encapsulate(gtsRequest);
+    macCmd->setDestAddr(addr);
+
+    EV_DEBUG << "Sending GTS-request To: " << addr << endl;
+
+    sendCSMA(macCmd, true);
+}
+
 
 void DSME::sendGTS(IEEE802154eMACFrame_Base *msg) {
 

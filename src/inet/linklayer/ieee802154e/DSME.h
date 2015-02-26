@@ -20,6 +20,7 @@
 
 #include "inet/linklayer/csma/CSMA.h"
 #include "inet/linklayer/ieee802154e/DSME_PANDescriptor_m.h"
+#include "inet/linklayer/ieee802154e/DSME_GTSRequestCmd_m.h"
 #include "inet/linklayer/ieee802154e/BeaconBitmap.h"
 #include "inet/linklayer/ieee802154e/GTS.h"
 #include "inet/linklayer/ieee802154e/SlotAllocationBitmap.h"
@@ -68,8 +69,10 @@ protected:
     DSME_PANDescriptor PANDescriptor;
 
     // Guaranteed Time Slots
-    std::pair<MACAddress, std::set<GTS>> allocatedGTSs;
+    std::pair<MACAddress, std::set<GTS>> allocatedGTSsTX;
+    std::pair<MACAddress, std::set<GTS>> allocatedGTSsRX;
     SlotAllocationBitmap occupiedGTSs;
+    MacQueue GTSQueue;
 
     // packets
     EnhancedBeacon *beaconFrame;
@@ -124,6 +127,38 @@ protected:
      * @param addr Address to send to
      */
     GTS getNextGTSlot(MACAddress addr);
+
+    /**
+     * Send a GTS-request to device
+     * To de-/allocate slots or notify about duplicate allocation
+     */
+    virtual void sendGTSRequest(DSME_GTSRequestCmd*, MACAddress addr);
+
+    /**
+     * Called on reception of a GTS-request.
+     * handles de-/allocation and duplication requests
+     */
+    //virtual void handleGTSRequest();
+
+    /**
+     * Reply to GTS-request
+     */
+    //virtual void sendGTSReply();
+
+    /**
+     * Allocate slot on status "succeed" and send GTSNotifiy
+     */
+    //virtual void handleGTSReply();
+
+    /**
+     * Broadcast GTS Notifiy
+     */
+    //virtual void sendGTSNotify();
+
+    /**
+     * Update slot allocation on reception of GTS Notify
+     */
+    //virtual void handleGTSNotify();
 
     /**
      * Directly send packet without delay and without CSMA
