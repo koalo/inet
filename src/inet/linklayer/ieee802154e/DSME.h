@@ -23,7 +23,7 @@
 #include "inet/linklayer/ieee802154e/DSME_GTSRequestCmd_m.h"
 #include "inet/linklayer/ieee802154e/BeaconBitmap.h"
 #include "inet/linklayer/ieee802154e/GTS.h"
-#include "inet/linklayer/ieee802154e/SlotAllocationBitmap.h"
+#include "inet/linklayer/ieee802154e/DSMESlotAllocationBitmap.h"
 #include "inet/linklayer/ieee802154e/IEEE802154eMACFrame_m.h"
 #include "inet/linklayer/ieee802154e/IEEE802154eMACCmdFrame_m.h"
 #include "inet/linklayer/ieee802154e/EnhancedBeacon.h"
@@ -71,7 +71,7 @@ protected:
     // Guaranteed Time Slots
     std::pair<MACAddress, std::set<GTS>> allocatedGTSsTX;
     std::pair<MACAddress, std::set<GTS>> allocatedGTSsRX;
-    SlotAllocationBitmap occupiedGTSs;
+    DSMESlotAllocationBitmap occupiedGTSs;
     MacQueue GTSQueue;
 
     // packets
@@ -138,7 +138,7 @@ protected:
      * Called on reception of a GTS-request.
      * handles de-/allocation and duplication requests
      */
-    //virtual void handleGTSRequest();
+    virtual void handleGTSRequest(IEEE802154eMACCmdFrame *);
 
     /**
      * Reply to GTS-request

@@ -87,6 +87,9 @@ void DSME::initialize(int stage)
         contentionWindowInit = par("contentionWindow");
         contentionWindow = contentionWindowInit;
 
+        // GTS
+        occupiedGTSs = DSMESlotAllocationBitmap(numberSuperframes, slotsPerSuperframe-numCSMASlots-1, 16); // TODO par channels
+
         // Beacon management:
         // PAN Coordinator sends beacon every beaconInterval
         // other devices scan for beacons for that duration
@@ -181,6 +184,10 @@ void DSME::handleLowerPacket(cPacket *msg) {
         if (strcmp(macPkt->getName(), "beacon-collision-notification") == 0) {
             IEEE802154eMACCmdFrame *macCmd = static_cast<IEEE802154eMACCmdFrame *>(macPkt->decapsulate()); // was send with CSMA
             return handleBeaconCollision(macCmd);
+        } else if (strcmp(macPkt->getName(), "gts-request-cmd") == 0) {
+            IEEE802154eMACCmdFrame *macCmd = static_cast<IEEE802154eMACCmdFrame *>(macPkt->decapsulate()); // was send with CSMA
+            // TODO handle send ACK, in CSMA or do it ourself? CSMA will forward packet to upperLayer...!?
+            return handleGTSRequest(macCmd);
         }
     }
 
@@ -190,15 +197,20 @@ void DSME::handleLowerPacket(cPacket *msg) {
 }
 
 void DSME::handleUpperPacket(cPacket *msg) {
-    EV_DETAIL << "DSME packet from upper layer -> send with GTS!" << endl;
-    // 1) lookup if slot to destination exist
-    // 2) check if queue already contains a message to same destination
-    // request a slot if one of the above is true (TODO make it configurable)
-    IMACProtocolControlInfo *const cInfo = check_and_cast<IMACProtocolControlInfo *>(msg->removeControlInfo());
-    allocateGTSlots(1, false, cInfo->getDestinationAddress());
+    EV_DETAIL << "DSME packet from upper layer: ";
+    if (!isAssociated) {
+        EV << " not associated -> discard packet." << endl;
+    } else {
+        EV << " send with GTS" << endl;
+        // 1) lookup if slot to destination exist
+        // 2) check if queue already contains a message to same destination
+        // request a slot if one of the above is true (TODO make it configurable)
+        IMACProtocolControlInfo *const cInfo = check_and_cast<IMACProtocolControlInfo *>(msg->removeControlInfo());
+        allocateGTSlots(1, false, cInfo->getDestinationAddress());
 
-    // create DSME MAC Packet containing given packet
-    // push into queue
+        // create DSME MAC Packet containing given packet
+        // push into queue
+    }
 
 }
 
@@ -242,8 +254,7 @@ void DSME::endChannelScan() {
 
 void DSME::allocateGTSlots(uint8_t numSlots, bool direction, MACAddress addr) {
     // select random slot
-    // TODO crashes here!
-    /*GTS randomGTS = occupiedGTSs.getRandomFreeGTS();  // TODO get for nearby superframe
+    GTS randomGTS = occupiedGTSs.getRandomFreeGTS();  // TODO get for nearby superframe
     // create request command
     DSME_GTS_Management man;
     man.type = ALLOCATION;
@@ -254,14 +265,14 @@ void DSME::allocateGTSlots(uint8_t numSlots, bool direction, MACAddress addr) {
     sabSpec.subBlockIndex = randomGTS.superframeID;            // TODO subBlockIndex bitwise?!
     sabSpec.subBlock = occupiedGTSs.getSubBlock(randomGTS.superframeID);
 
-    /*DSME_GTSRequestCmd *req = new DSME_GTSRequestCmd("gts-request-allocation");
+    DSME_GTSRequestCmd *req = new DSME_GTSRequestCmd("gts-request-allocation");
     req->setGtsManagement(man); // TODO pointer new?
     req->setSABSpec(sabSpec);   //
     req->setNumSlots(numSlots);
     req->setPreferredSuperframeID(randomGTS.superframeID);
     req->setPreferredSlotID(randomGTS.slotID);
 
-    sendGTSRequest(req, addr);*/
+    sendGTSRequest(req, addr);
 }
 
 void DSME::sendGTSRequest(DSME_GTSRequestCmd* gtsRequest, MACAddress addr) {
@@ -273,6 +284,21 @@ void DSME::sendGTSRequest(DSME_GTSRequestCmd* gtsRequest, MACAddress addr) {
     EV_DEBUG << "Sending GTS-request To: " << addr << endl;
 
     sendCSMA(macCmd, true);
+}
+
+void DSME::handleGTSRequest(IEEE802154eMACCmdFrame *macCmd) {
+    DSME_GTSRequestCmd *req = static_cast<DSME_GTSRequestCmd*>(macCmd->decapsulate());
+    EV_DETAIL << "Received GTS-request: " << req->getGtsManagement().type;
+    BitVector replySAB;
+    switch(req->getGtsManagement().type) {
+    case ALLOCATION:
+        // select numSlots free slots from intersection of received subBlock and local subBlock
+        EV << " - ALLOCATION" << endl;
+        replySAB = occupiedGTSs.allocateSlots(req->getSABSpec(), req->getNumSlots(), req->getPreferredSuperframeID(), req->getPreferredSlotID());
+        break;
+    default:
+        EV_ERROR << "GTS Mangement Type " << req->getGtsManagement().type << " not supported yet" << endl;
+    }
 }
 
 
