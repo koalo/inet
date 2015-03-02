@@ -20,7 +20,7 @@
 
 namespace inet {
 
-class EnhancedBeacon: public IEEE802154eMACFrame_Base {
+class EnhancedBeacon: public IEEE802154eMACFrame {
 public:
 
     static const char* NAME;

@@ -246,6 +246,8 @@ class INET_API CSMA : public MACProtocolBase, public IMACProtocol
     simtime_t aUnitBackoffPeriod;
     /** @brief Stores if the MAC expects Acks for Unicast packets.*/
     bool useMACAcks;
+    /** @brief Stores if the MAC expects Acks for Broadcast packets.*/
+    bool useBrdCstAcks;
 
     /** @brief Defines the backoff method to be used.*/
     backoff_methods backoffMethod;
@@ -317,6 +319,8 @@ class INET_API CSMA : public MACProtocolBase, public IMACProtocol
     void attachSignal(cPacket *mac, simtime_t_cref startTime);
     void manageMissingAck(t_mac_event event, cMessage *msg);
     void startTimer(t_mac_timer timer);
+
+    virtual void handleBroadcastAck(CSMAFrame *ack, CSMAFrame *frame);
 
     virtual simtime_t scheduleBackoff();
 

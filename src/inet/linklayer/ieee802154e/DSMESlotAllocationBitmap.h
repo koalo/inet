@@ -29,7 +29,7 @@ public:
     /**
      * select numSlots free slots from intersection of received subBlock and local subBlock
      */
-    BitVector allocateSlots(DSME_SAB_Specification sabSpec, uint8_t numSlots, uint16_t preferredSuperframe, uint8_t preferredSlot);
+    DSME_SAB_Specification allocateSlots(DSME_SAB_Specification sabSpec, uint8_t numSlots, uint16_t preferredSuperframe, uint8_t preferredSlot);
 
     /**
      * Get sub block for superframe

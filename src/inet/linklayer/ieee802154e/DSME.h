@@ -21,6 +21,7 @@
 #include "inet/linklayer/csma/CSMA.h"
 #include "inet/linklayer/ieee802154e/DSME_PANDescriptor_m.h"
 #include "inet/linklayer/ieee802154e/DSME_GTSRequestCmd_m.h"
+#include "inet/linklayer/ieee802154e/DSME_GTSReplyCmd_m.h"
 #include "inet/linklayer/ieee802154e/BeaconBitmap.h"
 #include "inet/linklayer/ieee802154e/GTS.h"
 #include "inet/linklayer/ieee802154e/DSMESlotAllocationBitmap.h"
@@ -72,11 +73,11 @@ protected:
     std::pair<MACAddress, std::set<GTS>> allocatedGTSsTX;
     std::pair<MACAddress, std::set<GTS>> allocatedGTSsRX;
     DSMESlotAllocationBitmap occupiedGTSs;
-    MacQueue GTSQueue;
+    std::list<IEEE802154eMACFrame*> GTSQueue;
 
     // packets
     EnhancedBeacon *beaconFrame;
-    IEEE802154eMACFrame_Base *csmaFrame;
+    IEEE802154eMACFrame *csmaFrame;
 
     // timers
     cMessage *beaconIntervalTimer;
@@ -120,7 +121,7 @@ protected:
     /**
      * Send packet at next available GTS
      */
-    virtual void sendGTS(IEEE802154eMACFrame_Base *);
+    virtual void sendGTS(IEEE802154eMACFrame *);
 
     /**
      * Gets time and channel of next GTSlot for address
@@ -143,12 +144,12 @@ protected:
     /**
      * Reply to GTS-request
      */
-    //virtual void sendGTSReply();
+    virtual void sendGTSReply(DSME_GTSReplyCmd *);
 
     /**
      * Allocate slot on status "succeed" and send GTSNotifiy
      */
-    //virtual void handleGTSReply();
+    virtual void handleGTSReply(IEEE802154eMACCmdFrame *);
 
     /**
      * Broadcast GTS Notifiy
@@ -159,6 +160,13 @@ protected:
      * Update slot allocation on reception of GTS Notify
      */
     //virtual void handleGTSNotify();
+
+    /**
+     * Send ACK message
+     */
+    virtual void sendACK(MACAddress);
+
+    virtual void handleBroadcastAck(CSMAFrame *ack, CSMAFrame *frame);
 
     /**
      * Directly send packet without delay and without CSMA
@@ -179,7 +187,7 @@ protected:
     /**
      * Send packet directly using CSMA
      */
-    virtual void sendCSMA(IEEE802154eMACFrame_Base *, bool requestACK);
+    virtual void sendCSMA(IEEE802154eMACFrame *, bool requestACK);
 
     /**
      * Gets called when CSMA Message was sent down to the PHY

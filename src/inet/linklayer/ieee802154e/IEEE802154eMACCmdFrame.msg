@@ -44,8 +44,8 @@ enum CommandFrameIdentifier {
 }
 
 
-class IEEE802154eMACFrame_Base;
+class IEEE802154eMACFrame;
 
-packet IEEE802154eMACCmdFrame extends IEEE802154eMACFrame_Base {
+packet IEEE802154eMACCmdFrame extends IEEE802154eMACFrame {
     short cmdId @enum(CommandFrameIdentifier);
 }

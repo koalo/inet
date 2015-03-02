@@ -45,6 +45,7 @@ void CSMA::initialize(int stage)
     MACProtocolBase::initialize(stage);
     if (stage == INITSTAGE_LOCAL) {
         useMACAcks = par("useMACAcks").boolValue();
+        useBrdCstAcks = false;
         queueLength = par("queueLength");
         sifs = par("sifs");
         transmissionAttemptInterruptedByRx = false;
@@ -497,7 +498,7 @@ void CSMA::updateStatusTransmitFrame(t_mac_event event, cMessage *msg)
             //broadcast
             EV_DETAIL << "(27) FSM State TRANSMITFRAME_4, EV_FRAME_TRANSMITTED "
                       << " [Broadcast]";
-            expectAck = false;
+            expectAck &= useBrdCstAcks;
         }
 
         if (expectAck) {
@@ -896,6 +897,8 @@ void CSMA::handleLowerPacket(cPacket *msg)
                 if (src == firstPacket->getDestAddr()) {
                     nbRecvdAcks++;
                     executeMac(EV_ACK_RECEIVED, macPkt);
+                } else if(firstPacket->getDestAddr() == MACAddress::BROADCAST_ADDRESS) {
+                    handleBroadcastAck(macPkt, firstPacket);
                 }
                 else {
                     EV << "Error! Received an ack from an unexpected source: src=" << src << ", I was expecting from node addr=" << firstPacket->getDestAddr() << endl;
@@ -915,6 +918,10 @@ void CSMA::handleLowerPacket(cPacket *msg)
         EV_DETAIL << "packet not for me, deleting...\n";
         delete macPkt;
     }
+}
+
+void CSMA::handleBroadcastAck(CSMAFrame *ack, CSMAFrame *frame) {
+    EV_ERROR << "Received ACK to broadcast message" << endl;
 }
 
 void CSMA::receiveSignal(cComponent *source, simsignal_t signalID, long value)

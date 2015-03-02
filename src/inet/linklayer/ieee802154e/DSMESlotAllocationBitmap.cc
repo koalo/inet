@@ -23,7 +23,7 @@ DSMESlotAllocationBitmap::DSMESlotAllocationBitmap(uint16_t numSuperframes, uint
     }
 }
 
-BitVector DSMESlotAllocationBitmap::allocateSlots(DSME_SAB_Specification sabSpec, uint8_t numSlots, uint16_t preferredSuperframe, uint8_t preferredSlot) {
+DSME_SAB_Specification DSMESlotAllocationBitmap::allocateSlots(DSME_SAB_Specification sabSpec, uint8_t numSlots, uint16_t preferredSuperframe, uint8_t preferredSlot) {
     // TODO subblock may have different length
     EV_DETAIL << "received subBlock: \t";
     BitVector slotsOccupied = sabSpec.subBlock;
@@ -32,18 +32,21 @@ BitVector DSMESlotAllocationBitmap::allocateSlots(DSME_SAB_Specification sabSpec
     EV << "local subBlock intersection: " << slotsOccupied.toString() << endl;
 
     // TODO assuming only preferred superframe in recieved subblock
-    BitVector slotAllocation = BitVector(0, slotsOccupied.getSize());
+    DSME_SAB_Specification replySabSpec;
+    replySabSpec.subBlock = BitVector(0, slotsOccupied.getSize());;
+    replySabSpec.subBlockIndex = sabSpec.subBlockIndex;
+    replySabSpec.subBlockLength = sabSpec.subBlockLength;
     uint8_t numAllocated = 0;
     EV_DETAIL << "allocating slots starting at " << (int)preferredSlot;
     for (uint16_t i = preferredSlot; i < slotsOccupied.getSize(); i++) {
         if(!slotsOccupied.getBit(i)) {
-            slotAllocation.setBit(i, true);
+            replySabSpec.subBlock.setBit(i, true);
             numAllocated++;
             EV << ", " << i;
-            // TODO pushback GTS to RX/TX lists
+            // TODO pushback GTS to RX/TX lists or on handleNotify?
             if(numAllocated == numSlots) {
                 EV << endl;
-                return slotAllocation;
+                return replySabSpec;
             } else {
                 // channel in slot selected, check next slot
                 i += numChannels - i % numChannels - 1; // i++ follows
@@ -51,8 +54,9 @@ BitVector DSMESlotAllocationBitmap::allocateSlots(DSME_SAB_Specification sabSpec
             }
         }
     }
+
     // TODO further search in following superframes or reply failure?
-    return slotAllocation;
+    return replySabSpec;
 }
 
 BitVector DSMESlotAllocationBitmap::getSubBlock(uint8_t superframeID) {

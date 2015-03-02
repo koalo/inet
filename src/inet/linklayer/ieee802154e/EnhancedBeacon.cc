@@ -20,7 +20,7 @@ namespace inet {
 const char *EnhancedBeacon::NAME = "enhanced-beacon";
 
 EnhancedBeacon::EnhancedBeacon() :
-        IEEE802154eMACFrame_Base(NAME)
+        IEEE802154eMACFrame(NAME)
 {
     destAddr_var.setBroadcast();
     setBitLength(100);  // TODO exact length

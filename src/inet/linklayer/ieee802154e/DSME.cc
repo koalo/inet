@@ -42,9 +42,9 @@ DSME::~DSME() {
         delete beaconFrame;
     //if(csmaFrame != nullptr)
     //    delete csmaFrame;     // FIXME this crashes when closing the simulation
-    for (auto it = GTSQueue.begin(); it != GTSQueue.end(); ++it) {
-        delete (*it);
-    }
+    //for (auto it = GTSQueue.begin(); it != GTSQueue.end(); ++it) {
+    //    delete (*it);
+    //}
 }
 
 
@@ -61,7 +61,7 @@ void DSME::initialize(int stage)
         isCoordinator = host->par("isCoordinator");
         isAssociated = isPANCoordinator;
         isBeaconAllocated = isPANCoordinator;
-        isBeaconAllocationSent = isPANCoordinator;
+        isBeaconAllocationSent = false;
 
         // DSME configuration
         superframeSpec.beaconOrder = par("beaconOrder");
@@ -86,6 +86,7 @@ void DSME::initialize(int stage)
         aUnitBackoffPeriod = slotDuration;
         contentionWindowInit = par("contentionWindow");
         contentionWindow = contentionWindowInit;
+        useBrdCstAcks = true;   // DSME GTS management uses broadcast messages with encapsulated dest address
 
         // GTS
         occupiedGTSs = DSMESlotAllocationBitmap(numberSuperframes, slotsPerSuperframe-numCSMASlots-1, 16); // TODO par channels
@@ -156,7 +157,7 @@ void DSME::handleSelfMessage(cMessage *msg) {
         simtime_t nextCSMASlotTimestamp = getNextCSMASlot();
         scheduleAt(nextCSMASlotTimestamp, nextCSMASlotTimer);
     }
-    else if (msg == nextCSMASlotTimer) { // TODO this is too much if/else, make a function or nicer state machine or ...
+    else if (msg == nextCSMASlotTimer) {
         handleCSMASlot();
     } else {
         // TODO handle discared messages, e.g. clear isBeaconAllocationSent
@@ -167,7 +168,7 @@ void DSME::handleSelfMessage(cMessage *msg) {
 }
 
 void DSME::handleLowerPacket(cPacket *msg) {
-    IEEE802154eMACFrame_Base *macPkt = static_cast<IEEE802154eMACFrame_Base *>(msg);
+    IEEE802154eMACFrame *macPkt = static_cast<IEEE802154eMACFrame *>(msg);
     const MACAddress& dest = macPkt->getDestAddr();
 
     //EV_DEBUG << "Received " << macPkt->getName() << " bcast:" << dest.isBroadcast() << endl;
@@ -178,6 +179,9 @@ void DSME::handleLowerPacket(cPacket *msg) {
         } else if(strcmp(macPkt->getName(), "beacon-allocation-notification") == 0) {
             IEEE802154eMACCmdFrame *macCmd = static_cast<IEEE802154eMACCmdFrame *>(macPkt->decapsulate()); // was send with CSMA
             return handleBeaconAllocation(macCmd);
+        } else if(strcmp(macPkt->getName(), "gts-reply-cmd") == 0) {
+            IEEE802154eMACCmdFrame *macCmd = static_cast<IEEE802154eMACCmdFrame *>(macPkt->decapsulate()); // was send with CSMA
+            return handleGTSReply(macCmd);
         }
     } else if (dest == address) {
         EV_DETAIL << "DSME received packet for me: " << macPkt->getName() << endl;
@@ -186,7 +190,6 @@ void DSME::handleLowerPacket(cPacket *msg) {
             return handleBeaconCollision(macCmd);
         } else if (strcmp(macPkt->getName(), "gts-request-cmd") == 0) {
             IEEE802154eMACCmdFrame *macCmd = static_cast<IEEE802154eMACCmdFrame *>(macPkt->decapsulate()); // was send with CSMA
-            // TODO handle send ACK, in CSMA or do it ourself? CSMA will forward packet to upperLayer...!?
             return handleGTSRequest(macCmd);
         }
     }
@@ -201,15 +204,23 @@ void DSME::handleUpperPacket(cPacket *msg) {
     if (!isAssociated) {
         EV << " not associated -> discard packet." << endl;
     } else {
-        EV << " send with GTS" << endl;
+        EV << " send with GTS: ";
         // 1) lookup if slot to destination exist
         // 2) check if queue already contains a message to same destination
         // request a slot if one of the above is true (TODO make it configurable)
-        IMACProtocolControlInfo *const cInfo = check_and_cast<IMACProtocolControlInfo *>(msg->removeControlInfo());
-        allocateGTSlots(1, false, cInfo->getDestinationAddress());
+        if (GTSQueue.size() == 0) {
+            EV << "empty Queue" << endl;
+            IMACProtocolControlInfo *const cInfo = check_and_cast<IMACProtocolControlInfo *>(msg->removeControlInfo());
+            allocateGTSlots(1, false, cInfo->getDestinationAddress());
+        } else {
+            EV << "queue not empty: " << GTSQueue.size() << endl;
+        }
 
         // create DSME MAC Packet containing given packet
         // push into queue
+        IEEE802154eMACFrame *macFrame = new IEEE802154eMACFrame("dsme-gts-frame");
+        macFrame->encapsulate(msg);
+        GTSQueue.push_back(macFrame);
     }
 
 }
@@ -280,6 +291,7 @@ void DSME::sendGTSRequest(DSME_GTSRequestCmd* gtsRequest, MACAddress addr) {
     macCmd->setCmdId(DSME_GTS_REQUEST);
     macCmd->encapsulate(gtsRequest);
     macCmd->setDestAddr(addr);
+    macCmd->setSrcAddr(address);
 
     EV_DEBUG << "Sending GTS-request To: " << addr << endl;
 
@@ -287,35 +299,89 @@ void DSME::sendGTSRequest(DSME_GTSRequestCmd* gtsRequest, MACAddress addr) {
 }
 
 void DSME::handleGTSRequest(IEEE802154eMACCmdFrame *macCmd) {
+    sendACK(macCmd->getSrcAddr());
     DSME_GTSRequestCmd *req = static_cast<DSME_GTSRequestCmd*>(macCmd->decapsulate());
     EV_DETAIL << "Received GTS-request: " << req->getGtsManagement().type;
-    BitVector replySAB;
+
+    DSME_GTSReplyCmd *reply = new DSME_GTSReplyCmd();
+    reply->setGtsManagement(req->getGtsManagement());                   // TODO copy?
+    reply->setDestinationAddress(macCmd->getSrcAddr());
+    DSME_SAB_Specification replySABSpec;
+
     switch(req->getGtsManagement().type) {
     case ALLOCATION:
+        reply->setName("gts-reply-allocation");
         // select numSlots free slots from intersection of received subBlock and local subBlock
         EV << " - ALLOCATION" << endl;
-        replySAB = occupiedGTSs.allocateSlots(req->getSABSpec(), req->getNumSlots(), req->getPreferredSuperframeID(), req->getPreferredSlotID());
+        replySABSpec = occupiedGTSs.allocateSlots(req->getSABSpec(), req->getNumSlots(), req->getPreferredSuperframeID(), req->getPreferredSlotID());
         break;
     default:
         EV_ERROR << "GTS Mangement Type " << req->getGtsManagement().type << " not supported yet" << endl;
     }
+
+    reply->setSABSpec(replySABSpec);
+    sendGTSReply(reply);
 }
 
+void DSME::sendGTSReply(DSME_GTSReplyCmd *gtsReply) {
+    IEEE802154eMACCmdFrame *macCmd = new IEEE802154eMACCmdFrame("gts-reply-cmd");
+    macCmd->setCmdId(DSME_GTS_REPLY);
+    macCmd->encapsulate(gtsReply);
+    macCmd->setDestAddr(MACAddress::BROADCAST_ADDRESS);
+    macCmd->setSrcAddr(address);
 
-void DSME::sendGTS(IEEE802154eMACFrame_Base *msg) {
+    EV_DEBUG << "Sending GTS-reply broadcast" << endl;
+    sendCSMA(macCmd, true);             // TODO broadcast ACK gets handled?
+}
 
+void DSME::handleGTSReply(IEEE802154eMACCmdFrame *macCmd) {
+    // send ACK if for me
+    DSME_GTSReplyCmd *gtsReply = static_cast<DSME_GTSReplyCmd*>(macCmd->decapsulate());
+    if (gtsReply->getDestinationAddress() == address) {
+        sendACK(macCmd->getSrcAddr());
+
+        // TODO send Notify
+    }
+
+    // TODO update GTS allocation bitmap
+}
+
+void DSME::sendGTS(IEEE802154eMACFrame *msg) {
+
+}
+
+void DSME::sendACK(MACAddress addr) {
+    if (ackMessage != nullptr)
+        delete ackMessage;
+    ackMessage = new CSMAFrame("CSMA-Ack");
+    ackMessage->setSrcAddr(address);
+    ackMessage->setDestAddr(addr);
+    ackMessage->setBitLength(ackLength);
+    sendDirect(ackMessage);
+}
+
+void DSME::handleBroadcastAck(CSMAFrame *ack, CSMAFrame *frame) {
+    EV_DEBUG << "Received Ack to Broadcast: " << frame->getName() << endl;
+    if (strcmp(frame->getName(), "gts-reply-cmd") == 0) {
+        DSME_GTSReplyCmd *reply = static_cast<DSME_GTSReplyCmd*>(frame->getEncapsulatedPacket()->getEncapsulatedPacket());
+        if (reply->getDestinationAddress() == ack->getSrcAddr()) {
+            nbRecvdAcks++;
+            executeMac(EV_ACK_RECEIVED, ack);
+        } else {
+            EV_DEBUG << "ACK from " << ack->getSrcAddr() << " not from destination " << reply->getDestinationAddress() << endl;
+        }
+    }
 }
 
 void DSME::sendDirect(cPacket *msg) {
     radio->setRadioMode(IRadio::RADIO_MODE_TRANSMITTER);
     attachSignal(msg, simTime() + aTurnaroundTime); // TODO turnaroundTime only on statechange, plus parameter is useless?
     sendDown(msg);
-    // TODO reset to receiving / IDLE?
 }
 
 simtime_t DSME::getNextCSMASlot() {
-    unsigned slotOffset = (currentSlot < numCSMASlots) ? 1 : slotsPerSuperframe - currentSlot;
-    double offset = (slotOffset-1)*slotDuration;
+    unsigned slotOffset = (currentSlot < numCSMASlots) ? 0 : slotsPerSuperframe - currentSlot + 1;
+    double offset = slotOffset * slotDuration;
     EV_DEBUG << "CurrentSlot: " << currentSlot << ", nextCSMASlot Offset: " << slotOffset << " (" << offset << ")" << endl;
     return nextSlotTimestamp + offset;
 }
@@ -356,12 +422,13 @@ void DSME::handleCSMASlot() {
     }
 }
 
-void DSME::sendCSMA(IEEE802154eMACFrame_Base *msg, bool requestACK = false) {
+void DSME::sendCSMA(IEEE802154eMACFrame *msg, bool requestACK = false) {
     headerLength = 0;                               // otherwise CSMA adds 72 bits
     useMACAcks = requestACK;
     // simulate upperlayer dest addr to CSMA
     SimpleLinkLayerControlInfo *const cCtrlInfo = new SimpleLinkLayerControlInfo();
     cCtrlInfo->setDest(msg->getDestAddr());
+    cCtrlInfo->setSrc(this->address);
     msg->setControlInfo(cCtrlInfo);
     CSMA::handleUpperPacket(msg);
 }
