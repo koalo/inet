@@ -22,6 +22,7 @@
 #include "inet/linklayer/ieee802154e/DSME_PANDescriptor_m.h"
 #include "inet/linklayer/ieee802154e/DSME_GTSRequestCmd_m.h"
 #include "inet/linklayer/ieee802154e/DSME_GTSReplyCmd_m.h"
+#include "inet/linklayer/ieee802154e/DSME_GTSNotifyCmd_m.h"
 #include "inet/linklayer/ieee802154e/BeaconBitmap.h"
 #include "inet/linklayer/ieee802154e/GTS.h"
 #include "inet/linklayer/ieee802154e/DSMESlotAllocationBitmap.h"
@@ -142,30 +143,40 @@ protected:
     virtual void handleGTSRequest(IEEE802154eMACCmdFrame *);
 
     /**
-     * Reply to GTS-request
+     * Send Reply broadcast to GTS-request as response and to notify neighbors
      */
     virtual void sendGTSReply(DSME_GTSReplyCmd *);
 
     /**
-     * Allocate slot on status "succeed" and send GTSNotifiy
+     * Update slot allocation
+     * Request initiator then sends GTS Notify to its neighbors
      */
     virtual void handleGTSReply(IEEE802154eMACCmdFrame *);
 
     /**
-     * Broadcast GTS Notifiy
+     * Send GTS Notifiy broadcast to notify neighbors about GTS allocation
      */
-    //virtual void sendGTSNotify();
+    virtual void sendGTSNotify(DSME_GTSNotifyCmd *);
 
     /**
      * Update slot allocation on reception of GTS Notify
      */
-    //virtual void handleGTSNotify();
+    virtual void handleGTSNotify(IEEE802154eMACCmdFrame *);
+
+    /**
+     * Send IEEE802154eMACCmdFrame broadcast message.
+     * await an ACK response from encapsulated packet destination address
+     */
+    virtual void sendBroadcastCmd(const char *name, cPacket *payload, uint8_t cmdId);
 
     /**
      * Send ACK message
      */
     virtual void sendACK(MACAddress);
 
+    /**
+     * @Override
+     */
     virtual void handleBroadcastAck(CSMAFrame *ack, CSMAFrame *frame);
 
     /**

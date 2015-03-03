@@ -182,6 +182,9 @@ void DSME::handleLowerPacket(cPacket *msg) {
         } else if(strcmp(macPkt->getName(), "gts-reply-cmd") == 0) {
             IEEE802154eMACCmdFrame *macCmd = static_cast<IEEE802154eMACCmdFrame *>(macPkt->decapsulate()); // was send with CSMA
             return handleGTSReply(macCmd);
+        } else if(strcmp(macPkt->getName(), "gts-notify-cmd") == 0) {
+            IEEE802154eMACCmdFrame *macCmd = static_cast<IEEE802154eMACCmdFrame *>(macPkt->decapsulate()); // was send with CSMA
+            return handleGTSNotify(macCmd);
         }
     } else if (dest == address) {
         EV_DETAIL << "DSME received packet for me: " << macPkt->getName() << endl;
@@ -314,9 +317,11 @@ void DSME::handleGTSRequest(IEEE802154eMACCmdFrame *macCmd) {
         // select numSlots free slots from intersection of received subBlock and local subBlock
         EV << " - ALLOCATION" << endl;
         replySABSpec = occupiedGTSs.allocateSlots(req->getSABSpec(), req->getNumSlots(), req->getPreferredSuperframeID(), req->getPreferredSlotID());
+        // TODO handle errors
+        reply->getGtsManagement().status = ALLOCATION_APPROVED;
         break;
     default:
-        EV_ERROR << "GTS Mangement Type " << req->getGtsManagement().type << " not supported yet" << endl;
+        EV_ERROR << "DSME: GTS Mangement Type " << req->getGtsManagement().type << " not supported yet" << endl;
     }
 
     reply->setSABSpec(replySABSpec);
@@ -324,14 +329,7 @@ void DSME::handleGTSRequest(IEEE802154eMACCmdFrame *macCmd) {
 }
 
 void DSME::sendGTSReply(DSME_GTSReplyCmd *gtsReply) {
-    IEEE802154eMACCmdFrame *macCmd = new IEEE802154eMACCmdFrame("gts-reply-cmd");
-    macCmd->setCmdId(DSME_GTS_REPLY);
-    macCmd->encapsulate(gtsReply);
-    macCmd->setDestAddr(MACAddress::BROADCAST_ADDRESS);
-    macCmd->setSrcAddr(address);
-
-    EV_DEBUG << "Sending GTS-reply broadcast" << endl;
-    sendCSMA(macCmd, true);             // TODO broadcast ACK gets handled?
+    sendBroadcastCmd("gts-reply-cmd", gtsReply, DSME_GTS_REPLY);
 }
 
 void DSME::handleGTSReply(IEEE802154eMACCmdFrame *macCmd) {
@@ -340,14 +338,50 @@ void DSME::handleGTSReply(IEEE802154eMACCmdFrame *macCmd) {
     if (gtsReply->getDestinationAddress() == address) {
         sendACK(macCmd->getSrcAddr());
 
-        // TODO send Notify
+        // notify neighbors if allocation succeeded
+        if (gtsReply->getGtsManagement().status == ALLOCATION_APPROVED) {
+            EV_DETAIL << "DSME: GTS Allocation succeeded -> notify" << endl;
+            DSME_GTSNotifyCmd *gtsNotify = new DSME_GTSNotifyCmd("gts-notify-allocation");
+            gtsNotify->setGtsManagement(gtsReply->getGtsManagement());
+            gtsNotify->setSABSpec(gtsReply->getSABSpec());
+            gtsNotify->setDestinationAddress(macCmd->getSrcAddr());
+            sendGTSNotify(gtsNotify);
+        }
     }
 
-    // TODO update GTS allocation bitmap
+    // TODO update GTS allocation bitmap on success
+    if (gtsReply->getGtsManagement().status == ALLOCATION_APPROVED) {
+        EV_DETAIL << "DSME: Updating neighboring GTS allocation bitmap" << endl;
+    }
+}
+
+void DSME::sendGTSNotify(DSME_GTSNotifyCmd *gtsNotify) {
+    sendBroadcastCmd("gts-notify-cmd", gtsNotify, DSME_GTS_NOTIFY);
+}
+
+void DSME::handleGTSNotify(IEEE802154eMACCmdFrame *macCmd) {
+    // send ACK if for me
+    DSME_GTSNotifyCmd *gtsNotify = static_cast<DSME_GTSNotifyCmd*>(macCmd->decapsulate());
+    if (gtsNotify->getDestinationAddress() == address) {
+        sendACK(macCmd->getSrcAddr());
+    }
+    // TODO update GTS allocation
+    EV_DETAIL << "DSME: Received GTS Notify" << endl;
 }
 
 void DSME::sendGTS(IEEE802154eMACFrame *msg) {
 
+}
+
+void DSME::sendBroadcastCmd(const char *name, cPacket *payload, uint8_t cmdId) {
+    IEEE802154eMACCmdFrame *macCmd = new IEEE802154eMACCmdFrame(name);
+    macCmd->setCmdId(cmdId);
+    macCmd->encapsulate(payload);
+    macCmd->setDestAddr(MACAddress::BROADCAST_ADDRESS);
+    macCmd->setSrcAddr(address);
+
+    EV_DEBUG << "DSME: Sending " << name << " broadcast" << endl;
+    sendCSMA(macCmd, true);
 }
 
 void DSME::sendACK(MACAddress addr) {
@@ -362,14 +396,21 @@ void DSME::sendACK(MACAddress addr) {
 
 void DSME::handleBroadcastAck(CSMAFrame *ack, CSMAFrame *frame) {
     EV_DEBUG << "Received Ack to Broadcast: " << frame->getName() << endl;
+    MACAddress dest;
     if (strcmp(frame->getName(), "gts-reply-cmd") == 0) {
         DSME_GTSReplyCmd *reply = static_cast<DSME_GTSReplyCmd*>(frame->getEncapsulatedPacket()->getEncapsulatedPacket());
-        if (reply->getDestinationAddress() == ack->getSrcAddr()) {
-            nbRecvdAcks++;
-            executeMac(EV_ACK_RECEIVED, ack);
-        } else {
-            EV_DEBUG << "ACK from " << ack->getSrcAddr() << " not from destination " << reply->getDestinationAddress() << endl;
-        }
+        dest = reply->getDestinationAddress();
+    } else if (strcmp(frame->getName(), "gts-notify-cmd") == 0) {
+        DSME_GTSNotifyCmd *notify = static_cast<DSME_GTSNotifyCmd*>(frame->getEncapsulatedPacket()->getEncapsulatedPacket());
+        dest = notify->getDestinationAddress();
+    } else {
+        return;
+    }
+    if (dest == ack->getSrcAddr()) {
+        nbRecvdAcks++;
+        executeMac(EV_ACK_RECEIVED, ack);
+    } else {
+        EV_DEBUG << "ACK from " << ack->getSrcAddr() << " not from destination " << dest << endl;
     }
 }
 

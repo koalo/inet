@@ -33,10 +33,17 @@ enum ManagementType {
     EXPIRATION = 5;
 }
 
+enum StatusType {
+    ALLOCATION_APPROVED = 0;
+    ALLOCATION_DISAPPROVED = 1;
+    OTHER_DISAPPROVED = 2;
+}
+
 struct DSME_GTS_Management {
     short type @enum(ManagementType);	// 3 bits
     bool direction;						// TX -> 0, RX -> 1;   (only for allocation)
     bool prioritizedChannelAccess;
+    short status @enum(StatusType);
 }
 
 class noncobject BitVector;
