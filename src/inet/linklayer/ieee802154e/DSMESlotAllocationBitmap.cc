@@ -59,6 +59,21 @@ DSME_SAB_Specification DSMESlotAllocationBitmap::allocateSlots(DSME_SAB_Specific
     return replySabSpec;
 }
 
+std::list<GTS> DSMESlotAllocationBitmap::getGTSsFromAllocation(DSME_SAB_Specification sabSpec) {
+    std::list<GTS> gtss;
+    for (uint16_t i=0; i<sabSpec.subBlock.getSize(); i++) {
+        if (sabSpec.subBlock.getBit(i))
+            gtss.push_back(getGTS(sabSpec.subBlockIndex, i));
+    }
+    return gtss;
+}
+
+void DSMESlotAllocationBitmap::updateSlotAllocation(DSME_SAB_Specification sabSpec) {
+    EV_DETAIL << "DSME: Updating neighboring GTS allocation bitmap for superframe(" << sabSpec.subBlockIndex << "): ";
+    bitmap[sabSpec.subBlockIndex] |= sabSpec.subBlock;
+    EV << bitmap[sabSpec.subBlockIndex].toString() << endl;
+}
+
 BitVector DSMESlotAllocationBitmap::getSubBlock(uint8_t superframeID) {
     return bitmap[superframeID];
 }

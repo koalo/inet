@@ -32,6 +32,16 @@ public:
     DSME_SAB_Specification allocateSlots(DSME_SAB_Specification sabSpec, uint8_t numSlots, uint16_t preferredSuperframe, uint8_t preferredSlot);
 
     /**
+     * extract all allocated GTSs from bitmap
+     */
+    std::list<GTS> getGTSsFromAllocation(DSME_SAB_Specification sabSpec);
+
+    /**
+     * Update slot allocation of neighborhood on receipt of reply/notify
+     */
+    void updateSlotAllocation(DSME_SAB_Specification sabSpec);
+
+    /**
      * Get sub block for superframe
      */
     BitVector getSubBlock(uint8_t superframeID);
@@ -52,7 +62,7 @@ public:
     uint8_t getSubBlockLength();
 
 protected:
-    GTS getGTS(uint16_t superframeID, uint16_t slotID);
+    GTS getGTS(uint16_t superframeID, uint16_t offset);
 };
 
 } /* namespace inet */

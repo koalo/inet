@@ -339,6 +339,7 @@ void DSME::handleGTSReply(IEEE802154eMACCmdFrame *macCmd) {
         sendACK(macCmd->getSrcAddr());
 
         // notify neighbors if allocation succeeded
+        // TODO also send if not?
         if (gtsReply->getGtsManagement().status == ALLOCATION_APPROVED) {
             EV_DETAIL << "DSME: GTS Allocation succeeded -> notify" << endl;
             DSME_GTSNotifyCmd *gtsNotify = new DSME_GTSNotifyCmd("gts-notify-allocation");
@@ -346,12 +347,13 @@ void DSME::handleGTSReply(IEEE802154eMACCmdFrame *macCmd) {
             gtsNotify->setSABSpec(gtsReply->getSABSpec());
             gtsNotify->setDestinationAddress(macCmd->getSrcAddr());
             sendGTSNotify(gtsNotify);
+
+            //occupiedGTSs.getGTSs(gtsReply->getSABSpec());
         }
     }
 
-    // TODO update GTS allocation bitmap on success
     if (gtsReply->getGtsManagement().status == ALLOCATION_APPROVED) {
-        EV_DETAIL << "DSME: Updating neighboring GTS allocation bitmap" << endl;
+        occupiedGTSs.updateSlotAllocation(gtsReply->getSABSpec());
     }
 }
 
@@ -365,8 +367,9 @@ void DSME::handleGTSNotify(IEEE802154eMACCmdFrame *macCmd) {
     if (gtsNotify->getDestinationAddress() == address) {
         sendACK(macCmd->getSrcAddr());
     }
-    // TODO update GTS allocation
+    // update neighbor slot allocation
     EV_DETAIL << "DSME: Received GTS Notify" << endl;
+    occupiedGTSs.updateSlotAllocation(gtsNotify->getSABSpec());
 }
 
 void DSME::sendGTS(IEEE802154eMACFrame *msg) {
