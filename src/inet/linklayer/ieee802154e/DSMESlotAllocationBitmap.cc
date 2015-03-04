@@ -37,7 +37,7 @@ DSME_SAB_Specification DSMESlotAllocationBitmap::allocateSlots(DSME_SAB_Specific
     replySabSpec.subBlockIndex = sabSpec.subBlockIndex;
     replySabSpec.subBlockLength = sabSpec.subBlockLength;
     uint8_t numAllocated = 0;
-    EV_DETAIL << "allocating slots starting at " << (int)preferredSlot;
+    EV_DETAIL << "allocating slot-channel starting at " << (int)preferredSlot;
     for (uint16_t i = preferredSlot; i < slotsOccupied.getSize(); i++) {
         if(!slotsOccupied.getBit(i)) {
             replySabSpec.subBlock.setBit(i, true);
@@ -104,7 +104,7 @@ GTS DSMESlotAllocationBitmap::getRandomFreeGTS(uint16_t superframeID) {
 }
 
 GTS DSMESlotAllocationBitmap::getGTS(uint16_t superframeID, uint16_t offset) {
-    return GTS(superframeID, offset/numSlots, offset%numSlots);
+    return GTS(superframeID, offset/numChannels, offset%numChannels);
 }
 
 uint8_t DSMESlotAllocationBitmap::getSubBlockLength() {

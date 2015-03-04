@@ -55,6 +55,7 @@ protected:
     unsigned numberSuperframes;
 
     unsigned currentSlot;
+    unsigned currentSuperframe;
     simtime_t nextSlotTimestamp;
     unsigned slotsPerSuperframe;
 
@@ -71,10 +72,11 @@ protected:
     DSME_PANDescriptor PANDescriptor;
 
     // Guaranteed Time Slots
-    std::pair<MACAddress, std::set<GTS>> allocatedGTSsTX;
-    std::pair<MACAddress, std::set<GTS>> allocatedGTSsRX;
+    typedef std::vector<std::vector<GTS>> gts_allocation;     // superframes x slots
+    gts_allocation allocatedGTSs;
     DSMESlotAllocationBitmap occupiedGTSs;
-    std::list<IEEE802154eMACFrame*> GTSQueue;
+    typedef std::map<MACAddress, std::list<IEEE802154eMACFrame*>> gts_queue;
+    gts_queue GTSQueue;
 
     // packets
     EnhancedBeacon *beaconFrame;
@@ -84,7 +86,6 @@ protected:
     cMessage *beaconIntervalTimer;
     cMessage *nextSlotTimer;
     cMessage *nextCSMASlotTimer;
-    cMessage *nextGTSlotTimer;
 
     // slotted csma uses contentionWindow
     unsigned contentionWindow;
@@ -183,6 +184,12 @@ protected:
      * Directly send packet without delay and without CSMA
      */
     virtual void sendDirect(cPacket *);
+
+    /**
+     * Called on start of every GTSlot.
+     * Switch channel for reception or transmit from queue in allocated slots.
+     */
+    virtual void handleGTS();
 
     /**
      * Gets time of next CSMA slot

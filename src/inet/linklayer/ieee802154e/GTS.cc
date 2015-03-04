@@ -17,16 +17,13 @@
 
 namespace inet {
 
-const GTS GTS::UNDEFINED = GTS(0xff, 0xff, 0xff);         // TODO ugly workaround, also there are no 256 channels...
+const GTS GTS::UNDEFINED = GTS(0xffff, 0xffff, 0xff);         // TODO ugly workaround, also there are no 256 channels...
 
-GTS::GTS(uint8_t superframeID, uint8_t slotID, uint8_t channel) {
+GTS::GTS(uint16_t superframeID, uint16_t slotID, uint8_t channel) {
     this->superframeID = superframeID;
     this->slotID = slotID;
     this->channel = channel;
 }
 
-bool GTS::operator<(const GTS& other) {
-    return (this->slotID < other.slotID);
-}
 
 } /* namespace inet */

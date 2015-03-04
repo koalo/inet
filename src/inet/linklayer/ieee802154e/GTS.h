@@ -17,6 +17,7 @@
 #define GTS_H_
 
 #include "inet/common/INETDefs.h"
+#include "inet/linklayer/common/MACAddress.h"
 
 namespace inet {
 
@@ -24,13 +25,16 @@ class GTS {
 public:
     static const GTS UNDEFINED;
 
-    GTS(uint8_t superframeID, uint8_t slotID, uint8_t channel);
+    GTS(uint16_t superframeID, uint16_t slotID, uint8_t channel);
 
-    uint8_t superframeID;
+    uint16_t superframeID;
     uint16_t slotID;
     uint8_t channel;
+    bool direction;
+    MACAddress address;
 
-    bool operator<(const GTS& other);
+    bool operator==(const GTS& b) { return (this->superframeID==b.superframeID && this->slotID==b.slotID && this->channel==b.channel);}
+    bool operator!=(const GTS& b) { return !(*this == b); }
 };
 
 } /* namespace inet */
