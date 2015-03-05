@@ -84,6 +84,7 @@ protected:
 
     // timers
     cMessage *beaconIntervalTimer;
+    cMessage *preNextSlotTimer;
     cMessage *nextSlotTimer;
     cMessage *nextCSMASlotTimer;
 
@@ -121,15 +122,14 @@ protected:
     virtual void endChannelScan();
 
     /**
-     * Send packet at next available GTS
+     * Switch Channel for transceiving before next slot
      */
-    virtual void sendGTS(IEEE802154eMACFrame *);
+    virtual void switchToNextSlotChannel();
 
     /**
-     * Gets time and channel of next GTSlot for address
-     * @param addr Address to send to
+     * Update GTS allocation for receiving or transmitting for this device
      */
-    GTS getNextGTSlot(MACAddress addr);
+    virtual void updateAllocatedGTS(std::list<GTS>& gtss, bool direction, MACAddress address);
 
     /**
      * Send a GTS-request to device
@@ -242,6 +242,13 @@ protected:
      * Update beacon allocation
      */
     virtual void handleBeaconCollision(IEEE802154eMACCmdFrame *);
+
+
+    /**
+     * Switch Transceiver to given channel [11, 26]
+     * TODO this should be done in the Radio class
+     */
+    virtual void setChannelNumber(unsigned k);
 
 };
 

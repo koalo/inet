@@ -30,6 +30,7 @@ DSME::DSME() :
                         beaconFrame(nullptr),
                         csmaFrame(nullptr),
                         beaconIntervalTimer(nullptr),
+                        preNextSlotTimer(nullptr),
                         nextSlotTimer(nullptr),
                         nextCSMASlotTimer(nullptr)
 {
@@ -37,6 +38,7 @@ DSME::DSME() :
 
 DSME::~DSME() {
     cancelAndDelete(beaconIntervalTimer);
+    cancelAndDelete(preNextSlotTimer);
     cancelAndDelete(nextSlotTimer);
     cancelAndDelete(nextCSMASlotTimer);
     if (beaconFrame != nullptr)
@@ -104,6 +106,7 @@ void DSME::initialize(int stage)
         currentSlot = 0;
         currentSuperframe = 0;
         nextSlotTimestamp = simTime() + slotDuration;
+        preNextSlotTimer = new cMessage("pre-next-slot-timer");
         nextSlotTimer = new cMessage("next-slot-timer");
         nextCSMASlotTimer = new cMessage("csma-slot-timer");
         scheduleAt(nextSlotTimestamp, nextSlotTimer);
@@ -127,6 +130,9 @@ void DSME::initialize(int stage)
             PANDescriptor.setBitLength(92 + numberSuperframes);
         }
 
+        // common channel for all
+        setChannelNumber(11);
+
         // others scan network for beacons and remember beacon allocation included in enhanced beacons
         heardBeacons.SDBitmap.appendBit(false, numberSuperframes);
         neighborHeardBeacons.SDBitmap.appendBit(false, numberSuperframes);
@@ -134,19 +140,21 @@ void DSME::initialize(int stage)
 }
 
 void DSME::handleSelfMessage(cMessage *msg) {
-    if (msg == nextSlotTimer) {
+    if (msg == preNextSlotTimer) {
+        // Switch to channel for next slot
+        switchToNextSlotChannel();
+    } else if (msg == nextSlotTimer) {
         // update current slot and superframe information
         nextSlotTimestamp = simTime() + slotDuration;
         currentSlot = (currentSlot < slotsPerSuperframe-1) ? currentSlot + 1 : 0;
         if (currentSlot == 0)
             currentSuperframe = (currentSuperframe < numberSuperframes-1) ? currentSuperframe + 1: 0;
+        scheduleAt(nextSlotTimestamp-sifs, preNextSlotTimer);
         scheduleAt(nextSlotTimestamp, nextSlotTimer);
 
         // if is GTS handle RX/TX if allocated
         if (currentSlot > numCSMASlots) {
             handleGTS();
-        } else {
-            // TODO switch back to common channel
         }
     } else if (msg == beaconIntervalTimer) {
         // PAN Coordinator sends beacon every beaconInterval
@@ -196,7 +204,10 @@ void DSME::handleLowerPacket(cPacket *msg) {
         }
     } else if (dest == address) {
         EV_DETAIL << "DSME received packet for me: " << macPkt->getName() << endl;
-        if (strcmp(macPkt->getName(), "beacon-collision-notification") == 0) {
+        if (strcmp(macPkt->getName(), "dsme-gts-frame") == 0) {
+            EV_DEBUG << "Received GTS frame" << endl;return;
+            // handleGTSFrame();
+        } else if (strcmp(macPkt->getName(), "beacon-collision-notification") == 0) {
             IEEE802154eMACCmdFrame *macCmd = static_cast<IEEE802154eMACCmdFrame *>(macPkt->decapsulate()); // was send with CSMA
             return handleBeaconCollision(macCmd);
         } else if (strcmp(macPkt->getName(), "gts-request-cmd") == 0) {
@@ -223,7 +234,7 @@ void DSME::handleUpperPacket(cPacket *msg) {
         MACAddress dest = cInfo->getDestinationAddress();
         if (GTSQueue[dest].size() == 0) {
             EV << "empty Queue" << endl;
-            allocateGTSlots(1, false, dest);
+            allocateGTSlots(1, false, dest);    // TODO more greedy allocation (configurable)
         } else {
             EV << "queue[" << dest << "] not empty: " << GTSQueue[dest].size() << endl;
         }
@@ -246,8 +257,9 @@ void DSME::receiveSignal(cComponent *source, simsignal_t signalID, long value) {
         IRadio::TransmissionState newRadioTransmissionState = (IRadio::TransmissionState)value;
         if (transmissionState == IRadio::TRANSMISSION_STATE_TRANSMITTING && newRadioTransmissionState == IRadio::TRANSMISSION_STATE_IDLE) {
             if (macState == IDLE_1) { // capture transmission end when sent without CSMA state machine
-                EV_DEBUG << "DSME-CSMA: Transmission over" << endl;
+                EV_DEBUG << "DSME-(CSMA): Transmission over" << endl;
                 radio->setRadioMode(IRadio::RADIO_MODE_RECEIVER);
+                // TODO reset channel after after sending in gts here?!?
             } else {
                 // KLUDGE: we used to get a cMessage from the radio (the identity was not important)
                 executeMac(EV_FRAME_TRANSMITTED, new cMessage("Transmission over"));
@@ -259,7 +271,19 @@ void DSME::receiveSignal(cComponent *source, simsignal_t signalID, long value) {
 
 
 
-
+void DSME::switchToNextSlotChannel() {
+    // TODO common channel as parameter
+    // TODO store currentChannel, switch if not equal
+    if (currentSlot == slotsPerSuperframe-1)
+        setChannelNumber(11);
+    else if (currentSlot >= numCSMASlots) {
+        unsigned nextGTS = currentSlot - numCSMASlots;
+        GTS &gts = allocatedGTSs[currentSuperframe][nextGTS];
+        if (gts != GTS::UNDEFINED) {
+            setChannelNumber(11 + gts.channel);
+        }
+    }
+}
 
 void DSME::endChannelScan() {
     EV_DETAIL << "EndChannelScan: ";
@@ -313,7 +337,9 @@ void DSME::sendGTSRequest(DSME_GTSRequestCmd* gtsRequest, MACAddress addr) {
 }
 
 void DSME::handleGTSRequest(IEEE802154eMACCmdFrame *macCmd) {
+    // immediately send ACK
     sendACK(macCmd->getSrcAddr());
+
     DSME_GTSRequestCmd *req = static_cast<DSME_GTSRequestCmd*>(macCmd->decapsulate());
     EV_DETAIL << "Received GTS-request: " << req->getGtsManagement().type;
 
@@ -323,14 +349,17 @@ void DSME::handleGTSRequest(IEEE802154eMACCmdFrame *macCmd) {
     DSME_SAB_Specification replySABSpec;
 
     switch(req->getGtsManagement().type) {
-    case ALLOCATION:
+    case ALLOCATION: {
         reply->setName("gts-reply-allocation");
         // select numSlots free slots from intersection of received subBlock and local subBlock
         EV << " - ALLOCATION" << endl;
         replySABSpec = occupiedGTSs.allocateSlots(req->getSABSpec(), req->getNumSlots(), req->getPreferredSuperframeID(), req->getPreferredSlotID());
-        // TODO handle errors
         reply->getGtsManagement().status = ALLOCATION_APPROVED;
-        break;
+        // TODO handle errors
+        // allocate for opposite direction of request
+        std::list<GTS> newGTSs = occupiedGTSs.getGTSsFromAllocation(replySABSpec);
+        updateAllocatedGTS(newGTSs, !reply->getGtsManagement().direction, macCmd->getSrcAddr());
+        break;}
     default:
         EV_ERROR << "DSME: GTS Mangement Type " << req->getGtsManagement().type << " not supported yet" << endl;
     }
@@ -343,9 +372,25 @@ void DSME::sendGTSReply(DSME_GTSReplyCmd *gtsReply) {
     sendBroadcastCmd("gts-reply-cmd", gtsReply, DSME_GTS_REPLY);
 }
 
+void DSME::updateAllocatedGTS(std::list<GTS>& gtss, bool direction, MACAddress address) {
+    EV_DEBUG << "Allocated slots for " << address << " (" << direction << "): ";
+    for(auto it = gtss.begin(); it != gtss.end(); it++) {
+        it->direction = direction;
+        it->address = address;
+        allocatedGTSs[it->superframeID][it->slotID] = *it;
+        EV << it->superframeID << "/" << it->slotID << "@" << (int)it->channel << "  ";
+    }
+    EV << endl;
+}
+
 void DSME::handleGTSReply(IEEE802154eMACCmdFrame *macCmd) {
+
+    // TODO check if I already occupy that that slot (allocated)
+    // send collision notification if so
+
     // send ACK if for me
     DSME_GTSReplyCmd *gtsReply = static_cast<DSME_GTSReplyCmd*>(macCmd->decapsulate());
+
     if (gtsReply->getDestinationAddress() == address) {
         MACAddress other = macCmd->getSrcAddr();
         sendACK(other);
@@ -358,16 +403,10 @@ void DSME::handleGTSReply(IEEE802154eMACCmdFrame *macCmd) {
             gtsNotify->setSABSpec(gtsReply->getSABSpec());
             gtsNotify->setDestinationAddress(macCmd->getSrcAddr());
 
+            // allocate GTS
             bool direction = gtsReply->getGtsManagement().direction;
-            EV_DEBUG << "Allocated slots for " << other << " (" << direction << "): ";
             std::list<GTS> newGTSs = occupiedGTSs.getGTSsFromAllocation(gtsReply->getSABSpec());
-            for(auto it = newGTSs.begin(); it != newGTSs.end(); it++) {
-                it->direction = direction;
-                it->address = other;
-                allocatedGTSs[it->superframeID][it->slotID] = *it;
-                EV << it->superframeID << "/" << it->slotID << "@" << (int)it->channel << "  ";
-            }
-            EV << endl;
+            updateAllocatedGTS(newGTSs, direction, other);
 
             sendGTSNotify(gtsNotify);
         }
@@ -441,29 +480,24 @@ void DSME::sendDirect(cPacket *msg) {
 }
 
 void DSME::handleGTS() {
-    // TODO check GTS Slot allocation, switch to channel for RX
-    // TODO or transmit from GTSQueue
-    // TODO Ieee80211Radio has the nice method ::setChannelNumber(int newChannelNumber)
-    //      Ieee802154* should also have this
     unsigned currentGTS = currentSlot - numCSMASlots - 1;
-    if (allocatedGTSs[currentSuperframe][currentGTS] != GTS::UNDEFINED) {
-        GTS &gts = allocatedGTSs[currentSuperframe][currentGTS];
+    GTS &gts = allocatedGTSs[currentSuperframe][currentGTS];
+    if (gts != GTS::UNDEFINED) {
         EV_DEBUG << "DSME: handleGTS @ " << currentSuperframe << "/" << currentGTS << ": ";
-        EV << "direction:" << gts.direction << " ";
+        EV << "direction:" << gts.direction << " channel:" << gts.channel << endl;
+
         if (gts.direction) {
-            EV << "receive from: " << gts.address;
+            EV << "Waiting to receive from: " << gts.address << endl;
         } else {
-            const Ieee802154NarrowbandScalarTransmitter *transmitter = dynamic_cast<const Ieee802154NarrowbandScalarTransmitter*>(radio->getTransmitter());
-            EV << "send to: " << gts.address << " on channel " << (int)gts.channel << " (current:";
-            EV << transmitter->getCarrierFrequency() << "/BW:" << transmitter->getBandwidth() << ")" << endl;
-            // TODO transmitter->setCarrierFrequency()
+            EV << "send to: " << gts.address << " | " << GTSQueue[gts.address].size() << " packets in queue" << endl;
+            // transmit from GTSQueue
+            if (GTSQueue[gts.address].size() > 0)
+                sendDirect(GTSQueue[gts.address].front()); // TODO send delayed beacuse of timesync misalignment or change channel earlier
+            // TODO remove on ACK
         }
     }
 }
 
-void DSME::sendGTS(IEEE802154eMACFrame *msg) {
-
-}
 
 simtime_t DSME::getNextCSMASlot() {
     unsigned slotOffset = (currentSlot < numCSMASlots) ? 0 : slotsPerSuperframe - currentSlot + 1;
@@ -656,5 +690,29 @@ void DSME::handleBeaconCollision(IEEE802154eMACCmdFrame *macCmd) {
     neighborHeardBeacons.SDBitmap.setBit(cmd->getBeaconSDIndex(), true);
 }
 
+
+void DSME::setChannelNumber(unsigned k) {
+    // see IEEE802.15.4-2011 p. 148 for center frequencies of channels
+    if (k < 11) {
+        EV_ERROR << "Channel number must be greater than 11" << endl;
+        k = 11;
+    }
+    else if (k > 26) {
+        EV_ERROR << "Channel number must be less than 26" << endl;
+        k = 26;
+    }
+
+    Hz centerFrequency = Hz((2405 + 5 * (k - 11)) * 1e06);
+
+    NarrowbandTransmitterBase *transmitter = const_cast<NarrowbandTransmitterBase *>(check_and_cast<const NarrowbandTransmitterBase *>(radio->getTransmitter()));
+    NarrowbandReceiverBase *receiver = const_cast<NarrowbandReceiverBase *>(check_and_cast<const NarrowbandReceiverBase *>(radio->getReceiver()));
+    EV << "DSME: changing channel from centerFreq: " << transmitter->getCarrierFrequency() << " to: " << centerFrequency << endl;
+    transmitter->setCarrierFrequency(centerFrequency);
+    receiver->setCarrierFrequency(centerFrequency);
+    //ieee80211Radio also does:
+    //endReceptionTimer = nullptr;
+    //emit(radioChannelChangedSignal, newChannelNumber);
+    emit(radio->listeningChangedSignal, 0);
+}
 
 } //namespace
