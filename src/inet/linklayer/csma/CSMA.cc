@@ -937,7 +937,7 @@ void CSMA::receiveSignal(cComponent *source, simsignal_t signalID, long value)
     }
 }
 
-cPacket *CSMA::decapsMsg(CSMAFrame *macPkt)
+cPacket *CSMA::decapsMsg(MACFrameBase *macPkt)
 {
     cPacket *msg = macPkt->decapsulate();
     setUpControlInfo(msg, macPkt->getSrcAddr());

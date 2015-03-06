@@ -529,7 +529,7 @@ void DSME::handleGTS() {
 
 void DSME::handleGTSFrame(IEEE802154eMACFrame *macPkt) {
     sendDSMEAck(macPkt->getSrcAddr());
-    // TODO sendUp
+    sendUp(decapsMsg(macPkt));
 }
 
 simtime_t DSME::getNextCSMASlot() {
