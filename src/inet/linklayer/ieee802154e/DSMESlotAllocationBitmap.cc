@@ -75,6 +75,7 @@ void DSMESlotAllocationBitmap::updateSlotAllocation(DSME_SAB_Specification sabSp
 }
 
 BitVector DSMESlotAllocationBitmap::getSubBlock(uint8_t superframeID) {
+    // TODO subBlockIndex in units or in bits?!
     return bitmap[superframeID];
 }
 

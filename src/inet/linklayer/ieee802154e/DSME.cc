@@ -27,8 +27,10 @@ namespace inet {
 Define_Module(DSME);
 
 DSME::DSME() :
+                        lastSendGTSFrame(nullptr),
                         beaconFrame(nullptr),
                         csmaFrame(nullptr),
+                        dsmeAckFrame(nullptr),
                         beaconIntervalTimer(nullptr),
                         preNextSlotTimer(nullptr),
                         nextSlotTimer(nullptr),
@@ -187,7 +189,6 @@ void DSME::handleLowerPacket(cPacket *msg) {
     IEEE802154eMACFrame *macPkt = static_cast<IEEE802154eMACFrame *>(msg);
     const MACAddress& dest = macPkt->getDestAddr();
 
-    //EV_DEBUG << "Received " << macPkt->getName() << " bcast:" << dest.isBroadcast() << endl;
     if(dest.isBroadcast()) {
         if(strcmp(macPkt->getName(), EnhancedBeacon::NAME) == 0) {
             EnhancedBeacon *beacon = static_cast<EnhancedBeacon *>(msg);
@@ -205,8 +206,9 @@ void DSME::handleLowerPacket(cPacket *msg) {
     } else if (dest == address) {
         EV_DETAIL << "DSME received packet for me: " << macPkt->getName() << endl;
         if (strcmp(macPkt->getName(), "dsme-gts-frame") == 0) {
-            EV_DEBUG << "Received GTS frame" << endl;return;
-            // handleGTSFrame();
+            return handleGTSFrame(macPkt);
+        } else if (strcmp(macPkt->getName(), "dsme-ack") == 0) {
+            return handleDSMEAck(macPkt);
         } else if (strcmp(macPkt->getName(), "beacon-collision-notification") == 0) {
             IEEE802154eMACCmdFrame *macCmd = static_cast<IEEE802154eMACCmdFrame *>(macPkt->decapsulate()); // was send with CSMA
             return handleBeaconCollision(macCmd);
@@ -259,7 +261,6 @@ void DSME::receiveSignal(cComponent *source, simsignal_t signalID, long value) {
             if (macState == IDLE_1) { // capture transmission end when sent without CSMA state machine
                 EV_DEBUG << "DSME-(CSMA): Transmission over" << endl;
                 radio->setRadioMode(IRadio::RADIO_MODE_RECEIVER);
-                // TODO reset channel after after sending in gts here?!?
             } else {
                 // KLUDGE: we used to get a cMessage from the radio (the identity was not important)
                 executeMac(EV_FRAME_TRANSMITTED, new cMessage("Transmission over"));
@@ -311,12 +312,12 @@ void DSME::allocateGTSlots(uint8_t numSlots, bool direction, MACAddress addr) {
     man.prioritizedChannelAccess = false;
     DSME_SAB_Specification sabSpec;
     sabSpec.subBlockLength = occupiedGTSs.getSubBlockLength();
-    sabSpec.subBlockIndex = randomGTS.superframeID;            // TODO subBlockIndex bitwise?!
+    sabSpec.subBlockIndex = randomGTS.superframeID;            // TODO subBlockIndex in units or in bits?!
     sabSpec.subBlock = occupiedGTSs.getSubBlock(randomGTS.superframeID);
 
     DSME_GTSRequestCmd *req = new DSME_GTSRequestCmd("gts-request-allocation");
-    req->setGtsManagement(man); // TODO pointer new?
-    req->setSABSpec(sabSpec);   //
+    req->setGtsManagement(man);
+    req->setSABSpec(sabSpec);
     req->setNumSlots(numSlots);
     req->setPreferredSuperframeID(randomGTS.superframeID);
     req->setPreferredSlotID(randomGTS.slotID);
@@ -338,13 +339,13 @@ void DSME::sendGTSRequest(DSME_GTSRequestCmd* gtsRequest, MACAddress addr) {
 
 void DSME::handleGTSRequest(IEEE802154eMACCmdFrame *macCmd) {
     // immediately send ACK
-    sendACK(macCmd->getSrcAddr());
+    sendCSMAAck(macCmd->getSrcAddr());
 
     DSME_GTSRequestCmd *req = static_cast<DSME_GTSRequestCmd*>(macCmd->decapsulate());
     EV_DETAIL << "Received GTS-request: " << req->getGtsManagement().type;
 
     DSME_GTSReplyCmd *reply = new DSME_GTSReplyCmd();
-    reply->setGtsManagement(req->getGtsManagement());                   // TODO copy?
+    reply->setGtsManagement(req->getGtsManagement());
     reply->setDestinationAddress(macCmd->getSrcAddr());
     DSME_SAB_Specification replySABSpec;
 
@@ -393,7 +394,7 @@ void DSME::handleGTSReply(IEEE802154eMACCmdFrame *macCmd) {
 
     if (gtsReply->getDestinationAddress() == address) {
         MACAddress other = macCmd->getSrcAddr();
-        sendACK(other);
+        sendCSMAAck(other);
 
         // notify neighbors if allocation succeeded
         if (gtsReply->getGtsManagement().status == ALLOCATION_APPROVED) {
@@ -425,7 +426,7 @@ void DSME::handleGTSNotify(IEEE802154eMACCmdFrame *macCmd) {
     // send ACK if for me
     DSME_GTSNotifyCmd *gtsNotify = static_cast<DSME_GTSNotifyCmd*>(macCmd->decapsulate());
     if (gtsNotify->getDestinationAddress() == address) {
-        sendACK(macCmd->getSrcAddr());
+        sendCSMAAck(macCmd->getSrcAddr());
     }
     // update neighbor slot allocation
     EV_DETAIL << "DSME: Received GTS Notify" << endl;
@@ -443,14 +444,41 @@ void DSME::sendBroadcastCmd(const char *name, cPacket *payload, uint8_t cmdId) {
     sendCSMA(macCmd, true);
 }
 
-void DSME::sendACK(MACAddress addr) {
+void DSME::sendAck(MACFrameBase *msg, MACAddress addr) {
+    msg->setSrcAddr(address);
+    msg->setDestAddr(addr);
+    msg->setBitLength(ackLength);
+    sendDirect(msg);
+}
+
+void DSME::sendCSMAAck(MACAddress addr) {
     if (ackMessage != nullptr)
         delete ackMessage;
     ackMessage = new CSMAFrame("CSMA-Ack");
-    ackMessage->setSrcAddr(address);
-    ackMessage->setDestAddr(addr);
-    ackMessage->setBitLength(ackLength);
-    sendDirect(ackMessage);
+    sendAck(ackMessage, addr);
+}
+
+void DSME::sendDSMEAck(MACAddress addr) {
+    if (dsmeAckFrame != nullptr)
+        delete dsmeAckFrame;
+    dsmeAckFrame = new IEEE802154eMACFrame("dsme-ack");
+    sendAck(dsmeAckFrame, addr);
+}
+
+void DSME::handleDSMEAck(IEEE802154eMACFrame *ack) {
+    EV_DEBUG << "DSME ACK received" << endl;
+    if (lastSendGTSFrame != nullptr) {
+        MACAddress dest = lastSendGTSFrame->getDestAddr();
+        if (ack->getSrcAddr() == dest) {
+            lastSendGTSFrame = nullptr;
+            GTSQueue[dest].pop_front();
+            EV_DEBUG << "DSME received expected Ack, removed packet from queue " << dest << ", remaining: " << GTSQueue[dest].size() << endl;
+        } else {
+            EV_ERROR << "DSME received unexpected Ack (src and dest address differ)" << endl;
+        }
+    } else {
+        EV_ERROR << "DSME received unexpected Ack (did not send anything lately)" << endl;
+    }
 }
 
 void DSME::handleBroadcastAck(CSMAFrame *ack, CSMAFrame *frame) {
@@ -475,7 +503,7 @@ void DSME::handleBroadcastAck(CSMAFrame *ack, CSMAFrame *frame) {
 
 void DSME::sendDirect(cPacket *msg) {
     radio->setRadioMode(IRadio::RADIO_MODE_TRANSMITTER);
-    attachSignal(msg, simTime() + aTurnaroundTime); // TODO turnaroundTime only on statechange, plus parameter is useless?
+    attachSignal(msg, simTime() + aTurnaroundTime); // TODO turnaroundTime only on mode change, plus parameter is useless?
     sendDown(msg);
 }
 
@@ -491,13 +519,18 @@ void DSME::handleGTS() {
         } else {
             EV << "send to: " << gts.address << " | " << GTSQueue[gts.address].size() << " packets in queue" << endl;
             // transmit from GTSQueue
-            if (GTSQueue[gts.address].size() > 0)
-                sendDirect(GTSQueue[gts.address].front()); // TODO send delayed beacuse of timesync misalignment or change channel earlier
-            // TODO remove on ACK
+            if (GTSQueue[gts.address].size() > 0) {
+                lastSendGTSFrame = GTSQueue[gts.address].front();
+                sendDirect(lastSendGTSFrame);
+            }
         }
     }
 }
 
+void DSME::handleGTSFrame(IEEE802154eMACFrame *macPkt) {
+    sendDSMEAck(macPkt->getSrcAddr());
+    // TODO sendUp
+}
 
 simtime_t DSME::getNextCSMASlot() {
     unsigned slotOffset = (currentSlot < numCSMASlots) ? 0 : slotsPerSuperframe - currentSlot + 1;
@@ -517,11 +550,11 @@ void DSME::handleCSMASlot() {
             simtime_t nextCSMASlotTimestamp = getNextCSMASlot();
             if (contentionWindow > 0) {
                 EV << "Cotention Window: " << contentionWindow << endl;
-                scheduleAt(nextCSMASlotTimestamp + ccaDetectionTime, nextCSMASlotTimer); // TODO timestamp correct?
+                scheduleAt(nextCSMASlotTimestamp + ccaDetectionTime, nextCSMASlotTimer);
             } else {
                 // then send direct at next slot!
                 EV << "Contention Windows where idle -> send next CSMA Slot!" << endl;
-                scheduleAt(nextCSMASlotTimestamp, nextCSMASlotTimer);  // TODO timestamp correct?
+                scheduleAt(nextCSMASlotTimestamp, nextCSMASlotTimer);
             }
         } else {
             // backoff again
@@ -543,8 +576,9 @@ void DSME::handleCSMASlot() {
 }
 
 void DSME::sendCSMA(IEEE802154eMACFrame *msg, bool requestACK = false) {
-    headerLength = 0;                               // otherwise CSMA adds 72 bits
+    headerLength = 0;         // otherwise CSMA adds 72 bits
     useMACAcks = requestACK;
+
     // simulate upperlayer dest addr to CSMA
     SimpleLinkLayerControlInfo *const cCtrlInfo = new SimpleLinkLayerControlInfo();
     cCtrlInfo->setDest(msg->getDestAddr());
@@ -641,7 +675,7 @@ void DSME::sendBeaconAllocationNotification(uint16_t beaconSDIndex) {
 
     // Update PANDDescrition
     PANDescriptor.getBeaconBitmap().SDIndex = beaconSDIndex;
-    PANDescriptor.getBeaconBitmap().SDBitmap = heardBeacons.SDBitmap;      // TODO remove allocationbitmap?
+    PANDescriptor.getBeaconBitmap().SDBitmap = heardBeacons.SDBitmap;
 
     // schedule BeaconInterval to allocated slot
     cancelEvent(beaconIntervalTimer);
@@ -665,8 +699,6 @@ void DSME::handleBeaconAllocation(IEEE802154eMACCmdFrame *macCmd) {
         EV_DETAIL << "HeardBeacons: " << heardBeacons.getAllocatedCount() << endl;
         // TODO when to remove heardBeacons in case of collision elsewhere?
     }
-
-    // TODO Coordinator which has sent allocation notification to same slot should cancel if possible
 
 }
 

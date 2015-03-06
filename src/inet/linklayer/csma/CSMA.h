@@ -320,6 +320,9 @@ class INET_API CSMA : public MACProtocolBase, public IMACProtocol
     void manageMissingAck(t_mac_event event, cMessage *msg);
     void startTimer(t_mac_timer timer);
 
+    /**
+     * Handle broadcast messages with encapsulated destination address to send Ack
+     */
     virtual void handleBroadcastAck(CSMAFrame *ack, CSMAFrame *frame);
 
     virtual simtime_t scheduleBackoff();

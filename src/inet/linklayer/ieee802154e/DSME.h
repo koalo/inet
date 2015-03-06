@@ -71,16 +71,19 @@ protected:
     BeaconBitmap beaconAllocation;
     DSME_PANDescriptor PANDescriptor;
 
-    // Guaranteed Time Slots
+    // Guaranteed Time Slot management
     typedef std::vector<std::vector<GTS>> gts_allocation;     // superframes x slots
     gts_allocation allocatedGTSs;
     DSMESlotAllocationBitmap occupiedGTSs;
+
     typedef std::map<MACAddress, std::list<IEEE802154eMACFrame*>> gts_queue;
     gts_queue GTSQueue;
+    IEEE802154eMACFrame *lastSendGTSFrame;
 
     // packets
     EnhancedBeacon *beaconFrame;
     IEEE802154eMACFrame *csmaFrame;
+    IEEE802154eMACFrame *dsmeAckFrame;
 
     // timers
     cMessage *beaconIntervalTimer;
@@ -171,9 +174,24 @@ protected:
     virtual void sendBroadcastCmd(const char *name, cPacket *payload, uint8_t cmdId);
 
     /**
-     * Send ACK message
+     * Send given Ack frame to specified address
      */
-    virtual void sendACK(MACAddress);
+    virtual void sendAck(MACFrameBase *, MACAddress addr);
+
+    /**
+     * Send ACK message for CSMA
+     */
+    virtual void sendCSMAAck(MACAddress addr);
+
+    /**
+     * Send ACK message for DSME-GTS
+     */
+    virtual void sendDSMEAck(MACAddress addr);
+
+    /**
+     * Called on reception of dsmeAckFrame. If matches last sent message, remove from queue.
+     */
+    virtual void handleDSMEAck(IEEE802154eMACFrame *ack);
 
     /**
      * @Override
@@ -190,6 +208,11 @@ protected:
      * Switch channel for reception or transmit from queue in allocated slots.
      */
     virtual void handleGTS();
+
+    /**
+     * Called on reception of a GTS frame. Send Ack and send payload to upper layer.
+     */
+    virtual void handleGTSFrame(IEEE802154eMACFrame *);
 
     /**
      * Gets time of next CSMA slot
