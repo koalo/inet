@@ -83,7 +83,6 @@ protected:
 
     // packets
     EnhancedBeacon *beaconFrame;
-    IEEE802154eMACFrame *csmaFrame;
     IEEE802154eMACFrame *dsmeAckFrame;
 
     // timers
@@ -91,6 +90,7 @@ protected:
     cMessage *preNextSlotTimer;
     cMessage *nextSlotTimer;
     cMessage *nextCSMASlotTimer;
+    cMessage *resetGtsAllocationSent;
 
     // slotted csma uses contentionWindow
     unsigned contentionWindow;

@@ -21,7 +21,6 @@
 #include "inet/physicallayer/ieee802154/Ieee802154NarrowbandScalarReceiver.h"
 #include "inet/physicallayer/ieee802154/Ieee802154NarrowbandScalarTransmitter.h"
 #include <exception>
-#include <typeinfo>
 namespace inet {
 
 Define_Module(DSME);
@@ -29,12 +28,12 @@ Define_Module(DSME);
 DSME::DSME() :
                         lastSendGTSFrame(nullptr),
                         beaconFrame(nullptr),
-                        csmaFrame(nullptr),
                         dsmeAckFrame(nullptr),
                         beaconIntervalTimer(nullptr),
                         preNextSlotTimer(nullptr),
                         nextSlotTimer(nullptr),
-                        nextCSMASlotTimer(nullptr)
+                        nextCSMASlotTimer(nullptr),
+                        resetGtsAllocationSent(nullptr)
 {
 }
 
@@ -43,13 +42,12 @@ DSME::~DSME() {
     cancelAndDelete(preNextSlotTimer);
     cancelAndDelete(nextSlotTimer);
     cancelAndDelete(nextCSMASlotTimer);
+    cancelAndDelete(resetGtsAllocationSent);
     if (beaconFrame != nullptr)
         delete beaconFrame;
-    //if(csmaFrame != nullptr)
-    //    delete csmaFrame;     // FIXME this crashes when closing the simulation
-    //for (auto it = GTSQueue.begin(); it != GTSQueue.end(); ++it) {
-    //    delete (*it);
-    //}
+    /*TODO for all addrs do: for (auto it = GTSQueue.begin(); it != GTSQueue.end(); ++it) {
+        delete (*it);
+    }*/
 }
 
 
@@ -112,6 +110,7 @@ void DSME::initialize(int stage)
         preNextSlotTimer = new cMessage("pre-next-slot-timer");
         nextSlotTimer = new cMessage("next-slot-timer");
         nextCSMASlotTimer = new cMessage("csma-slot-timer");
+        resetGtsAllocationSent = new cMessage("reset-gts-allocation-sent");
         scheduleAt(nextSlotTimestamp, nextSlotTimer);
 
 
@@ -178,6 +177,8 @@ void DSME::handleSelfMessage(cMessage *msg) {
     }
     else if (msg == nextCSMASlotTimer) {
         handleCSMASlot();
+    } else if (msg == resetGtsAllocationSent) {
+        gtsAllocationSent = false;
     } else {
         // TODO handle discared messages, e.g. clear isBeaconAllocationSent
 
@@ -433,9 +434,7 @@ void DSME::handleGTSReply(IEEE802154eMACCmdFrame *macCmd) {
             updateAllocatedGTS(newGTSs, direction, other);
 
             sendGTSNotify(gtsNotify);
-            //gtsAllocationSent = false;  // TODO reset far later, maybe a beacon period
-                                          // TODO did sent another request before this notify?
-                                          // TODO also crashed within radio, setControlInfo for endTransmission, was already set??
+            //scheduleAt(simTime() + beaconInterval, resetGtsAllocationSent);
         }
     }
 
@@ -482,6 +481,7 @@ void DSME::sendCSMAAck(MACAddress addr) {
         delete ackMessage;
     ackMessage = new CSMAFrame("CSMA-Ack");
     sendAck(ackMessage, addr);
+    ackMessage = nullptr;
 }
 
 void DSME::sendDSMEAck(MACAddress addr) {
@@ -489,6 +489,7 @@ void DSME::sendDSMEAck(MACAddress addr) {
         delete dsmeAckFrame;
     dsmeAckFrame = new IEEE802154eMACFrame("dsme-ack");
     sendAck(dsmeAckFrame, addr);
+    dsmeAckFrame = nullptr;
 }
 
 void DSME::handleDSMEAck(IEEE802154eMACFrame *ack) {
@@ -505,6 +506,7 @@ void DSME::handleDSMEAck(IEEE802154eMACFrame *ack) {
     } else {
         EV_ERROR << "DSME received unexpected Ack (did not send anything lately)" << endl;
     }
+    delete ack;
 }
 
 void DSME::handleBroadcastAck(CSMAFrame *ack, CSMAFrame *frame) {
@@ -530,7 +532,14 @@ void DSME::handleBroadcastAck(CSMAFrame *ack, CSMAFrame *frame) {
 void DSME::sendDirect(cPacket *msg) {
     radio->setRadioMode(IRadio::RADIO_MODE_TRANSMITTER);
     attachSignal(msg, simTime() + aTurnaroundTime); // TODO turnaroundTime only on mode change, plus parameter is useless?
+    try {
+        EV_DEBUG << "FIXME msg: " << msg->getName() << endl;
+        EV_DEBUG << "FIXMEFIXME owner: " << msg->getOwner()->detailedInfo() << endl;
+        EV_DEBUG << msg->getOwner()->getFullPath().c_str() << endl;
     sendDown(msg);
+    } catch (cRuntimeError& e) { EV_ERROR << "CRASHED with runtime error: " << e.what() << endl; }
+    //catch (exception& e) { EV_ERROR << "CRASHED with exception: " << e.what() << endl; }
+    catch (...) {EV_ERROR << "CRASHED with unkown error" << endl;}
 }
 
 void DSME::handleGTS() {
