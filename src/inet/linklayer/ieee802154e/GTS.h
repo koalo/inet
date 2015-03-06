@@ -24,6 +24,8 @@ namespace inet {
 class GTS {
 public:
     static const GTS UNDEFINED;
+    static const bool DIRECTION_TX = false;
+    static const bool DIRECTION_RX = true;
 
     GTS(uint16_t superframeID, uint16_t slotID, uint8_t channel);
 

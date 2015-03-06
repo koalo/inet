@@ -49,13 +49,14 @@ DSME_SAB_Specification DSMESlotAllocationBitmap::allocateSlots(DSME_SAB_Specific
                 return replySabSpec;
             } else {
                 // channel in slot selected, check next slot
-                i += numChannels - i % numChannels - 1; // i++ follows
+                i += numChannels - 1; // try to stay on same channel
                 EV << " -> " << i;
             }
         }
     }
+    EV << endl;
 
-    // TODO further search in following superframes or reply failure?
+    // TODO further search in following superframes or reply failure? Just if nothin found?
     return replySabSpec;
 }
 

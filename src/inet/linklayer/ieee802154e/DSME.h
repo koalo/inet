@@ -75,6 +75,7 @@ protected:
     typedef std::vector<std::vector<GTS>> gts_allocation;     // superframes x slots
     gts_allocation allocatedGTSs;
     DSMESlotAllocationBitmap occupiedGTSs;
+    bool gtsAllocationSent;
 
     typedef std::map<MACAddress, std::list<IEEE802154eMACFrame*>> gts_queue;
     gts_queue GTSQueue;
@@ -133,6 +134,11 @@ protected:
      * Update GTS allocation for receiving or transmitting for this device
      */
     virtual void updateAllocatedGTS(std::list<GTS>& gtss, bool direction, MACAddress address);
+
+    /**
+     * Get number of allocated slots to specified address and given direction
+     */
+    virtual unsigned getNumAllocatedGTS(MACAddress address, bool direction);
 
     /**
      * Send a GTS-request to device

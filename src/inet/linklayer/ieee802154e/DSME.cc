@@ -97,6 +97,7 @@ void DSME::initialize(int stage)
         unsigned gtsPerSuperframe = slotsPerSuperframe-numCSMASlots-1;
         occupiedGTSs = DSMESlotAllocationBitmap(numberSuperframes, gtsPerSuperframe, 16); // TODO par channels
         allocatedGTSs.insert(allocatedGTSs.begin(), numberSuperframes, std::vector<GTS>(gtsPerSuperframe, GTS::UNDEFINED));
+        gtsAllocationSent = false;
 
         // Beacon management:
         // PAN Coordinator sends beacon every beaconInterval
@@ -224,32 +225,41 @@ void DSME::handleLowerPacket(cPacket *msg) {
 }
 
 void DSME::handleUpperPacket(cPacket *msg) {
+    // extract destination
+    IMACProtocolControlInfo *const cInfo = check_and_cast<IMACProtocolControlInfo *>(msg->removeControlInfo());
+    MACAddress dest = cInfo->getDestinationAddress();
+
     EV_DETAIL << "DSME packet from upper layer: ";
     if (!isAssociated) {
-        EV << " not associated -> discard packet." << endl;
+        EV << " not associated -> push into queue." << endl;
+        // TODO allocate slots after association
     } else {
         EV << " send with GTS: ";
         // 1) lookup if slot to destination exist
         // 2) check if queue already contains a message to same destination
-        // request a slot if one of the above is true (TODO make it configurable)
-        IMACProtocolControlInfo *const cInfo = check_and_cast<IMACProtocolControlInfo *>(msg->removeControlInfo());
-        MACAddress dest = cInfo->getDestinationAddress();
-        if (GTSQueue[dest].size() == 0) {
-            EV << "empty Queue" << endl;
-            allocateGTSlots(1, false, dest);    // TODO more greedy allocation (configurable)
+        //  -> request same amount of slots as queue holds packets
+        // TODO make it configurable how to and how many slots to allocate
+        unsigned numSlots = getNumAllocatedGTS(dest, GTS::DIRECTION_TX);
+        unsigned numPackets = GTSQueue[dest].size();
+        if (!gtsAllocationSent) {
+            if (numSlots == 0 || numSlots < numPackets) {
+                EV << "No allocated Slots or less than packets in queue " << numSlots << " / " << numPackets << endl;
+                allocateGTSlots(numPackets - numSlots, GTS::DIRECTION_TX, dest);    // TODO more greedy allocation (configurable)
+            } else {
+                EV << "Enough allocated Slots to handle queue " << numSlots << " / " << numPackets << endl;
+            }
         } else {
-            EV << "queue[" << dest << "] not empty: " << GTSQueue[dest].size() << endl;
+            EV << "Slot allocation already sent -> wait for it" << endl;
         }
-
-        // create DSME MAC Packet containing given packet
-        // push into queue
-        IEEE802154eMACFrame *macFrame = new IEEE802154eMACFrame("dsme-gts-frame");
-        macFrame->encapsulate(msg);
-        macFrame->setDestAddr(dest);
-        macFrame->setSrcAddr(address);
-        GTSQueue[dest].push_back(macFrame);
     }
 
+    // create DSME MAC Packet containing given packet
+    // push into queue
+    IEEE802154eMACFrame *macFrame = new IEEE802154eMACFrame("dsme-gts-frame");
+    macFrame->encapsulate(msg);
+    macFrame->setDestAddr(dest);
+    macFrame->setSrcAddr(address);
+    GTSQueue[dest].push_back(macFrame);
 }
 
 // See CSMA.cc
@@ -303,6 +313,7 @@ void DSME::endChannelScan() {
 
 
 void DSME::allocateGTSlots(uint8_t numSlots, bool direction, MACAddress addr) {
+    // TODO only allocate if no allocation request is "pending"
     // select random slot
     GTS randomGTS = occupiedGTSs.getRandomFreeGTS();  // TODO get for nearby superframe
     // create request command
@@ -323,6 +334,18 @@ void DSME::allocateGTSlots(uint8_t numSlots, bool direction, MACAddress addr) {
     req->setPreferredSlotID(randomGTS.slotID);
 
     sendGTSRequest(req, addr);
+    gtsAllocationSent = true;
+}
+
+unsigned DSME::getNumAllocatedGTS(MACAddress address, bool direction) {
+    unsigned num = 0;
+    for (auto sf = allocatedGTSs.begin(); sf < allocatedGTSs.end(); sf++) {
+        for (auto gts = sf->begin(); gts < sf->end(); gts++) {
+            if (gts->address == address && gts->direction == direction)
+                num++;
+        }
+    }
+    return num;
 }
 
 void DSME::sendGTSRequest(DSME_GTSRequestCmd* gtsRequest, MACAddress addr) {
@@ -410,6 +433,9 @@ void DSME::handleGTSReply(IEEE802154eMACCmdFrame *macCmd) {
             updateAllocatedGTS(newGTSs, direction, other);
 
             sendGTSNotify(gtsNotify);
+            //gtsAllocationSent = false;  // TODO reset far later, maybe a beacon period
+                                          // TODO did sent another request before this notify?
+                                          // TODO also crashed within radio, setControlInfo for endTransmission, was already set??
         }
     }
 
@@ -512,7 +538,7 @@ void DSME::handleGTS() {
     GTS &gts = allocatedGTSs[currentSuperframe][currentGTS];
     if (gts != GTS::UNDEFINED) {
         EV_DEBUG << "DSME: handleGTS @ " << currentSuperframe << "/" << currentGTS << ": ";
-        EV << "direction:" << gts.direction << " channel:" << gts.channel << endl;
+        EV << "direction:" << gts.direction << " channel:" << (unsigned)gts.channel << endl;
 
         if (gts.direction) {
             EV << "Waiting to receive from: " << gts.address << endl;
