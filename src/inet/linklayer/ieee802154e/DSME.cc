@@ -184,6 +184,20 @@ void DSME::handleSelfMessage(cMessage *msg) {
     else if (msg == resetGtsAllocationSent) {
         gtsAllocationSent = false;
     }
+    else if (msg == backoffTimer) {
+        // TODO remove this ugly workaround
+        // When sending an ACK and directly send reply using CSMA and backoffTimer = 0
+        // CSMA will break the transmission of the ACK.
+        // In detail: the endReception() method of the radio will not remove the controlInfo from the timer message
+        // Which will cause an error later on sending the next packet: (cMessage)endTransmission: setControlInfo(): message already has control info attached.
+        if (radio->getTransmissionState() == IRadio::TRANSMISSION_STATE_TRANSMITTING) {
+            EV_WARN << "FIXME: CSMA backofftimer while transmitting -> reschedule in 400us (Ack transmit time)" << endl;
+            scheduleAt(simTime() + 0.0004, backoffTimer);
+        } else {
+            EV_DEBUG << "HandleSelf CSMA @ slot " << currentSlot << endl;
+            CSMA::handleSelfMessage(msg);
+        }
+    }
     else {
         // TODO handle discared messages, e.g. clear isBeaconAllocationSent
 
