@@ -145,7 +145,8 @@ void DSME::handleSelfMessage(cMessage *msg) {
     if (msg == preNextSlotTimer) {
         // Switch to channel for next slot
         switchToNextSlotChannel();
-    } else if (msg == nextSlotTimer) {
+    }
+    else if (msg == nextSlotTimer) {
         // update current slot and superframe information
         nextSlotTimestamp = simTime() + slotDuration;
         currentSlot = (currentSlot < slotsPerSuperframe-1) ? currentSlot + 1 : 0;
@@ -158,7 +159,8 @@ void DSME::handleSelfMessage(cMessage *msg) {
         if (currentSlot > numCSMASlots) {
             handleGTS();
         }
-    } else if (msg == beaconIntervalTimer) {
+    }
+    else if (msg == beaconIntervalTimer) {
         // PAN Coordinator sends beacon every beaconInterval
         // Coordinators send beacons after allocating a slot
         if (isBeaconAllocated)
@@ -167,7 +169,8 @@ void DSME::handleSelfMessage(cMessage *msg) {
         // Unassociated devices have scanned for beaconInterval and may have heard beacons
         else if (!isAssociated)
             endChannelScan();
-    } else if (msg == ccaTimer) {
+    }
+    else if (msg == ccaTimer) {
         // slotted CSMA
         // Perform CCA at backoff period boundary, 2 times (contentionWindow), then send at backoff boundary
         EV_DETAIL << "DSME slotted CSMA: TIMER_CCA at backoff period boundary" << endl;
@@ -177,9 +180,11 @@ void DSME::handleSelfMessage(cMessage *msg) {
     }
     else if (msg == nextCSMASlotTimer) {
         handleCSMASlot();
-    } else if (msg == resetGtsAllocationSent) {
+    }
+    else if (msg == resetGtsAllocationSent) {
         gtsAllocationSent = false;
-    } else {
+    }
+    else {
         // TODO handle discared messages, e.g. clear isBeaconAllocationSent
 
         EV_DEBUG << "HandleSelf CSMA @ slot " << currentSlot << endl;
@@ -192,6 +197,7 @@ void DSME::handleLowerPacket(cPacket *msg) {
     const MACAddress& dest = macPkt->getDestAddr();
 
     if(dest.isBroadcast()) {
+        // TODO delete macPkt after decaosulate
         if(strcmp(macPkt->getName(), EnhancedBeacon::NAME) == 0) {
             EnhancedBeacon *beacon = static_cast<EnhancedBeacon *>(msg);
             return handleEnhancedBeacon(beacon);
@@ -269,7 +275,8 @@ void DSME::receiveSignal(cComponent *source, simsignal_t signalID, long value) {
     if (signalID == IRadio::transmissionStateChangedSignal) {
         IRadio::TransmissionState newRadioTransmissionState = (IRadio::TransmissionState)value;
         if (transmissionState == IRadio::TRANSMISSION_STATE_TRANSMITTING && newRadioTransmissionState == IRadio::TRANSMISSION_STATE_IDLE) {
-            if (macState == IDLE_1) { // capture transmission end when sent without CSMA state machine
+            // capture transmission end when sent without CSMA state machine
+            if (macState == IDLE_1 || currentSlot == 0 || currentSlot >= numCSMASlots) {
                 EV_DEBUG << "DSME-(CSMA): Transmission over" << endl;
                 radio->setRadioMode(IRadio::RADIO_MODE_RECEIVER);
             } else {
@@ -314,7 +321,6 @@ void DSME::endChannelScan() {
 
 
 void DSME::allocateGTSlots(uint8_t numSlots, bool direction, MACAddress addr) {
-    // TODO only allocate if no allocation request is "pending"
     // select random slot
     GTS randomGTS = occupiedGTSs.getRandomFreeGTS();  // TODO get for nearby superframe
     // create request command
@@ -357,7 +363,6 @@ void DSME::sendGTSRequest(DSME_GTSRequestCmd* gtsRequest, MACAddress addr) {
     macCmd->setSrcAddr(address);
 
     EV_DEBUG << "Sending GTS-request To: " << addr << endl;
-
     sendCSMA(macCmd, true);
 }
 
@@ -391,6 +396,7 @@ void DSME::handleGTSRequest(IEEE802154eMACCmdFrame *macCmd) {
 
     reply->setSABSpec(replySABSpec);
     sendGTSReply(reply);
+    delete macCmd;
 }
 
 void DSME::sendGTSReply(DSME_GTSReplyCmd *gtsReply) {
@@ -434,13 +440,15 @@ void DSME::handleGTSReply(IEEE802154eMACCmdFrame *macCmd) {
             updateAllocatedGTS(newGTSs, direction, other);
 
             sendGTSNotify(gtsNotify);
-            //scheduleAt(simTime() + beaconInterval, resetGtsAllocationSent);
+            scheduleAt(simTime() + beaconInterval, resetGtsAllocationSent);
         }
     }
 
     if (gtsReply->getGtsManagement().status == ALLOCATION_APPROVED) {
         occupiedGTSs.updateSlotAllocation(gtsReply->getSABSpec());
     }
+
+    delete macCmd;
 }
 
 void DSME::sendGTSNotify(DSME_GTSNotifyCmd *gtsNotify) {
@@ -456,6 +464,8 @@ void DSME::handleGTSNotify(IEEE802154eMACCmdFrame *macCmd) {
     // update neighbor slot allocation
     EV_DETAIL << "DSME: Received GTS Notify" << endl;
     occupiedGTSs.updateSlotAllocation(gtsNotify->getSABSpec());
+
+    delete macCmd;
 }
 
 void DSME::sendBroadcastCmd(const char *name, cPacket *payload, uint8_t cmdId) {
@@ -532,14 +542,7 @@ void DSME::handleBroadcastAck(CSMAFrame *ack, CSMAFrame *frame) {
 void DSME::sendDirect(cPacket *msg) {
     radio->setRadioMode(IRadio::RADIO_MODE_TRANSMITTER);
     attachSignal(msg, simTime() + aTurnaroundTime); // TODO turnaroundTime only on mode change, plus parameter is useless?
-    try {
-        EV_DEBUG << "FIXME msg: " << msg->getName() << endl;
-        EV_DEBUG << "FIXMEFIXME owner: " << msg->getOwner()->detailedInfo() << endl;
-        EV_DEBUG << msg->getOwner()->getFullPath().c_str() << endl;
     sendDown(msg);
-    } catch (cRuntimeError& e) { EV_ERROR << "CRASHED with runtime error: " << e.what() << endl; }
-    //catch (exception& e) { EV_ERROR << "CRASHED with exception: " << e.what() << endl; }
-    catch (...) {EV_ERROR << "CRASHED with unkown error" << endl;}
 }
 
 void DSME::handleGTS() {
@@ -556,7 +559,10 @@ void DSME::handleGTS() {
             // transmit from GTSQueue
             if (GTSQueue[gts.address].size() > 0) {
                 lastSendGTSFrame = GTSQueue[gts.address].front();
-                sendDirect(lastSendGTSFrame);
+                if (nullptr == lastSendGTSFrame->getOwner()) // TODO this might happen if ACK sent but not received? How to avoid??
+                    EV_ERROR << simTime() << " handleGTS, transmit, queue.front has no owner! queue.size=" << GTSQueue[gts.address].size() << endl;
+                else
+                    sendDirect(lastSendGTSFrame);
             }
         }
     }
@@ -565,6 +571,7 @@ void DSME::handleGTS() {
 void DSME::handleGTSFrame(IEEE802154eMACFrame *macPkt) {
     sendDSMEAck(macPkt->getSrcAddr());
     sendUp(decapsMsg(macPkt));
+    delete macPkt;
 }
 
 simtime_t DSME::getNextCSMASlot() {
@@ -692,6 +699,8 @@ void DSME::handleEnhancedBeacon(EnhancedBeacon *beacon) {
     }
 
     // TODO if isAllocationsent and allocated Index now is allocated -> cancel!
+
+    delete beacon;
 }
 
 void DSME::sendBeaconAllocationNotification(uint16_t beaconSDIndex) {
@@ -735,6 +744,7 @@ void DSME::handleBeaconAllocation(IEEE802154eMACCmdFrame *macCmd) {
         // TODO when to remove heardBeacons in case of collision elsewhere?
     }
 
+    delete macCmd;
 }
 
 void DSME::sendBeaconCollisionNotification(uint16_t beaconSDIndex, MACAddress addr) {
@@ -755,6 +765,7 @@ void DSME::handleBeaconCollision(IEEE802154eMACCmdFrame *macCmd) {
     EV_DETAIL << "DSME handleBeaconCollision: removing beacon schedule @ " << cmd->getBeaconSDIndex();
     isBeaconAllocated = false;
     neighborHeardBeacons.SDBitmap.setBit(cmd->getBeaconSDIndex(), true);
+    delete macCmd;
 }
 
 
