@@ -174,6 +174,13 @@ protected:
     virtual void handleGTSNotify(IEEE802154eMACCmdFrame *);
 
     /**
+     * Check if recently requested GTSs are already allocated by this device.
+     * If so, send a request indicating duplicate allocation.
+     * @return true if duplicate allocation were found
+     */
+    virtual bool checkAndHandleGTSDuplicateAllocation(DSME_SAB_Specification& sabSpec);
+
+    /**
      * Send IEEE802154eMACCmdFrame broadcast message.
      * await an ACK response from encapsulated packet destination address
      */

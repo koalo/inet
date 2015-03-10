@@ -61,8 +61,10 @@ public:
      */
     uint8_t getSubBlockLength();
 
-protected:
+
     GTS getGTS(uint16_t superframeID, uint16_t offset);
+
+    uint16_t getSubBlockIndex(GTS& gts);
 };
 
 } /* namespace inet */

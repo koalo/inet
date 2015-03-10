@@ -290,8 +290,8 @@ void DSME::receiveSignal(cComponent *source, simsignal_t signalID, long value) {
         IRadio::TransmissionState newRadioTransmissionState = (IRadio::TransmissionState)value;
         if (transmissionState == IRadio::TRANSMISSION_STATE_TRANSMITTING && newRadioTransmissionState == IRadio::TRANSMISSION_STATE_IDLE) {
             // capture transmission end when sent without CSMA state machine
-            if (macState == IDLE_1 || currentSlot == 0 || currentSlot >= numCSMASlots) {
-                EV_DEBUG << "DSME-(CSMA): Transmission over" << endl;
+            if (macState == IDLE_1 || currentSlot == 0 || currentSlot > numCSMASlots) {
+                EV_DEBUG << "DSME-(CSMA): Transmission over. @" << currentSlot << " mac:" << macState << endl;
                 radio->setRadioMode(IRadio::RADIO_MODE_RECEIVER);
             } else {
                 // KLUDGE: we used to get a cMessage from the radio (the identity was not important)
@@ -455,11 +455,13 @@ void DSME::handleGTSReply(IEEE802154eMACCmdFrame *macCmd) {
 
             sendGTSNotify(gtsNotify);
             scheduleAt(simTime() + beaconInterval, resetGtsAllocationSent);
+            occupiedGTSs.updateSlotAllocation(gtsReply->getSABSpec());
         }
     }
 
-    if (gtsReply->getGtsManagement().status == ALLOCATION_APPROVED) {
-        occupiedGTSs.updateSlotAllocation(gtsReply->getSABSpec());
+    else if (gtsReply->getGtsManagement().status == ALLOCATION_APPROVED) {
+        if (!checkAndHandleGTSDuplicateAllocation(gtsReply->getSABSpec()))
+            occupiedGTSs.updateSlotAllocation(gtsReply->getSABSpec());
     }
 
     delete macCmd;
@@ -470,16 +472,39 @@ void DSME::sendGTSNotify(DSME_GTSNotifyCmd *gtsNotify) {
 }
 
 void DSME::handleGTSNotify(IEEE802154eMACCmdFrame *macCmd) {
+    EV_DETAIL << "DSME: Received GTS Notify" << endl;
     // send ACK if for me
     DSME_GTSNotifyCmd *gtsNotify = static_cast<DSME_GTSNotifyCmd*>(macCmd->decapsulate());
     if (gtsNotify->getDestinationAddress() == address) {
         sendCSMAAck(macCmd->getSrcAddr());
+        occupiedGTSs.updateSlotAllocation(gtsNotify->getSABSpec());
     }
     // update neighbor slot allocation
-    EV_DETAIL << "DSME: Received GTS Notify" << endl;
-    occupiedGTSs.updateSlotAllocation(gtsNotify->getSABSpec());
+    else if (!checkAndHandleGTSDuplicateAllocation(gtsNotify->getSABSpec()))
+        occupiedGTSs.updateSlotAllocation(gtsNotify->getSABSpec());
 
     delete macCmd;
+}
+
+bool DSME::checkAndHandleGTSDuplicateAllocation(DSME_SAB_Specification& sabSpec) {
+    bool duplicateFound = false;
+
+    DSME_SAB_Specification duplicateSABSpec;
+    duplicateSABSpec.subBlockIndex = sabSpec.subBlockIndex;
+    duplicateSABSpec.subBlockLength = sabSpec.subBlockLength;
+    duplicateSABSpec.subBlock = BitVector(0, sabSpec.subBlock.getSize());
+
+    auto gtss = occupiedGTSs.getGTSsFromAllocation(sabSpec);
+    for (auto gts = gtss.begin(); gts != gtss.end(); gts++) {
+        if (*gts == allocatedGTSs[gts->superframeID][gts->slotID]) {
+            EV_DEBUG << "DSME: GTS duplicate allocation: " << gts->superframeID << "/" << gts->slotID << "@" << gts->channel << endl;
+            duplicateFound = true;
+            uint16_t index = occupiedGTSs.getSubBlockIndex(*gts);
+            duplicateSABSpec.subBlock.setBit(index, true);
+            EV << " -> SBIndex=" << index << endl;
+        }
+    }
+    return duplicateFound;
 }
 
 void DSME::sendBroadcastCmd(const char *name, cPacket *payload, uint8_t cmdId) {
@@ -768,6 +793,7 @@ void DSME::sendBeaconCollisionNotification(uint16_t beaconSDIndex, MACAddress ad
     beaconCollisionCmd->setCmdId(DSME_BEACON_COLLISION_NOTIFICATION);
     beaconCollisionCmd->encapsulate(cmd);
     beaconCollisionCmd->setDestAddr(addr);
+    beaconCollisionCmd->setSrcAddr(address);
 
     EV_DEBUG << "Sending beaconCollisionNotification @ " << cmd->getBeaconSDIndex() << " To: " << addr << endl;
 
@@ -776,9 +802,10 @@ void DSME::sendBeaconCollisionNotification(uint16_t beaconSDIndex, MACAddress ad
 
 void DSME::handleBeaconCollision(IEEE802154eMACCmdFrame *macCmd) {
     DSMEBeaconCollisionNotificationCmd *cmd = static_cast<DSMEBeaconCollisionNotificationCmd*>(macCmd->decapsulate());
-    EV_DETAIL << "DSME handleBeaconCollision: removing beacon schedule @ " << cmd->getBeaconSDIndex();
+    EV_DETAIL << "DSME handleBeaconCollision: removing beacon schedule @ " << cmd->getBeaconSDIndex() << endl;
     isBeaconAllocated = false;
     neighborHeardBeacons.SDBitmap.setBit(cmd->getBeaconSDIndex(), true);
+    sendCSMAAck(macCmd->getSrcAddr());
     delete macCmd;
 }
 

@@ -105,12 +105,16 @@ GTS DSMESlotAllocationBitmap::getRandomFreeGTS(uint16_t superframeID) {
     return GTS::UNDEFINED;
 }
 
+uint8_t DSMESlotAllocationBitmap::getSubBlockLength() {
+    return subBlockLength / 8;  // TODO actually + subBlockLength % 8
+}
+
 GTS DSMESlotAllocationBitmap::getGTS(uint16_t superframeID, uint16_t offset) {
     return GTS(superframeID, offset/numChannels, offset%numChannels);
 }
 
-uint8_t DSMESlotAllocationBitmap::getSubBlockLength() {
-    return subBlockLength / 8;  // TODO actually + subBlockLength % 8
+uint16_t DSMESlotAllocationBitmap::getSubBlockIndex(GTS& gts) {
+    return gts.slotID * numChannels + gts.channel;
 }
 
 } /* namespace inet */
