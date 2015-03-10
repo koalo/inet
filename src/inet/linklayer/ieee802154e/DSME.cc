@@ -337,6 +337,8 @@ void DSME::endChannelScan() {
 void DSME::allocateGTSlots(uint8_t numSlots, bool direction, MACAddress addr) {
     // select random slot
     GTS randomGTS = occupiedGTSs.getRandomFreeGTS();  // TODO get for nearby superframe
+    randomGTS.superframeID = 0; // TODO test duplicated alloc
+    randomGTS.slotID = 0;       // TODO test duplicated alloc
     // create request command
     DSME_GTS_Management man;
     man.type = ALLOCATION;
@@ -404,6 +406,8 @@ void DSME::handleGTSRequest(IEEE802154eMACCmdFrame *macCmd) {
         std::list<GTS> newGTSs = occupiedGTSs.getGTSsFromAllocation(replySABSpec);
         updateAllocatedGTS(newGTSs, !reply->getGtsManagement().direction, macCmd->getSrcAddr());
         break;}
+    case DUPLICATED_ALLOCATION_NOTIFICATION:
+        EV << " - DUPLICATED_ALLOCATION_NOTIFICATION" << endl;
     default:
         EV_ERROR << "DSME: GTS Mangement Type " << req->getGtsManagement().type << " not supported yet" << endl;
     }
@@ -435,9 +439,9 @@ void DSME::handleGTSReply(IEEE802154eMACCmdFrame *macCmd) {
 
     // send ACK if for me
     DSME_GTSReplyCmd *gtsReply = static_cast<DSME_GTSReplyCmd*>(macCmd->decapsulate());
+    MACAddress other = macCmd->getSrcAddr();
 
     if (gtsReply->getDestinationAddress() == address) {
-        MACAddress other = macCmd->getSrcAddr();
         sendCSMAAck(other);
 
         // notify neighbors if allocation succeeded
@@ -460,7 +464,7 @@ void DSME::handleGTSReply(IEEE802154eMACCmdFrame *macCmd) {
     }
 
     else if (gtsReply->getGtsManagement().status == ALLOCATION_APPROVED) {
-        if (!checkAndHandleGTSDuplicateAllocation(gtsReply->getSABSpec()))
+        if (!checkAndHandleGTSDuplicateAllocation(gtsReply->getSABSpec(), other))
             occupiedGTSs.updateSlotAllocation(gtsReply->getSABSpec());
     }
 
@@ -475,18 +479,19 @@ void DSME::handleGTSNotify(IEEE802154eMACCmdFrame *macCmd) {
     EV_DETAIL << "DSME: Received GTS Notify" << endl;
     // send ACK if for me
     DSME_GTSNotifyCmd *gtsNotify = static_cast<DSME_GTSNotifyCmd*>(macCmd->decapsulate());
+    MACAddress other = macCmd->getSrcAddr();
     if (gtsNotify->getDestinationAddress() == address) {
-        sendCSMAAck(macCmd->getSrcAddr());
+        sendCSMAAck(other);
         occupiedGTSs.updateSlotAllocation(gtsNotify->getSABSpec());
     }
     // update neighbor slot allocation
-    else if (!checkAndHandleGTSDuplicateAllocation(gtsNotify->getSABSpec()))
+    else if (!checkAndHandleGTSDuplicateAllocation(gtsNotify->getSABSpec(), other))
         occupiedGTSs.updateSlotAllocation(gtsNotify->getSABSpec());
 
     delete macCmd;
 }
 
-bool DSME::checkAndHandleGTSDuplicateAllocation(DSME_SAB_Specification& sabSpec) {
+bool DSME::checkAndHandleGTSDuplicateAllocation(DSME_SAB_Specification& sabSpec, MACAddress addr) {
     bool duplicateFound = false;
 
     DSME_SAB_Specification duplicateSABSpec;
@@ -504,6 +509,16 @@ bool DSME::checkAndHandleGTSDuplicateAllocation(DSME_SAB_Specification& sabSpec)
             EV << " -> SBIndex=" << index << endl;
         }
     }
+
+    if (duplicateFound) {
+        DSME_GTSRequestCmd *dupReq = new DSME_GTSRequestCmd("gts-request-duplication");
+        DSME_GTS_Management man;
+        man.type = DUPLICATED_ALLOCATION_NOTIFICATION;
+        dupReq->setGtsManagement(man);
+        dupReq->setSABSpec(duplicateSABSpec);
+        sendGTSRequest(dupReq, addr);
+    }
+
     return duplicateFound;
 }
 

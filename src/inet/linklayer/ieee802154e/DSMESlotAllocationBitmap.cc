@@ -54,6 +54,8 @@ DSME_SAB_Specification DSMESlotAllocationBitmap::allocateSlots(DSME_SAB_Specific
             }
         }
     }
+    EV_WARN << "DUPLICATED DEBUG slot 000"<<endl;
+    replySabSpec.subBlock.setBit(0, true); // TODO remove debug
     EV << endl;
 
     // TODO further search in following superframes or reply failure? Just if nothin found?

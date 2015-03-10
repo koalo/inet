@@ -178,7 +178,7 @@ protected:
      * If so, send a request indicating duplicate allocation.
      * @return true if duplicate allocation were found
      */
-    virtual bool checkAndHandleGTSDuplicateAllocation(DSME_SAB_Specification& sabSpec);
+    virtual bool checkAndHandleGTSDuplicateAllocation(DSME_SAB_Specification& sabSpec, MACAddress addr);
 
     /**
      * Send IEEE802154eMACCmdFrame broadcast message.
