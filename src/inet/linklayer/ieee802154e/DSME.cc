@@ -380,6 +380,7 @@ void DSME::deallocateGTSlots(DSME_SAB_Specification sabSpec, uint8_t cmd) {
             } else {
                 EV_WARN << "DSME deallocateGTSlots: slot " << gts->superframeID << "/" << gts->slotID << " not allocated" << endl;
                 sabSpec.subBlock.setBit(occupiedGTSs.getSubBlockIndex(*gts), false);
+                gtss.remove(*gts);
             }
         }
 
@@ -403,14 +404,16 @@ void DSME::deallocateGTSlots(DSME_SAB_Specification sabSpec, uint8_t cmd) {
 
             switch(cmd) {
             case DSME_GTS_REQUEST:{
-                // TODO remove from allocatedGTSs
+                // remove from allocatedGTSs and send request to corresponding device
+                removeAllocatedGTS(gtss);
                 DSME_GTSRequestCmd *req = new DSME_GTSRequestCmd("gts-request-deallocation");
                 req->setGtsManagement(man);
                 req->setSABSpec(sabSpec);
                 sendGTSRequest(req, dest);
             } break;
             case DSME_GTS_REPLY: {
-                // TODO remove from allocatedGTSs
+                // remove from allocatedGTSs and send request to corresponding device
+                removeAllocatedGTS(gtss);
                 DSME_GTSReplyCmd *reply = new DSME_GTSReplyCmd("gts-reply-deallocation");
                 reply->setGtsManagement(man);
                 reply->setSABSpec(sabSpec);
@@ -505,6 +508,13 @@ void DSME::updateAllocatedGTS(std::list<GTS>& gtss, bool direction, MACAddress a
         EV << it->superframeID << "/" << it->slotID << "@" << (int)it->channel << "  ";
     }
     EV << endl;
+}
+
+void DSME::removeAllocatedGTS(std::list<GTS>& gtss) {
+    for (auto gts = gtss.begin(); gts != gtss.end(); gts++) {
+        EV_DEBUG << "DSME removing allocated slot: " << gts->superframeID << "/" << gts->slotID << endl;
+        allocatedGTSs[gts->superframeID][gts->slotID] = GTS::UNDEFINED;
+    }
 }
 
 void DSME::handleGTSReply(IEEE802154eMACCmdFrame *macCmd) {

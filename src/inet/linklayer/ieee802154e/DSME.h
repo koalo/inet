@@ -118,7 +118,7 @@ public:
     /**
      * Deallocate Slots when not needed anymore or received duplicated allocation notification
      * Given the slot allocation bitmap
-     * and the MAC command type (DSME_GTS_Request/Reply/Notify)
+     * and the MAC command type to send (DSME_GTS_Request/Reply)
      */
     virtual void deallocateGTSlots(DSME_SAB_Specification, uint8_t cmd);
 protected:
@@ -141,6 +141,10 @@ protected:
      */
     virtual void updateAllocatedGTS(std::list<GTS>& gtss, bool direction, MACAddress address);
 
+    /**
+     * Remove GTS from allocation when they should not be used anymore.
+     */
+    virtual void removeAllocatedGTS(std::list<GTS>& gtss);
     /**
      * Get number of allocated slots to specified address and given direction
      */
