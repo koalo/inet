@@ -115,6 +115,12 @@ public:
      */
     virtual void allocateGTSlots(uint8_t numSlots, bool direction, MACAddress addr);
 
+    /**
+     * Deallocate Slots when not needed anymore or received duplicated allocation notification
+     * Given the slot allocation bitmap
+     * and the MAC command type (DSME_GTS_Request/Reply/Notify)
+     */
+    virtual void deallocateGTSlots(DSME_SAB_Specification, uint8_t cmd);
 protected:
 
     /**

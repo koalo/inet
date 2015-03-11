@@ -360,6 +360,73 @@ void DSME::allocateGTSlots(uint8_t numSlots, bool direction, MACAddress addr) {
     gtsAllocationSent = true;
 }
 
+void DSME::deallocateGTSlots(DSME_SAB_Specification sabSpec, uint8_t cmd) {
+    // check slots to deallocate:
+    // is there at least one and do all belong to the same address?
+    auto gtss = occupiedGTSs.getGTSsFromAllocation(sabSpec);
+    bool foundGts = false;
+    bool gtsDifferentAddresses = false;
+    if (gtss.size() > 0) {
+        MACAddress dest = MACAddress::UNSPECIFIED_ADDRESS;
+        for (auto gts = gtss.begin(); gts != gtss.end(); gts++) {
+            GTS allocGts = allocatedGTSs[gts->superframeID][gts->slotID];
+            if (allocGts != GTS::UNDEFINED) {
+                if (dest == MACAddress::UNSPECIFIED_ADDRESS)
+                    dest = allocGts.address;
+                else if (dest == allocGts.address)
+                    foundGts = true;
+                else
+                    gtsDifferentAddresses = true;
+            } else {
+                EV_WARN << "DSME deallocateGTSlots: slot " << gts->superframeID << "/" << gts->slotID << " not allocated" << endl;
+                sabSpec.subBlock.setBit(occupiedGTSs.getSubBlockIndex(*gts), false);
+            }
+        }
+
+        if (gtss.size() < 2 && dest != MACAddress::UNSPECIFIED_ADDRESS)
+            foundGts = true;
+
+        if (gtsDifferentAddresses) {
+            // TODO handle multiple requests or also send (INVALID_PARAMETER)?!
+            EV_WARN << "DSME deallocateGTSlots: slots belong to different addresses!" << endl;
+            return;
+        } else {
+            EV_DETAIL << "DSME deallocatedGTSlots: " << sabSpec.subBlock.toString() << endl;
+            DSME_GTS_Management man;
+            man.type = DEALLOCATION;
+            if (foundGts) {
+                man.status = ALLOCATION_APPROVED;   // = SUCCESS
+            } else {
+                man.status = OTHER_DISAPPROVED;
+                EV_WARN << "DSME deallocatedGTSlots: no allocated Slots were found -> DISAPPROVED" << endl;
+            }
+
+            switch(cmd) {
+            case DSME_GTS_REQUEST:{
+                // TODO remove from allocatedGTSs
+                DSME_GTSRequestCmd *req = new DSME_GTSRequestCmd("gts-request-deallocation");
+                req->setGtsManagement(man);
+                req->setSABSpec(sabSpec);
+                sendGTSRequest(req, dest);
+            } break;
+            case DSME_GTS_REPLY: {
+                // TODO remove from allocatedGTSs
+                DSME_GTSReplyCmd *reply = new DSME_GTSReplyCmd("gts-reply-deallocation");
+                reply->setGtsManagement(man);
+                reply->setSABSpec(sabSpec);
+                reply->setDestinationAddress(dest);
+                sendGTSReply(reply);
+            } break;
+            default:
+                EV_ERROR << "UNKOWN DSME_GTS_CMD: " << (unsigned) cmd << endl;
+            }
+        }
+
+    } else {
+        EV_WARN << "DSME deallocateGTSlots: empty SAB" << endl;
+    }
+}
+
 unsigned DSME::getNumAllocatedGTS(MACAddress address, bool direction) {
     unsigned num = 0;
     for (auto sf = allocatedGTSs.begin(); sf < allocatedGTSs.end(); sf++) {
@@ -389,31 +456,39 @@ void DSME::handleGTSRequest(IEEE802154eMACCmdFrame *macCmd) {
     DSME_GTSRequestCmd *req = static_cast<DSME_GTSRequestCmd*>(macCmd->decapsulate());
     EV_DETAIL << "Received GTS-request: " << req->getGtsManagement().type;
 
-    DSME_GTSReplyCmd *reply = new DSME_GTSReplyCmd();
-    reply->setGtsManagement(req->getGtsManagement());
-    reply->setDestinationAddress(macCmd->getSrcAddr());
-    DSME_SAB_Specification replySABSpec;
-
     switch(req->getGtsManagement().type) {
     case ALLOCATION: {
+        DSME_GTSReplyCmd *reply = new DSME_GTSReplyCmd();
+        reply->setGtsManagement(req->getGtsManagement());
+        reply->setDestinationAddress(macCmd->getSrcAddr());
+        DSME_SAB_Specification replySABSpec;
         reply->setName("gts-reply-allocation");
+
         // select numSlots free slots from intersection of received subBlock and local subBlock
         EV << " - ALLOCATION" << endl;
         replySABSpec = occupiedGTSs.allocateSlots(req->getSABSpec(), req->getNumSlots(), req->getPreferredSuperframeID(), req->getPreferredSlotID());
         reply->getGtsManagement().status = ALLOCATION_APPROVED;
         // TODO handle errors
+
         // allocate for opposite direction of request
         std::list<GTS> newGTSs = occupiedGTSs.getGTSsFromAllocation(replySABSpec);
         updateAllocatedGTS(newGTSs, !reply->getGtsManagement().direction, macCmd->getSrcAddr());
+        reply->setSABSpec(replySABSpec);
+        sendGTSReply(reply);
         break;}
     case DUPLICATED_ALLOCATION_NOTIFICATION:
         EV << " - DUPLICATED_ALLOCATION_NOTIFICATION" << endl;
+        deallocateGTSlots(req->getSABSpec(), DSME_GTS_REQUEST);
+        break;
+    case DEALLOCATION:
+        EV << " - DEALLOCATION" << endl;
+        deallocateGTSlots(req->getSABSpec(), DSME_GTS_REPLY);
+        break;
     default:
         EV_ERROR << "DSME: GTS Mangement Type " << req->getGtsManagement().type << " not supported yet" << endl;
     }
 
-    reply->setSABSpec(replySABSpec);
-    sendGTSReply(reply);
+    delete req;
     delete macCmd;
 }
 
@@ -433,41 +508,46 @@ void DSME::updateAllocatedGTS(std::list<GTS>& gtss, bool direction, MACAddress a
 }
 
 void DSME::handleGTSReply(IEEE802154eMACCmdFrame *macCmd) {
-
-    // TODO check if I already occupy that that slot (allocated)
-    // send collision notification if so
-
-    // send ACK if for me
     DSME_GTSReplyCmd *gtsReply = static_cast<DSME_GTSReplyCmd*>(macCmd->decapsulate());
     MACAddress other = macCmd->getSrcAddr();
 
-    if (gtsReply->getDestinationAddress() == address) {
-        sendCSMAAck(other);
+    DSME_GTS_Management man = gtsReply->getGtsManagement();
+    if (man.status == ALLOCATION_APPROVED) {
+        if (gtsReply->getDestinationAddress() == address) {
+            sendCSMAAck(other);
 
-        // notify neighbors if allocation succeeded
-        if (gtsReply->getGtsManagement().status == ALLOCATION_APPROVED) {
-            EV_DETAIL << "DSME: GTS Allocation succeeded -> notify" << endl;
             DSME_GTSNotifyCmd *gtsNotify = new DSME_GTSNotifyCmd("gts-notify-allocation");
             gtsNotify->setGtsManagement(gtsReply->getGtsManagement());
             gtsNotify->setSABSpec(gtsReply->getSABSpec());
             gtsNotify->setDestinationAddress(macCmd->getSrcAddr());
 
-            // allocate GTS
-            bool direction = gtsReply->getGtsManagement().direction;
-            std::list<GTS> newGTSs = occupiedGTSs.getGTSsFromAllocation(gtsReply->getSABSpec());
-            updateAllocatedGTS(newGTSs, direction, other);
+            if (man.type == ALLOCATION) {
+                EV_DETAIL << "DSME: GTS Allocation succeeded -> notify" << endl;
+                // allocate GTS
+                bool direction = gtsReply->getGtsManagement().direction;
+                std::list<GTS> newGTSs = occupiedGTSs.getGTSsFromAllocation(gtsReply->getSABSpec());
+                updateAllocatedGTS(newGTSs, direction, other);
+                scheduleAt(simTime() + beaconInterval, resetGtsAllocationSent);
+                occupiedGTSs.updateSlotAllocation(gtsReply->getSABSpec());
+            } else if (man.type == DEALLOCATION) {
+                // TODO already removed allocated slots on request, do anything?
+            }
 
             sendGTSNotify(gtsNotify);
-            scheduleAt(simTime() + beaconInterval, resetGtsAllocationSent);
-            occupiedGTSs.updateSlotAllocation(gtsReply->getSABSpec());
         }
-    }
 
-    else if (gtsReply->getGtsManagement().status == ALLOCATION_APPROVED) {
-        if (!checkAndHandleGTSDuplicateAllocation(gtsReply->getSABSpec(), other))
-            occupiedGTSs.updateSlotAllocation(gtsReply->getSABSpec());
-    }
+        // neighbors update their SAB (occupiedGTSs)
+        else {
+            if (man.type == ALLOCATION) {
+                if (!checkAndHandleGTSDuplicateAllocation(gtsReply->getSABSpec(), other))
+                    occupiedGTSs.updateSlotAllocation(gtsReply->getSABSpec());
+            } else if (man.type == DEALLOCATION) {
+                // TODO remove slots from SAB
+            }
+        }
+    } // else DISAPPROVED
 
+    delete gtsReply;
     delete macCmd;
 }
 
@@ -480,14 +560,23 @@ void DSME::handleGTSNotify(IEEE802154eMACCmdFrame *macCmd) {
     // send ACK if for me
     DSME_GTSNotifyCmd *gtsNotify = static_cast<DSME_GTSNotifyCmd*>(macCmd->decapsulate());
     MACAddress other = macCmd->getSrcAddr();
+    DSME_GTS_Management man = gtsNotify->getGtsManagement();
     if (gtsNotify->getDestinationAddress() == address) {
         sendCSMAAck(other);
-        occupiedGTSs.updateSlotAllocation(gtsNotify->getSABSpec());
+        if (man.type == ALLOCATION)
+            occupiedGTSs.updateSlotAllocation(gtsNotify->getSABSpec());
     }
     // update neighbor slot allocation
-    else if (!checkAndHandleGTSDuplicateAllocation(gtsNotify->getSABSpec(), other))
-        occupiedGTSs.updateSlotAllocation(gtsNotify->getSABSpec());
+    else {
+        if (man.type == ALLOCATION) {
+            if (!checkAndHandleGTSDuplicateAllocation(gtsNotify->getSABSpec(), other))
+                occupiedGTSs.updateSlotAllocation(gtsNotify->getSABSpec());
+        } else if (man.type == DEALLOCATION) {
+            // TODO remove slots from SAB
+        }
+    }
 
+    delete gtsNotify;
     delete macCmd;
 }
 
