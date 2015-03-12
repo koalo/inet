@@ -24,6 +24,9 @@ DSMESlotAllocationBitmap::DSMESlotAllocationBitmap(uint16_t numSuperframes, uint
 }
 
 DSME_SAB_Specification DSMESlotAllocationBitmap::allocateSlots(DSME_SAB_Specification sabSpec, uint8_t numSlots, uint16_t preferredSuperframe, uint8_t preferredSlot) {
+    // if superframe is fully allocated try next, stop if all superframes were tried
+    static uint16_t numSuperframesTried = 0;
+
     // TODO subblock may have different length
     EV_DETAIL << "received subBlock: \t";
     BitVector slotsOccupied = sabSpec.subBlock;
@@ -54,9 +57,20 @@ DSME_SAB_Specification DSMESlotAllocationBitmap::allocateSlots(DSME_SAB_Specific
             }
         }
     }
-    EV_WARN << "DUPLICATED DEBUG slot 000"<<endl;
-    replySabSpec.subBlock.setBit(0, true); // TODO remove debug
     EV << endl;
+
+    // if not found any free slot, try next superframe
+    numSuperframesTried++;
+    if (numAllocated == 0 && numSuperframesTried < bitmap.size()) {
+        EV_DETAIL << "DSME allocateSlots: did not find any free slot in superframe " << preferredSuperframe << endl;
+        allocateSlots(sabSpec, numSlots, preferredSuperframe+1, 0);
+    }
+    else {
+        numSuperframesTried = 0;
+    }
+
+    //EV_WARN << "DUPLICATED DEBUG slot 000"<<endl;
+    //replySabSpec.subBlock.setBit(0, true); // force duplicate allocation
 
     // TODO further search in following superframes or reply failure? Just if nothin found?
     return replySabSpec;
@@ -82,25 +96,27 @@ BitVector DSMESlotAllocationBitmap::getSubBlock(uint8_t superframeID) {
     return bitmap[superframeID];
 }
 
-GTS DSMESlotAllocationBitmap::getRandomFreeGTS() {
+GTS DSMESlotAllocationBitmap::getRandomFreeGTS(const gts_allocation& allocatedGTS) {
     uint8_t start = intuniform(0, bitmap.size()-1);
-    return getRandomFreeGTS(start);
+    return getRandomFreeGTS(start, allocatedGTS);
 }
 
-GTS DSMESlotAllocationBitmap::getRandomFreeGTS(uint16_t superframeID) {
+GTS DSMESlotAllocationBitmap::getRandomFreeGTS(uint16_t superframeID, const gts_allocation& allocatedGTS) {
     uint16_t start = intuniform(0, bitmap.size()-1);
     uint16_t slot = intuniform(0, subBlockLength-1);
     for (uint16_t i=start; i<bitmap.size()-1; i++) {
         BitVector subBlock = getSubBlock(i);
         for (uint16_t j=slot; j<subBlockLength-1; j++) {
-            if (!subBlock.getBit(j))
+            if (GTS::UNDEFINED != allocatedGTS[i][j/numChannels]
+                    && !subBlock.getBit(j))
                 return getGTS(i, j);
         }
     }
     for (uint16_t i=0; i<start; i++) {
         BitVector subBlock = getSubBlock(i);
         for (uint16_t j=0; j<subBlockLength-1; j++) {
-            if (!subBlock.getBit(j))
+            if (GTS::UNDEFINED != allocatedGTS[i][j/numChannels]
+                    && !subBlock.getBit(j))
                 return getGTS(i, j);
         }
     }
@@ -115,7 +131,7 @@ GTS DSMESlotAllocationBitmap::getGTS(uint16_t superframeID, uint16_t offset) {
     return GTS(superframeID, offset/numChannels, offset%numChannels);
 }
 
-uint16_t DSMESlotAllocationBitmap::getSubBlockIndex(GTS& gts) {
+uint16_t DSMESlotAllocationBitmap::getSubBlockIndex(const GTS& gts) {
     return gts.slotID * numChannels + gts.channel;
 }
 

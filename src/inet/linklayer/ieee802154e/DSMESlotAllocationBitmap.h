@@ -15,6 +15,10 @@
 namespace inet {
 
 class DSMESlotAllocationBitmap {
+public:
+
+    typedef std::vector<std::vector<GTS>> gts_allocation;     // superframes x slots
+
 protected:
 
     std::vector<BitVector> bitmap;
@@ -47,14 +51,15 @@ public:
     BitVector getSubBlock(uint8_t superframeID);
 
     /**
-     * Get random free GTSlot
+     * Get random free GTSlot with respect to the current allocated slots
      */
-    GTS getRandomFreeGTS();
+    GTS getRandomFreeGTS(const gts_allocation&);
 
     /**
      * Get random free GTSlot, starting from specified superframe
+     *  with respect to the current allocated slots
      */
-    GTS getRandomFreeGTS(uint16_t superframeID);
+    GTS getRandomFreeGTS(uint16_t superframeID, const gts_allocation&);
 
     /**
      * Returns the subblock length unit in bytes which is numSlots*numChannels / 8
@@ -64,7 +69,7 @@ public:
 
     GTS getGTS(uint16_t superframeID, uint16_t offset);
 
-    uint16_t getSubBlockIndex(GTS& gts);
+    uint16_t getSubBlockIndex(const GTS& gts);
 };
 
 } /* namespace inet */

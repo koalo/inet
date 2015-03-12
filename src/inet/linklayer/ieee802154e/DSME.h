@@ -38,6 +38,11 @@ namespace inet {
  */
 class DSME : public CSMA
 {
+public:
+    // types: Guaranteed Time Slot management
+    typedef std::vector<std::vector<GTS>> gts_allocation;     // superframes x slots
+    typedef std::map<MACAddress, std::list<IEEE802154eMACFrame*>> gts_queue;
+
 protected:
     bool isPANCoordinator;
     bool isCoordinator;
@@ -72,12 +77,10 @@ protected:
     DSME_PANDescriptor PANDescriptor;
 
     // Guaranteed Time Slot management
-    typedef std::vector<std::vector<GTS>> gts_allocation;     // superframes x slots
     gts_allocation allocatedGTSs;
     DSMESlotAllocationBitmap occupiedGTSs;
     bool gtsAllocationSent;
 
-    typedef std::map<MACAddress, std::list<IEEE802154eMACFrame*>> gts_queue;
     gts_queue GTSQueue;
     IEEE802154eMACFrame *lastSendGTSFrame;
 
@@ -139,7 +142,7 @@ protected:
     /**
      * Update GTS allocation for receiving or transmitting for this device
      */
-    virtual void updateAllocatedGTS(std::list<GTS>& gtss, bool direction, MACAddress address);
+    virtual void updateAllocatedGTS(DSME_SAB_Specification&, bool direction, MACAddress address);
 
     /**
      * Remove GTS from allocation when they should not be used anymore.

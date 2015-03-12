@@ -35,8 +35,8 @@ public:
     bool direction;
     MACAddress address;
 
-    bool operator==(const GTS& b) { return (this->superframeID==b.superframeID && this->slotID==b.slotID && this->channel==b.channel);}
-    bool operator!=(const GTS& b) { return !(*this == b); }
+    bool operator==(const GTS& b) const { return (this->superframeID==b.superframeID && this->slotID==b.slotID && this->channel==b.channel);}
+    bool operator!=(const GTS& b) const { return !(*this == b); }
 };
 
 } /* namespace inet */
