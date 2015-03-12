@@ -473,7 +473,7 @@ void DSME::handleGTSRequest(IEEE802154eMACCmdFrame *macCmd) {
 
         // select numSlots free slots from intersection of received subBlock and local subBlock
         EV << " - ALLOCATION" << endl;
-        replySABSpec = occupiedGTSs.allocateSlots(req->getSABSpec(), req->getNumSlots(), req->getPreferredSuperframeID(), req->getPreferredSlotID());
+        replySABSpec = occupiedGTSs.allocateSlots(req->getSABSpec(), req->getNumSlots(), req->getPreferredSuperframeID(), req->getPreferredSlotID(), allocatedGTSs);
         reply->getGtsManagement().status = ALLOCATION_APPROVED;
         // TODO handle errors
 

@@ -23,7 +23,7 @@ DSMESlotAllocationBitmap::DSMESlotAllocationBitmap(uint16_t numSuperframes, uint
     }
 }
 
-DSME_SAB_Specification DSMESlotAllocationBitmap::allocateSlots(DSME_SAB_Specification sabSpec, uint8_t numSlots, uint16_t preferredSuperframe, uint8_t preferredSlot) {
+DSME_SAB_Specification DSMESlotAllocationBitmap::allocateSlots(DSME_SAB_Specification sabSpec, uint8_t numSlots, uint16_t preferredSuperframe, uint8_t preferredSlot, const gts_allocation& allocatedGTS) {
     // if superframe is fully allocated try next, stop if all superframes were tried
     static uint16_t numSuperframesTried = 0;
 
@@ -37,12 +37,13 @@ DSME_SAB_Specification DSMESlotAllocationBitmap::allocateSlots(DSME_SAB_Specific
     // TODO assuming only preferred superframe in recieved subblock
     DSME_SAB_Specification replySabSpec;
     replySabSpec.subBlock = BitVector(0, slotsOccupied.getSize());;
-    replySabSpec.subBlockIndex = sabSpec.subBlockIndex;
+    replySabSpec.subBlockIndex = preferredSuperframe;
     replySabSpec.subBlockLength = sabSpec.subBlockLength;
     uint8_t numAllocated = 0;
     EV_DETAIL << "allocating slot-channel starting at " << (int)preferredSlot;
     for (uint16_t i = preferredSlot; i < slotsOccupied.getSize(); i++) {
-        if(!slotsOccupied.getBit(i)) {
+        if(GTS::UNDEFINED == allocatedGTS[preferredSuperframe][i/numChannels] &&
+                !slotsOccupied.getBit(i)) {
             replySabSpec.subBlock.setBit(i, true);
             numAllocated++;
             EV << ", " << i;
@@ -63,7 +64,7 @@ DSME_SAB_Specification DSMESlotAllocationBitmap::allocateSlots(DSME_SAB_Specific
     numSuperframesTried++;
     if (numAllocated == 0 && numSuperframesTried < bitmap.size()) {
         EV_DETAIL << "DSME allocateSlots: did not find any free slot in superframe " << preferredSuperframe << endl;
-        allocateSlots(sabSpec, numSlots, preferredSuperframe+1, 0);
+        allocateSlots(sabSpec, numSlots, preferredSuperframe+1, 0, allocatedGTS);
     }
     else {
         numSuperframesTried = 0;

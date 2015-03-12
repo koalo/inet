@@ -32,8 +32,9 @@ public:
 
     /**
      * select numSlots free slots from intersection of received subBlock and local subBlock
+     * with respect to the current allocated slots
      */
-    DSME_SAB_Specification allocateSlots(DSME_SAB_Specification sabSpec, uint8_t numSlots, uint16_t preferredSuperframe, uint8_t preferredSlot);
+    DSME_SAB_Specification allocateSlots(DSME_SAB_Specification sabSpec, uint8_t numSlots, uint16_t preferredSuperframe, uint8_t preferredSlot, const gts_allocation& allocatedGTS);
 
     /**
      * extract all allocated GTSs from bitmap
