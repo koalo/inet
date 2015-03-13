@@ -50,8 +50,10 @@ class BitVector
         unsigned int getSize() const { return size; }
         int computeHammingDistance(const BitVector& u) const;
         friend std::ostream& operator<<(std::ostream& out, const BitVector& bitVector);
+        BitVector operator~();
         BitVector& operator=(const BitVector& rhs);
         BitVector& operator|=(const BitVector& rhs);
+        BitVector& operator&=(const BitVector& rhs);
         bool operator==(const BitVector& rhs) const;
         bool operator!=(const BitVector& rhs) const;
         std::string toString() const;

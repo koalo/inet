@@ -86,9 +86,14 @@ std::list<GTS> DSMESlotAllocationBitmap::getGTSsFromAllocation(DSME_SAB_Specific
     return gtss;
 }
 
-void DSMESlotAllocationBitmap::updateSlotAllocation(DSME_SAB_Specification sabSpec) {
-    EV_DETAIL << "DSME: Updating neighboring GTS allocation bitmap for superframe(" << sabSpec.subBlockIndex << "): ";
-    bitmap[sabSpec.subBlockIndex] |= sabSpec.subBlock;
+void DSMESlotAllocationBitmap::updateSlotAllocation(DSME_SAB_Specification sabSpec, short manType) {
+    EV_DETAIL << "DSME: Updating(" << manType << ") neighboring GTS allocation bitmap for superframe(" << sabSpec.subBlockIndex << "): ";
+    if (manType == ALLOCATION)
+        bitmap[sabSpec.subBlockIndex] |= sabSpec.subBlock;
+    else if (manType == DEALLOCATION)
+        bitmap[sabSpec.subBlockIndex] &= ~sabSpec.subBlock;
+    else
+        EV_ERROR << "UNKOWN MANAGEMENT TYPE" << endl;
     EV << bitmap[sabSpec.subBlockIndex].toString() << endl;
 }
 

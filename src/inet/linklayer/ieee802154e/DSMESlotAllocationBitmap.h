@@ -44,7 +44,7 @@ public:
     /**
      * Update slot allocation of neighborhood on receipt of reply/notify
      */
-    void updateSlotAllocation(DSME_SAB_Specification sabSpec);
+    void updateSlotAllocation(DSME_SAB_Specification sabSpec, short);
 
     /**
      * Get sub block for superframe

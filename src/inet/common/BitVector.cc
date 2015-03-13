@@ -197,6 +197,14 @@ BitVector::BitVector(unsigned int num)
     }
 }
 
+BitVector BitVector::operator~() {
+    BitVector inv_dup(*this);
+    for (unsigned int i = 0; i < getSize(); i++) {
+        inv_dup.toggleBit(i);
+    }
+    return inv_dup;
+}
+
 BitVector& BitVector::operator=(const BitVector& rhs)
 {
     if (this == &rhs)
@@ -213,6 +221,18 @@ BitVector& BitVector::operator|=(const BitVector& rhs)
     {
         if (rhs.getBit(i))
             setBit(i, true);
+    }
+    return *this;
+}
+
+BitVector& BitVector::operator&=(const BitVector& rhs)
+{
+    if (this == &rhs)
+        return *this;
+    for (unsigned int i = 0; i < getSize(); i++)
+    {
+        if (!this->getBit(i) || !rhs.getBit(i))
+            setBit(i, false);
     }
     return *this;
 }
