@@ -211,38 +211,43 @@ void DSME::handleLowerPacket(cPacket *msg) {
     const MACAddress& dest = macPkt->getDestAddr();
 
     if(dest.isBroadcast()) {
-        // TODO delete macPkt after decaosulate
         if(strcmp(macPkt->getName(), EnhancedBeacon::NAME) == 0) {
             EnhancedBeacon *beacon = static_cast<EnhancedBeacon *>(msg);
-            return handleEnhancedBeacon(beacon);
+            handleEnhancedBeacon(beacon);
         } else if(strcmp(macPkt->getName(), "beacon-allocation-notification") == 0) {
             IEEE802154eMACCmdFrame *macCmd = static_cast<IEEE802154eMACCmdFrame *>(macPkt->decapsulate()); // was send with CSMA
-            return handleBeaconAllocation(macCmd);
+            handleBeaconAllocation(macCmd);
         } else if(strcmp(macPkt->getName(), "gts-reply-cmd") == 0) {
             IEEE802154eMACCmdFrame *macCmd = static_cast<IEEE802154eMACCmdFrame *>(macPkt->decapsulate()); // was send with CSMA
-            return handleGTSReply(macCmd);
+            handleGTSReply(macCmd);
         } else if(strcmp(macPkt->getName(), "gts-notify-cmd") == 0) {
             IEEE802154eMACCmdFrame *macCmd = static_cast<IEEE802154eMACCmdFrame *>(macPkt->decapsulate()); // was send with CSMA
-            return handleGTSNotify(macCmd);
+            handleGTSNotify(macCmd);
+        } else {
+            // if not handled yet handle with CSMA
+            EV_DEBUG << "HandleLower Broadcast CSMA @ slot " << currentSlot << endl;
+            return CSMA::handleLowerPacket(msg);
         }
     } else if (dest == address) {
         EV_DETAIL << "DSME received packet for me: " << macPkt->getName() << endl;
         if (strcmp(macPkt->getName(), "dsme-gts-frame") == 0) {
-            return handleGTSFrame(macPkt);
+            handleGTSFrame(macPkt);
         } else if (strcmp(macPkt->getName(), "dsme-ack") == 0) {
-            return handleDSMEAck(macPkt);
+            handleDSMEAck(macPkt);
         } else if (strcmp(macPkt->getName(), "beacon-collision-notification") == 0) {
             IEEE802154eMACCmdFrame *macCmd = static_cast<IEEE802154eMACCmdFrame *>(macPkt->decapsulate()); // was send with CSMA
-            return handleBeaconCollision(macCmd);
+            handleBeaconCollision(macCmd);
         } else if (strcmp(macPkt->getName(), "gts-request-cmd") == 0) {
             IEEE802154eMACCmdFrame *macCmd = static_cast<IEEE802154eMACCmdFrame *>(macPkt->decapsulate()); // was send with CSMA
-            return handleGTSRequest(macCmd);
+            handleGTSRequest(macCmd);
+        } else {
+            // if not handled yet handle with CSMA
+            EV_DEBUG << "HandleLower CSMA @ slot " << currentSlot << endl;
+            return CSMA::handleLowerPacket(msg);
         }
     }
 
-    // if not handled yet handle with CSMA
-    EV_DEBUG << "HandleLower CSMA @ slot " << currentSlot << endl;
-    CSMA::handleLowerPacket(msg);
+    delete msg;
 }
 
 void DSME::handleUpperPacket(cPacket *msg) {
@@ -680,7 +685,6 @@ void DSME::handleDSMEAck(IEEE802154eMACFrame *ack) {
     } else {
         EV_ERROR << "DSME received unexpected Ack (did not send anything lately)" << endl;
     }
-    delete ack;
 }
 
 void DSME::handleBroadcastAck(CSMAFrame *ack, CSMAFrame *frame) {
@@ -735,7 +739,6 @@ void DSME::handleGTS() {
 void DSME::handleGTSFrame(IEEE802154eMACFrame *macPkt) {
     sendDSMEAck(macPkt->getSrcAddr());
     sendUp(decapsMsg(macPkt));
-    delete macPkt;
 }
 
 simtime_t DSME::getNextCSMASlot() {
@@ -863,8 +866,7 @@ void DSME::handleEnhancedBeacon(EnhancedBeacon *beacon) {
     }
 
     // TODO if isAllocationsent and allocated Index now is allocated -> cancel!
-
-    delete beacon;
+    delete descr;
 }
 
 void DSME::sendBeaconAllocationNotification(uint16_t beaconSDIndex) {
@@ -908,6 +910,7 @@ void DSME::handleBeaconAllocation(IEEE802154eMACCmdFrame *macCmd) {
         // TODO when to remove heardBeacons in case of collision elsewhere?
     }
 
+    delete beaconAlloc;
     delete macCmd;
 }
 
@@ -931,6 +934,7 @@ void DSME::handleBeaconCollision(IEEE802154eMACCmdFrame *macCmd) {
     isBeaconAllocated = false;
     neighborHeardBeacons.SDBitmap.setBit(cmd->getBeaconSDIndex(), true);
     sendCSMAAck(macCmd->getSrcAddr());
+    delete cmd;
     delete macCmd;
 }
 
