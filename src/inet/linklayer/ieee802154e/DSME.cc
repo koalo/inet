@@ -484,6 +484,10 @@ void DSME::handleGTSRequest(IEEE802154eMACCmdFrame *macCmd) {
 
         // allocate for opposite direction of request
         updateAllocatedGTS(replySABSpec, !reply->getGtsManagement().direction, macCmd->getSrcAddr());
+
+        //EV_WARN << "DUPLICATED DEBUG slot 000"<< endl;
+        //replySABSpec.subBlock.setBit(0, true); // force duplicate allocation
+
         reply->setSABSpec(replySABSpec);
         sendGTSReply(reply);
         break;}

@@ -70,10 +70,6 @@ DSME_SAB_Specification DSMESlotAllocationBitmap::allocateSlots(DSME_SAB_Specific
         numSuperframesTried = 0;
     }
 
-    //EV_WARN << "DUPLICATED DEBUG slot 000"<<endl;
-    //replySabSpec.subBlock.setBit(0, true); // force duplicate allocation
-
-    // TODO further search in following superframes or reply failure? Just if nothin found?
     return replySabSpec;
 }
 
