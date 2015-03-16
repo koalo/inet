@@ -45,11 +45,24 @@ DSME::~DSME() {
     cancelAndDelete(resetGtsAllocationSent);
     if (beaconFrame != nullptr)
         delete beaconFrame;
-    /*TODO for all addrs do: for (auto it = GTSQueue.begin(); it != GTSQueue.end(); ++it) {
-        delete (*it);
-    }*/
+    for (auto dest = GTSQueue.begin(); dest != GTSQueue.end(); ++dest) {
+        for (auto frame = dest->second.begin(); frame != dest->second.end(); frame++)
+            delete (*frame);
+    }
 }
 
+void DSME::finish() {
+    CSMA::finish();
+    recordScalar("numHeardBeacons", heardBeacons.getAllocatedCount());
+    recordScalar("numNeighborHeardBeacons", neighborHeardBeacons.getAllocatedCount());
+    recordScalar("numBeaconCollision", numBeaconCollision);
+    recordScalar("numTxGtsAllocated", numTxGtsAllocated);
+    recordScalar("numTxGtsFrames", numTxGtsFrames);
+    recordScalar("numRxGtsAllocated", numRxGtsAllocated);
+    recordScalar("numRxGtsFrames", numRxGtsFrames);
+    recordScalar("numGtsDuplicatedAllocation", numGtsDuplicatedAllocation);
+    recordScalar("numGtsDeallocated", numGtsDeallocated);
+}
 
 void DSME::initialize(int stage)
 {
@@ -58,6 +71,14 @@ void DSME::initialize(int stage)
     CSMA::initialize(stage);
 
     if (stage == INITSTAGE_LOCAL) {
+        // statistic
+        numBeaconCollision = 0;
+        numTxGtsAllocated = 0;
+        numTxGtsFrames = 0;
+        numRxGtsAllocated = 0;
+        numRxGtsFrames = 0;
+        numGtsDuplicatedAllocation = 0;
+        numGtsDeallocated = 0;
 
         // device specific
         isPANCoordinator = host->par("isPANCoordinator");
@@ -76,6 +97,7 @@ void DSME::initialize(int stage)
         slotDuration = baseSlotDuration * (1 << superframeSpec.superframeOrder);                    // IEEE802.15.4e-2012 p. 37
         slotsPerSuperframe = par("slotsPerSuperframe");
         numCSMASlots = par("numCSMASlots").longValue();
+        numMaxGTSAllocPerDevice = par("maxNumberGTSAllocPerDevice");
         baseSuperframeDuration = slotsPerSuperframe * baseSlotDuration;
         superframeDuration = slotDuration * slotsPerSuperframe;
         beaconInterval = baseSuperframeDuration * (1 << superframeSpec.beaconOrder);
@@ -264,13 +286,22 @@ void DSME::handleUpperPacket(cPacket *msg) {
         // 1) lookup if slot to destination exist
         // 2) check if queue already contains a message to same destination
         //  -> request same amount of slots as queue holds packets
-        // TODO make it configurable how to and how many slots to allocate
+        //     up to the maximum allowed per device
         unsigned numSlots = getNumAllocatedGTS(dest, GTS::DIRECTION_TX);
         unsigned numPackets = GTSQueue[dest].size();
         if (!gtsAllocationSent) {
             if (numSlots == 0 || numSlots < numPackets) {
                 EV << "No allocated Slots or less than packets in queue " << numSlots << " / " << numPackets << endl;
-                allocateGTSlots(numPackets - numSlots, GTS::DIRECTION_TX, dest);    // TODO more greedy allocation (configurable)
+                unsigned numSlotsAlloc = numPackets - numSlots;
+                EV << "Allocate " << numSlotsAlloc << " of " << numMaxGTSAllocPerDevice << " GTS. ";
+                if (numMaxGTSAllocPerDevice < numSlots + numSlotsAlloc) {
+                    EV << "Trying to allocate too many slots, reducing to: ";
+                    numSlotsAlloc = numMaxGTSAllocPerDevice - numSlots;
+                    EV << numSlotsAlloc << endl;
+                }
+                if (numSlotsAlloc > 0) {
+                    allocateGTSlots(numSlotsAlloc, GTS::DIRECTION_TX, dest);    // TODO more greedy allocation (configurable)
+                }
             } else {
                 EV << "Enough allocated Slots to handle queue " << numSlots << " / " << numPackets << endl;
             }
@@ -521,6 +552,10 @@ void DSME::updateAllocatedGTS(DSME_SAB_Specification& sabSpec, bool direction, M
             it->address = address;
             allocatedGTSs[it->superframeID][it->slotID] = *it;
             EV << "@" << (int)it->channel << "  ";
+            if (direction)
+                numRxGtsAllocated++;
+            else
+                numTxGtsAllocated++;
         } else {
             EV << " already allocated! ";
             sabSpec.subBlock.setBit(occupiedGTSs.getSubBlockIndex(*it), false);
@@ -533,6 +568,7 @@ void DSME::removeAllocatedGTS(std::list<GTS>& gtss) {
     for (auto gts = gtss.begin(); gts != gtss.end(); gts++) {
         EV_DEBUG << "DSME removing allocated slot: " << gts->superframeID << "/" << gts->slotID << endl;
         allocatedGTSs[gts->superframeID][gts->slotID] = GTS::UNDEFINED;
+        numGtsDeallocated++;
     }
 }
 
@@ -630,6 +666,7 @@ bool DSME::checkAndHandleGTSDuplicateAllocation(DSME_SAB_Specification& sabSpec,
     }
 
     if (duplicateFound) {
+        numGtsDuplicatedAllocation++;
         DSME_GTSRequestCmd *dupReq = new DSME_GTSRequestCmd("gts-request-duplication");
         DSME_GTS_Management man;
         man.type = DUPLICATED_ALLOCATION_NOTIFICATION;
@@ -733,14 +770,17 @@ void DSME::handleGTS() {
                 lastSendGTSFrame = GTSQueue[gts.address].front();
                 if (nullptr == lastSendGTSFrame->getOwner()) // TODO this might happen if ACK sent but not received? How to avoid??
                     EV_ERROR << simTime() << " handleGTS, transmit, queue.front has no owner! queue.size=" << GTSQueue[gts.address].size() << endl;
-                else
+                else {
                     sendDirect(lastSendGTSFrame);
+                    numTxGtsFrames++;
+                }
             }
         }
     }
 }
 
 void DSME::handleGTSFrame(IEEE802154eMACFrame *macPkt) {
+    numRxGtsFrames++;
     sendDSMEAck(macPkt->getSrcAddr());
     sendUp(decapsMsg(macPkt));
 }
@@ -919,6 +959,7 @@ void DSME::handleBeaconAllocation(IEEE802154eMACCmdFrame *macCmd) {
 }
 
 void DSME::sendBeaconCollisionNotification(uint16_t beaconSDIndex, MACAddress addr) {
+    numBeaconCollision++;
     IEEE802154eMACCmdFrame *beaconCollisionCmd = new IEEE802154eMACCmdFrame("beacon-collision-notification");
     DSMEBeaconCollisionNotificationCmd *cmd = new DSMEBeaconCollisionNotificationCmd("beacon-collision-notification-payload");
     cmd->setBeaconSDIndex(beaconSDIndex);

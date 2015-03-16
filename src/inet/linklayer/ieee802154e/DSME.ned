@@ -39,6 +39,10 @@ simple DSME extends CSMA
     	
     	int finalCAPSlot = default(8);				// 4 bits
     	
+    	// Maximum number GTS which a Device is allowed to allocate per destination
+    	// e.g. NumberOfGTSPerMultisuperframe / NumberOfNeighbors
+    	int maxNumberGTSAllocPerDevice = default(3);
+    	
     	// Slotted CSMA-CA
     	int contentionWindowLength = default(2);
         

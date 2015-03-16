@@ -58,6 +58,7 @@ protected:
 
     unsigned numCSMASlots;
     unsigned numberSuperframes;
+    unsigned numMaxGTSAllocPerDevice;
 
     unsigned currentSlot;
     unsigned currentSuperframe;
@@ -104,6 +105,7 @@ public:
     DSME();
     ~DSME();
     virtual void initialize(int);
+    virtual void finish();
 
     virtual void handleSelfMessage(cMessage *);
     virtual void handleUpperPacket(cPacket *);
@@ -125,6 +127,18 @@ public:
      */
     virtual void deallocateGTSlots(DSME_SAB_Specification, uint8_t cmd);
 protected:
+
+    /**
+     * Statistics @{
+     */
+    long numBeaconCollision;
+    long numTxGtsAllocated;
+    long numTxGtsFrames;
+    long numRxGtsAllocated;
+    long numRxGtsFrames;
+    long numGtsDuplicatedAllocation;
+    long numGtsDeallocated;
+    /*@}*/
 
     /**
      * Called after BeaconInterval
