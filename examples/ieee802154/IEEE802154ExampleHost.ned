@@ -41,7 +41,7 @@ module IEEE802154ExampleHost extends StandardHost
         wlan[0].typename = default("Ieee802154NarrowbandNic");
 
         trafficgen.protocol = 59; // TODO possible with enum?
-        trafficgen.packetLength = 10B;
+        trafficgen.packetLength = default(10B);
 
         @statistic[rcvdPkSrc](title="packets received per source"; source=rcvdPk; record="groupCount(sourceAddr)"; interpolationmode=none);
 

@@ -692,7 +692,6 @@ void DSME::sendBroadcastCmd(const char *name, cPacket *payload, uint8_t cmdId) {
 void DSME::sendAck(MACFrameBase *msg, MACAddress addr) {
     msg->setSrcAddr(address);
     msg->setDestAddr(addr);
-    msg->setBitLength(ackLength);
     sendDirect(msg);
 }
 
@@ -700,6 +699,7 @@ void DSME::sendCSMAAck(MACAddress addr) {
     if (ackMessage != nullptr)
         delete ackMessage;
     ackMessage = new CSMAFrame("CSMA-Ack");
+    ackMessage->setBitLength(ackLength);
     sendAck(ackMessage, addr);
     ackMessage = nullptr;
 }
