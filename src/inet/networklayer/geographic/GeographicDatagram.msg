@@ -30,6 +30,7 @@ class noncobject Coord;
 //
 packet GeographicDatagram extends GenericDatagram {
     @customize(true);
+    byteLength = 8 + 8 + 3; 				// Addrs, Coords, Protocol
     Coord sourceCoord @getter(getSrcCoord);
     Coord destinationCoord @getter(getDestCoord);
 }

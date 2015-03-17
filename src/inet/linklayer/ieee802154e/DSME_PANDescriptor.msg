@@ -47,6 +47,8 @@ struct SuperframeSpecification;
 struct PendingAddressSpecification;
 
 packet DSME_PANDescriptor {
+    byteLength = 2 + 1 + 8 + 4; // + actual bitmap size
+    
     SuperframeSpecification superframeSpec;
     
     PendingAddressSpecification pendingAddressSpec;

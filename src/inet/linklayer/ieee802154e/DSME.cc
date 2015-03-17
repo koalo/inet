@@ -145,13 +145,13 @@ void DSME::initialize(int stage)
             beaconAllocation.SDBitmap.appendBit(false, numberSuperframes-1);
 
             PANDescriptor.setBeaconBitmap(beaconAllocation);
-            PANDescriptor.setBitLength(92 + numberSuperframes);
+            PANDescriptor.setBitLength(PANDescriptor.getBitLength() + numberSuperframes);
 
         } else if (isCoordinator) {
             beaconAllocation.SDBitmapLength = numberSuperframes;
             beaconAllocation.SDBitmap.appendBit(false, numberSuperframes);
             PANDescriptor.setBeaconBitmap(beaconAllocation);
-            PANDescriptor.setBitLength(92 + numberSuperframes);
+            PANDescriptor.setBitLength(PANDescriptor.getBitLength() + numberSuperframes);
         }
 
         // common channel for all

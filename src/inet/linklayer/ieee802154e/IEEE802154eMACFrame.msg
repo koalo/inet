@@ -70,6 +70,7 @@ class MACFrameBase;
 packet IEEE802154eMACFrame extends MACFrameBase {
 	
 	//@customize(true);
+	byteLength = 2 + 1 + 4 + 4 + 2;
 	
     // MHR
     FrameControl FrameControl;
