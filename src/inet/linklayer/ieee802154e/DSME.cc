@@ -775,9 +775,10 @@ void DSME::handleGTS() {
             // transmit from GTSQueue
             if (GTSQueue[gts.address].size() > 0) {
                 lastSendGTSFrame = GTSQueue[gts.address].front();
-                if (nullptr == lastSendGTSFrame->getOwner()) // TODO this might happen if ACK sent but not received? How to avoid??
-                    EV_ERROR << simTime() << " handleGTS, transmit, queue.front has no owner! queue.size=" << GTSQueue[gts.address].size() << endl;
-                else {
+                if (nullptr == lastSendGTSFrame->getOwner()) { // TODO this might happen if ACK sent but not received? How to avoid??
+                    EV_ERROR << simTime() << " handleGTS, transmit, queue.front has no owner! removing, queue.size=" << GTSQueue[gts.address].size() << endl;
+                    GTSQueue[gts.address].pop_front();
+                } else {
                     sendDirect(lastSendGTSFrame);
                     numTxGtsFrames++;
                 }
@@ -1000,8 +1001,9 @@ void DSME::updateDisplay() {
 void DSME::setChannelNumber(unsigned k) {
     // see IEEE802.15.4-2011 p. 148 for center frequencies of channels
 
-    if (currentChannel == k)
-        return;
+    // FIXME somehow always need to change channel otherwise reception ignored after a while
+    //if (currentChannel == k)
+    //    return;
     if (k < 11) {
         EV_ERROR << "Channel number must be greater than 11" << endl;
         k = 11;
