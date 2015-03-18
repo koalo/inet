@@ -952,14 +952,18 @@ void DSME::sendBeaconAllocationNotification(uint16_t beaconSDIndex) {
 void DSME::handleBeaconAllocation(IEEE802154eMACCmdFrame *macCmd) {
     // TODO check if self has sent allocation to same slot -> abort CSMA transmission
     DSMEBeaconAllocationNotificationCmd *beaconAlloc = static_cast<DSMEBeaconAllocationNotificationCmd*>(macCmd->decapsulate());
-    EV_DEBUG << "HURRAY THERE IS A NEW COORDINATOR @ " << beaconAlloc->getBeaconSDIndex() << endl;
+    EV_DETAIL << "BeaconAllocation @ " << beaconAlloc->getBeaconSDIndex() << ". ";
     if (heardBeacons.SDBitmap.getBit(beaconAlloc->getBeaconSDIndex())) {
         EV_DETAIL << "Beacon Slot is not free -> collision !" << endl;
         sendBeaconCollisionNotification(beaconAlloc->getBeaconSDIndex(), macCmd->getSrcAddr());
+        if (ev.isGUI())
+            hostModule->bubble("BeaconAllocCollision");
     } else {
         heardBeacons.SDBitmap.setBit(beaconAlloc->getBeaconSDIndex(), true);
         EV_DETAIL << "HeardBeacons: " << heardBeacons.getAllocatedCount() << endl;
         // TODO when to remove heardBeacons in case of collision elsewhere?
+        if (ev.isGUI())
+            hostModule->bubble("BeaconAlloc");
     }
 
     delete beaconAlloc;
