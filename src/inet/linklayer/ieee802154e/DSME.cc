@@ -26,14 +26,15 @@ namespace inet {
 Define_Module(DSME);
 
 DSME::DSME() :
-                        lastSendGTSFrame(nullptr),
-                        beaconFrame(nullptr),
-                        dsmeAckFrame(nullptr),
-                        beaconIntervalTimer(nullptr),
-                        preNextSlotTimer(nullptr),
-                        nextSlotTimer(nullptr),
-                        nextCSMASlotTimer(nullptr),
-                        resetGtsAllocationSent(nullptr)
+        hostModule(nullptr),
+        lastSendGTSFrame(nullptr),
+        beaconFrame(nullptr),
+        dsmeAckFrame(nullptr),
+        beaconIntervalTimer(nullptr),
+        preNextSlotTimer(nullptr),
+        nextSlotTimer(nullptr),
+        nextCSMASlotTimer(nullptr),
+        resetGtsAllocationSent(nullptr)
 {
 }
 
@@ -66,7 +67,7 @@ void DSME::finish() {
 
 void DSME::initialize(int stage)
 {
-    cModule *host = getParentModule()->getParentModule();
+    hostModule = getParentModule()->getParentModule();
 
     CSMA::initialize(stage);
 
@@ -81,8 +82,8 @@ void DSME::initialize(int stage)
         numGtsDeallocated = 0;
 
         // device specific
-        isPANCoordinator = host->par("isPANCoordinator");
-        isCoordinator = host->par("isCoordinator");
+        isPANCoordinator = hostModule->par("isPANCoordinator");
+        isCoordinator = hostModule->par("isCoordinator");
         isAssociated = isPANCoordinator;
         isBeaconAllocated = isPANCoordinator;
         isBeaconAllocationSent = false;
@@ -101,9 +102,11 @@ void DSME::initialize(int stage)
         baseSuperframeDuration = slotsPerSuperframe * baseSlotDuration;
         superframeDuration = slotDuration * slotsPerSuperframe;
         beaconInterval = baseSuperframeDuration * (1 << superframeSpec.beaconOrder);
-        numberSuperframes = (1 << (superframeSpec.beaconOrder - superframeSpec.superframeOrder));   // 2^(BO-SO)
+        numberSuperframes = (1 << (dsmeSuperframeSpec.multiSuperframeOrder - superframeSpec.superframeOrder));
+        numberTotalSuperframes = (1 << (superframeSpec.beaconOrder - superframeSpec.superframeOrder));   // 2^(BO-SO)
 
-        EV_DEBUG << "Beacon Interval: " << beaconInterval << " = #SFrames: " << numberSuperframes << " * '#Slots: ";
+        EV_DEBUG << "Beacon Interval: " << beaconInterval << " = #SFrames: " << numberSuperframes;
+        EV << ", #totalSFrames: " << numberTotalSuperframes << " * '#Slots: ";
         EV << slotsPerSuperframe << " * SlotDuration: " << slotDuration;
         EV << "; baseSuperframeDuration: " << baseSuperframeDuration << ", superframeDuration: " << superframeDuration << endl;
 
@@ -128,6 +131,7 @@ void DSME::initialize(int stage)
         // slot scheduling
         currentSlot = 0;
         currentSuperframe = 0;
+        currentChannel = 11;        // TODO config common channel
         nextSlotTimestamp = simTime() + slotDuration;
         preNextSlotTimer = new cMessage("pre-next-slot-timer");
         nextSlotTimer = new cMessage("next-slot-timer");
@@ -140,33 +144,33 @@ void DSME::initialize(int stage)
         // PAN Coordinator starts network with beacon
         if (isPANCoordinator) {
             beaconAllocation.SDIndex = 0;
-            beaconAllocation.SDBitmapLength = numberSuperframes;
+            beaconAllocation.SDBitmapLength = numberTotalSuperframes;
             beaconAllocation.SDBitmap.appendBit(true);
-            beaconAllocation.SDBitmap.appendBit(false, numberSuperframes-1);
+            beaconAllocation.SDBitmap.appendBit(false, numberTotalSuperframes-1);
 
             PANDescriptor.setBeaconBitmap(beaconAllocation);
-            PANDescriptor.setBitLength(PANDescriptor.getBitLength() + numberSuperframes);
+            PANDescriptor.setBitLength(PANDescriptor.getBitLength() + numberTotalSuperframes);
 
         } else if (isCoordinator) {
-            beaconAllocation.SDBitmapLength = numberSuperframes;
-            beaconAllocation.SDBitmap.appendBit(false, numberSuperframes);
+            beaconAllocation.SDBitmapLength = numberTotalSuperframes;
+            beaconAllocation.SDBitmap.appendBit(false, numberTotalSuperframes);
             PANDescriptor.setBeaconBitmap(beaconAllocation);
-            PANDescriptor.setBitLength(PANDescriptor.getBitLength() + numberSuperframes);
+            PANDescriptor.setBitLength(PANDescriptor.getBitLength() + numberTotalSuperframes);
         }
 
         // common channel for all
-        setChannelNumber(11);
+        setChannelNumber(currentChannel);
 
         // others scan network for beacons and remember beacon allocation included in enhanced beacons
-        heardBeacons.SDBitmap.appendBit(false, numberSuperframes);
-        neighborHeardBeacons.SDBitmap.appendBit(false, numberSuperframes);
+        heardBeacons.SDBitmap.appendBit(false, numberTotalSuperframes);
+        neighborHeardBeacons.SDBitmap.appendBit(false, numberTotalSuperframes);
     }
 }
 
 void DSME::handleSelfMessage(cMessage *msg) {
     if (msg == preNextSlotTimer) {
         // Switch to channel for next slot
-        switchToNextSlotChannel();
+        switchToNextSlotChannelAndRadioMode();
     }
     else if (msg == nextSlotTimer) {
         // update current slot and superframe information
@@ -176,6 +180,9 @@ void DSME::handleSelfMessage(cMessage *msg) {
             currentSuperframe = (currentSuperframe < numberSuperframes-1) ? currentSuperframe + 1: 0;
         scheduleAt(nextSlotTimestamp-sifs, preNextSlotTimer);
         scheduleAt(nextSlotTimestamp, nextSlotTimer);
+
+        if (ev.isGUI())
+            updateDisplay();
 
         // if is GTS handle RX/TX if allocated
         if (currentSlot > numCSMASlots) {
@@ -340,9 +347,8 @@ void DSME::receiveSignal(cComponent *source, simsignal_t signalID, long value) {
 
 
 
-void DSME::switchToNextSlotChannel() {
+void DSME::switchToNextSlotChannelAndRadioMode() {
     // TODO common channel as parameter
-    // TODO store currentChannel, switch if not equal
     if (currentSlot == slotsPerSuperframe-1)
         setChannelNumber(11);
     else if (currentSlot >= numCSMASlots) {
@@ -350,6 +356,7 @@ void DSME::switchToNextSlotChannel() {
         GTS &gts = allocatedGTSs[currentSuperframe][nextGTS];
         if (gts != GTS::UNDEFINED) {
             setChannelNumber(11 + gts.channel);
+            radio->setRadioMode((gts.direction) ? IRadio::RADIO_MODE_RECEIVER : IRadio::RADIO_MODE_TRANSMITTER);
         }
     }
 }
@@ -885,7 +892,7 @@ void DSME::handleEnhancedBeacon(EnhancedBeacon *beacon) {
     cancelEvent(nextSlotTimer);
     scheduleAt(lastHeardBeaconTimestamp + slotDuration, nextSlotTimer);
     currentSlot = 0;
-    currentSuperframe = lastHeardBeaconSDIndex;
+    currentSuperframe = lastHeardBeaconSDIndex % numberSuperframes;
 
     // update heardBeacons and neighborHeardBeacons
     heardBeacons.SDBitmap.setBit(descr->getBeaconBitmap().SDIndex, true);
@@ -983,9 +990,18 @@ void DSME::handleBeaconCollision(IEEE802154eMACCmdFrame *macCmd) {
     delete macCmd;
 }
 
+void DSME::updateDisplay() {
+    char buf[10];
+    sprintf(buf, "%02u/%02u/%02u", currentSuperframe, currentSlot, currentChannel);
+    hostModule->getDisplayString().setTagArg("t",0,buf);
+}
+
 
 void DSME::setChannelNumber(unsigned k) {
     // see IEEE802.15.4-2011 p. 148 for center frequencies of channels
+
+    if (currentChannel == k)
+        return;
     if (k < 11) {
         EV_ERROR << "Channel number must be greater than 11" << endl;
         k = 11;
@@ -995,6 +1011,7 @@ void DSME::setChannelNumber(unsigned k) {
         k = 26;
     }
 
+    currentChannel = k;
     Hz centerFrequency = Hz((2405 + 5 * (k - 11)) * 1e06);
 
     NarrowbandTransmitterBase *transmitter = const_cast<NarrowbandTransmitterBase *>(check_and_cast<const NarrowbandTransmitterBase *>(radio->getTransmitter()));

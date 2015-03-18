@@ -44,6 +44,8 @@ public:
     typedef std::map<MACAddress, std::list<IEEE802154eMACFrame*>> gts_queue;
 
 protected:
+    cModule *hostModule;
+
     bool isPANCoordinator;
     bool isCoordinator;
 
@@ -58,10 +60,12 @@ protected:
 
     unsigned numCSMASlots;
     unsigned numberSuperframes;
+    unsigned numberTotalSuperframes;
     unsigned numMaxGTSAllocPerDevice;
 
     unsigned currentSlot;
     unsigned currentSuperframe;
+    unsigned currentChannel;
     simtime_t nextSlotTimestamp;
     unsigned slotsPerSuperframe;
 
@@ -151,7 +155,7 @@ protected:
     /**
      * Switch Channel for transceiving before next slot
      */
-    virtual void switchToNextSlotChannel();
+    virtual void switchToNextSlotChannelAndRadioMode();
 
     /**
      * Update GTS allocation for receiving or transmitting for this device
@@ -306,6 +310,10 @@ protected:
      */
     virtual void handleBeaconCollision(IEEE802154eMACCmdFrame *);
 
+    /**
+     * Called every slot to display node status in GUI
+     */
+    virtual void updateDisplay();
 
     /**
      * Switch Transceiver to given channel [11, 26]
