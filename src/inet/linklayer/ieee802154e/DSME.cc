@@ -198,14 +198,14 @@ void DSME::handleSelfMessage(cMessage *msg) {
         }
     }
     else if (msg == beaconIntervalTimer) {
+        // Unassociated devices have scanned for beaconInterval and may have heard beacons
+        if (!isAssociated)
+            endChannelScan();
+
         // PAN Coordinator sends beacon every beaconInterval
         // Coordinators send beacons after allocating a slot
         if (isBeaconAllocated)
             sendEnhancedBeacon();
-
-        // Unassociated devices have scanned for beaconInterval and may have heard beacons
-        else if (!isAssociated)
-            endChannelScan();
     }
     else if (msg == ccaTimer) {
         // slotted CSMA
@@ -291,6 +291,7 @@ void DSME::handleUpperPacket(cPacket *msg) {
     // extract destination
     IMACProtocolControlInfo *const cInfo = check_and_cast<IMACProtocolControlInfo *>(msg->removeControlInfo());
     MACAddress dest = cInfo->getDestinationAddress();
+    unsigned numPackets = GTSQueue[dest].size();
 
     EV_DETAIL << "DSME packet from upper layer: ";
     if (!isAssociated) {
@@ -303,7 +304,6 @@ void DSME::handleUpperPacket(cPacket *msg) {
         //  -> request same amount of slots as queue holds packets
         //     up to the maximum allowed per device
         unsigned numSlots = getNumAllocatedGTS(dest, GTS::DIRECTION_TX);
-        unsigned numPackets = GTSQueue[dest].size();
         if (!gtsAllocationSent) {
             if (numSlots == 0 || numSlots < numPackets) {
                 EV << "No allocated Slots or less than packets in queue " << numSlots << " / " << numPackets << endl;
@@ -326,7 +326,7 @@ void DSME::handleUpperPacket(cPacket *msg) {
     }
 
     // create DSME MAC Packet containing given packet
-    if (GTSQueue[dest].size() < queueLength) {
+    if (numPackets < queueLength) {
         // push into queue
         IEEE802154eMACFrame *macFrame = new IEEE802154eMACFrame("dsme-gts-frame");
         macFrame->encapsulate(msg);
@@ -373,8 +373,11 @@ void DSME::switchToNextSlotChannelAndRadioMode() {
         if (gts != GTS::UNDEFINED) {
             setChannelNumber(11 + gts.channel);
             radio->setRadioMode((gts.direction) ? IRadio::RADIO_MODE_RECEIVER : IRadio::RADIO_MODE_TRANSMITTER);
+            return;
         }
     }
+    // default receive
+    radio->setRadioMode(IRadio::RADIO_MODE_RECEIVER);
 }
 
 void DSME::endChannelScan() {
@@ -387,6 +390,8 @@ void DSME::endChannelScan() {
         EV_DETAIL << "heard " << heardBeacons.getAllocatedCount() << " beacons so far -> end scan!" << endl;
         // TODO assuming associated without sending association request
         isAssociated = true;
+        if (ev.isGUI())
+            hostModule->bubble("Associated now :)");
     }
 }
 
