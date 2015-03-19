@@ -63,6 +63,10 @@ void DSME::finish() {
     recordScalar("numRxGtsFrames", numRxGtsFrames);
     recordScalar("numGtsDuplicatedAllocation", numGtsDuplicatedAllocation);
     recordScalar("numGtsDeallocated", numGtsDeallocated);
+    recordScalar("numUpperPacketsDroppedFullQueue", numUpperPacketsDroppedFullQueue);
+    recordScalar("numAllocationRequestsSent", numAllocationRequestsSent);
+    recordScalar("timeFirstAllocationSent", timeFirstAllocationSent);
+    recordScalar("timeLastAllocationSent", timeLastAllocationSent);
 }
 
 void DSME::initialize(int stage)
@@ -75,11 +79,15 @@ void DSME::initialize(int stage)
         // statistic
         numBeaconCollision = 0;
         numTxGtsAllocated = 0;
-        numTxGtsFrames = 0;
         numRxGtsAllocated = 0;
-        numRxGtsFrames = 0;
         numGtsDuplicatedAllocation = 0;
         numGtsDeallocated = 0;
+        numTxGtsFrames = 0;
+        numRxGtsFrames = 0;
+        numUpperPacketsDroppedFullQueue = 0;
+        numAllocationRequestsSent = 0;
+        timeFirstAllocationSent = 0.0;
+        timeLastAllocationSent = 0.0;
 
         // device specific
         isPANCoordinator = hostModule->par("isPANCoordinator");
@@ -318,12 +326,20 @@ void DSME::handleUpperPacket(cPacket *msg) {
     }
 
     // create DSME MAC Packet containing given packet
-    // push into queue
-    IEEE802154eMACFrame *macFrame = new IEEE802154eMACFrame("dsme-gts-frame");
-    macFrame->encapsulate(msg);
-    macFrame->setDestAddr(dest);
-    macFrame->setSrcAddr(address);
-    GTSQueue[dest].push_back(macFrame);
+    if (GTSQueue[dest].size() < queueLength) {
+        // push into queue
+        IEEE802154eMACFrame *macFrame = new IEEE802154eMACFrame("dsme-gts-frame");
+        macFrame->encapsulate(msg);
+        macFrame->setDestAddr(dest);
+        macFrame->setSrcAddr(address);
+        GTSQueue[dest].push_back(macFrame);
+    } else {
+        EV_WARN << "DSME upperpacket: queue full" << endl;
+        numUpperPacketsDroppedFullQueue++;
+        if (ev.isGUI())
+            hostModule->bubble("Dropped packet, queue full :(");
+        delete msg;
+    }
 }
 
 // See CSMA.cc
@@ -405,6 +421,11 @@ void DSME::allocateGTSlots(uint8_t numSlots, bool direction, MACAddress addr) {
 
     sendGTSRequest(req, addr);
     gtsAllocationSent = true;
+
+    numAllocationRequestsSent++;
+    if (timeFirstAllocationSent == 0.0)
+        timeFirstAllocationSent = simTime();
+    timeLastAllocationSent = simTime();
 }
 
 void DSME::deallocateGTSlots(DSME_SAB_Specification sabSpec, uint8_t cmd) {

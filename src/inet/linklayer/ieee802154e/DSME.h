@@ -137,11 +137,15 @@ protected:
      */
     long numBeaconCollision;
     long numTxGtsAllocated;
-    long numTxGtsFrames;
     long numRxGtsAllocated;
-    long numRxGtsFrames;
     long numGtsDuplicatedAllocation;
     long numGtsDeallocated;
+    long numAllocationRequestsSent;
+    simtime_t timeFirstAllocationSent;
+    simtime_t timeLastAllocationSent;
+    long numTxGtsFrames;
+    long numRxGtsFrames;
+    long numUpperPacketsDroppedFullQueue;
     /*@}*/
 
     /**
