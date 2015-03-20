@@ -619,6 +619,8 @@ void DSME::handleGTSReply(IEEE802154eMACCmdFrame *macCmd) {
 
     DSME_GTS_Management man = gtsReply->getGtsManagement();
 
+    bool scheduleResetGtsAllocationSent = false;
+
     if (man.status == ALLOCATION_APPROVED) {
         if (gtsReply->getDestinationAddress() == address) {
             sendCSMAAck(other);
@@ -634,6 +636,7 @@ void DSME::handleGTSReply(IEEE802154eMACCmdFrame *macCmd) {
                 bool direction = gtsReply->getGtsManagement().direction;
                 updateAllocatedGTS(sabSpec, direction, other);
                 occupiedGTSs.updateSlotAllocation(sabSpec, man.type);
+                scheduleResetGtsAllocationSent = true;
             } else if (man.type == DEALLOCATION) {
                 // TODO already removed allocated slots on request, do anything?
             }
@@ -650,12 +653,20 @@ void DSME::handleGTSReply(IEEE802154eMACCmdFrame *macCmd) {
 
             occupiedGTSs.updateSlotAllocation(gtsReply->getSABSpec(), man.type);
         }
-    } else {
+    } else if (man.status == ALLOCATION_DISAPPROVED && gtsReply->getDestinationAddress() == address) {
         numAllocationDisapproved++;
+        scheduleResetGtsAllocationSent = true;
         EV_WARN << "DSME: GTS reply with status DISAPPROVED and type " << man.type << endl;
+    } else {
+        EV_WARN << "DSME: GTS reply other_disaproved or allocation disapproved not for me -> ignored" << endl;
     }
 
-    scheduleAt(simTime() + beaconInterval, resetGtsAllocationSent);
+    if (scheduleResetGtsAllocationSent) {
+        if (resetGtsAllocationSent->isScheduled())
+            cancelEvent(resetGtsAllocationSent);
+        scheduleAt(simTime() + beaconInterval, resetGtsAllocationSent);
+    }
+
     delete gtsReply;
     delete macCmd;
 }
