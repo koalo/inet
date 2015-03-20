@@ -256,6 +256,14 @@ bool BitVector::operator!=(const BitVector& rhs) const
     return !(rhs == *this);
 }
 
+bool BitVector::isZero() {
+    for (unsigned int i = 0; i < getSize(); i++) {
+        if (getBit(i))
+            return false;
+    }
+    return true;
+}
+
 BitVector::BitVector(unsigned int num, unsigned int fixedSize)
 {
     undef = false;

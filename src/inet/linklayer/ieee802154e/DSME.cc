@@ -65,6 +65,7 @@ void DSME::finish() {
     recordScalar("numGtsDeallocated", numGtsDeallocated);
     recordScalar("numUpperPacketsDroppedFullQueue", numUpperPacketsDroppedFullQueue);
     recordScalar("numAllocationRequestsSent", numAllocationRequestsSent);
+    recordScalar("numAllocationDisapproved", numAllocationDisapproved);
     recordScalar("timeFirstAllocationSent", timeFirstAllocationSent);
     recordScalar("timeLastAllocationSent", timeLastAllocationSent);
 }
@@ -86,6 +87,7 @@ void DSME::initialize(int stage)
         numRxGtsFrames = 0;
         numUpperPacketsDroppedFullQueue = 0;
         numAllocationRequestsSent = 0;
+        numAllocationDisapproved = 0;
         timeFirstAllocationSent = 0.0;
         timeLastAllocationSent = 0.0;
 
@@ -543,11 +545,16 @@ void DSME::handleGTSRequest(IEEE802154eMACCmdFrame *macCmd) {
         // select numSlots free slots from intersection of received subBlock and local subBlock
         EV << " - ALLOCATION" << endl;
         replySABSpec = occupiedGTSs.allocateSlots(req->getSABSpec(), req->getNumSlots(), req->getPreferredSuperframeID(), req->getPreferredSlotID(), allocatedGTSs);
-        reply->getGtsManagement().status = ALLOCATION_APPROVED;
-        // TODO if no slots in returned sabSpec -> disapproved
+        if (replySABSpec.subBlock.isZero()) {
+            EV_DEBUG << "NOT APPROVED" << endl;
+            reply->getGtsManagement().status = ALLOCATION_DISAPPROVED;
+        } else {
+            EV_DEBUG << "APPROVED" << endl;
+            reply->getGtsManagement().status = ALLOCATION_APPROVED;
+            // allocate for opposite direction of request
+            updateAllocatedGTS(replySABSpec, !reply->getGtsManagement().direction, macCmd->getSrcAddr());
 
-        // allocate for opposite direction of request
-        updateAllocatedGTS(replySABSpec, !reply->getGtsManagement().direction, macCmd->getSrcAddr());
+        }
 
         //EV_WARN << "DUPLICATED DEBUG slot 000"<< endl;
         //replySABSpec.subBlock.setBit(0, true); // force duplicate allocation
@@ -578,6 +585,7 @@ void DSME::sendGTSReply(DSME_GTSReplyCmd *gtsReply) {
 void DSME::updateAllocatedGTS(DSME_SAB_Specification& sabSpec, bool direction, MACAddress address) {
     std::list<GTS> gtss = occupiedGTSs.getGTSsFromAllocation(sabSpec);
     EV_DEBUG << "Allocated slots for " << address << " (" << direction << "): ";
+    EV << gtss.size() << " in " << sabSpec.subBlock.toString() << endl;
     for(auto it = gtss.begin(); it != gtss.end(); it++) {
         EV << it->superframeID << "/" << it->slotID;
         if (allocatedGTSs[it->superframeID][it->slotID] == GTS::UNDEFINED) {
@@ -625,7 +633,6 @@ void DSME::handleGTSReply(IEEE802154eMACCmdFrame *macCmd) {
                 // allocate GTS
                 bool direction = gtsReply->getGtsManagement().direction;
                 updateAllocatedGTS(sabSpec, direction, other);
-                scheduleAt(simTime() + beaconInterval, resetGtsAllocationSent);
                 occupiedGTSs.updateSlotAllocation(sabSpec, man.type);
             } else if (man.type == DEALLOCATION) {
                 // TODO already removed allocated slots on request, do anything?
@@ -644,9 +651,11 @@ void DSME::handleGTSReply(IEEE802154eMACCmdFrame *macCmd) {
             occupiedGTSs.updateSlotAllocation(gtsReply->getSABSpec(), man.type);
         }
     } else {
+        numAllocationDisapproved++;
         EV_WARN << "DSME: GTS reply with status DISAPPROVED and type " << man.type << endl;
     }
 
+    scheduleAt(simTime() + beaconInterval, resetGtsAllocationSent);
     delete gtsReply;
     delete macCmd;
 }

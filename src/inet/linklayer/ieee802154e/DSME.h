@@ -141,6 +141,7 @@ protected:
     long numGtsDuplicatedAllocation;
     long numGtsDeallocated;
     long numAllocationRequestsSent;
+    long numAllocationDisapproved;
     simtime_t timeFirstAllocationSent;
     simtime_t timeLastAllocationSent;
     long numTxGtsFrames;

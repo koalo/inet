@@ -56,6 +56,7 @@ class BitVector
         BitVector& operator&=(const BitVector& rhs);
         bool operator==(const BitVector& rhs) const;
         bool operator!=(const BitVector& rhs) const;
+        bool isZero();
         std::string toString() const;
         BitVector();
         BitVector(const char *str);

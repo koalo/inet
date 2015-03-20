@@ -25,7 +25,7 @@ DSMESlotAllocationBitmap::DSMESlotAllocationBitmap(uint16_t numSuperframes, uint
 
 DSME_SAB_Specification DSMESlotAllocationBitmap::allocateSlots(DSME_SAB_Specification sabSpec, uint8_t numSlots, uint16_t preferredSuperframe, uint8_t preferredSlot, const gts_allocation& allocatedGTS) {
     // if superframe is fully allocated try next, stop if all superframes were tried
-    static uint16_t numSuperframesTried = 0;
+    static unsigned numSuperframesTried = 0;
 
     // TODO subblock may have different length
     EV_DETAIL << "received subBlock: \t";
@@ -39,9 +39,9 @@ DSME_SAB_Specification DSMESlotAllocationBitmap::allocateSlots(DSME_SAB_Specific
     replySabSpec.subBlock = BitVector(0, slotsOccupied.getSize());;
     replySabSpec.subBlockIndex = preferredSuperframe;
     replySabSpec.subBlockLength = sabSpec.subBlockLength;
-    uint8_t numAllocated = 0;
+    unsigned numAllocated = 0;
     EV_DETAIL << "allocating slot-channel starting at " << (int)preferredSlot;
-    for (uint16_t i = preferredSlot; i < slotsOccupied.getSize(); i++) {
+    for (unsigned i = preferredSlot; i < slotsOccupied.getSize(); i++) {
         if(GTS::UNDEFINED == allocatedGTS[preferredSuperframe][i/numChannels] &&
                 !slotsOccupied.getBit(i)) {
             replySabSpec.subBlock.setBit(i, true);
@@ -49,7 +49,7 @@ DSME_SAB_Specification DSMESlotAllocationBitmap::allocateSlots(DSME_SAB_Specific
             EV << ", " << i;
             // TODO pushback GTS to RX/TX lists or on handleNotify?
             if(numAllocated == numSlots) {
-                EV << endl;
+                EV << " => " << numAllocated << " allocated" << endl;
                 return replySabSpec;
             } else {
                 // channel in slot selected, check next slot
@@ -61,10 +61,11 @@ DSME_SAB_Specification DSMESlotAllocationBitmap::allocateSlots(DSME_SAB_Specific
     EV << endl;
 
     // if not found any free slot, try next superframe
+    EV_DEBUG << "numAllocated: " << numAllocated << ", superframesTried: " << numSuperframesTried << " of " << bitmap.size() << endl;
     numSuperframesTried++;
     if (numAllocated == 0 && numSuperframesTried < bitmap.size()) {
         EV_DETAIL << "DSME allocateSlots: did not find any free slot in superframe " << preferredSuperframe << endl;
-        allocateSlots(sabSpec, numSlots, preferredSuperframe+1, 0, allocatedGTS);
+        return allocateSlots(sabSpec, numSlots, (preferredSuperframe<bitmap.size()-1)?preferredSuperframe+1:0, 0, allocatedGTS);
     }
     else {
         numSuperframesTried = 0;
