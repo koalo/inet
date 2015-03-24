@@ -438,12 +438,13 @@ void DSME::allocateGTSlots(uint8_t numSlots, bool direction, MACAddress addr) {
 void DSME::deallocateGTSlots(DSME_SAB_Specification sabSpec, uint8_t cmd) {
     // check slots to deallocate:
     // is there at least one and do all belong to the same address?
+    std::cout << simTime() << " deallocate Slots in SF: " << sabSpec.subBlockIndex << endl;
     auto gtss = occupiedGTSs.getGTSsFromAllocation(sabSpec);
     bool foundGts = false;
     bool gtsDifferentAddresses = false;
     if (gtss.size() > 0) {
         MACAddress dest = MACAddress::UNSPECIFIED_ADDRESS;
-        for (auto gts = gtss.begin(); gts != gtss.end(); gts++) {
+        for (auto gts = gtss.begin(); gts != gtss.end(); ) {
             GTS allocGts = allocatedGTSs[gts->superframeID][gts->slotID];
             if (allocGts != GTS::UNDEFINED) {
                 if (dest == MACAddress::UNSPECIFIED_ADDRESS)
@@ -452,10 +453,11 @@ void DSME::deallocateGTSlots(DSME_SAB_Specification sabSpec, uint8_t cmd) {
                     foundGts = true;
                 else
                     gtsDifferentAddresses = true;
+                gts++;
             } else {
                 EV_WARN << "DSME deallocateGTSlots: slot " << gts->superframeID << "/" << gts->slotID << " not allocated" << endl;
                 sabSpec.subBlock.setBit(occupiedGTSs.getSubBlockIndex(*gts), false);
-                gtss.remove(*gts);
+                gts = gtss.erase(gts);
             }
         }
 
@@ -725,6 +727,7 @@ bool DSME::checkAndHandleGTSDuplicateAllocation(DSME_SAB_Specification& sabSpec,
         man.type = DUPLICATED_ALLOCATION_NOTIFICATION;
         dupReq->setGtsManagement(man);
         dupReq->setSABSpec(duplicateSABSpec);
+        std::cout << "Sending duplicatealloc for SF: " << duplicateSABSpec.subBlockIndex << endl;
         sendGTSRequest(dupReq, addr);
     }
 
@@ -767,11 +770,12 @@ void DSME::sendDSMEAck(MACAddress addr) {
 
 void DSME::handleDSMEAck(IEEE802154eMACFrame *ack) {
     EV_DEBUG << "DSME ACK received" << endl;
+    hostModule->bubble("ACK received");
     if (lastSendGTSFrame != nullptr) {
         MACAddress dest = lastSendGTSFrame->getDestAddr();
         if (ack->getSrcAddr() == dest) {
             lastSendGTSFrame = nullptr;
-            GTSQueue[dest].pop_front();
+            GTSQueue[dest].pop_front(); // TODO also delete, beacuse dup'ed before? CSMA does not delete?!
             EV_DEBUG << "DSME received expected Ack, removed packet from queue " << dest << ", remaining: " << GTSQueue[dest].size() << endl;
         } else {
             EV_ERROR << "DSME received unexpected Ack (src and dest address differ)" << endl;
@@ -821,11 +825,12 @@ void DSME::handleGTS() {
             // transmit from GTSQueue
             if (GTSQueue[gts.address].size() > 0) {
                 lastSendGTSFrame = GTSQueue[gts.address].front();
+                std::cout << simTime() << " frame: " << ((void*)lastSendGTSFrame) << endl;
                 if (nullptr == lastSendGTSFrame->getOwner()) { // TODO this might happen if ACK sent but not received? How to avoid??
                     EV_ERROR << simTime() << " handleGTS, transmit, queue.front has no owner! removing, queue.size=" << GTSQueue[gts.address].size() << endl;
                     GTSQueue[gts.address].pop_front();
                 } else {
-                    sendDirect(lastSendGTSFrame);
+                    sendDirect(lastSendGTSFrame->dup());
                     numTxGtsFrames++;
                 }
             }
@@ -835,6 +840,7 @@ void DSME::handleGTS() {
 
 void DSME::handleGTSFrame(IEEE802154eMACFrame *macPkt) {
     numRxGtsFrames++;
+    hostModule->bubble("GTS received");
     sendDSMEAck(macPkt->getSrcAddr());
     sendUp(decapsMsg(macPkt));
 }
