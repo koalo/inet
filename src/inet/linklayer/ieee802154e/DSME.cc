@@ -58,8 +58,10 @@ void DSME::finish() {
     recordScalar("numNeighborHeardBeacons", neighborHeardBeacons.getAllocatedCount());
     recordScalar("numBeaconCollision", numBeaconCollision);
     recordScalar("numTxGtsAllocated", numTxGtsAllocated);
+    recordScalar("numTxGtsAllocatedReal", getNumAllocatedGTS(GTS::DIRECTION_TX));
     recordScalar("numTxGtsFrames", numTxGtsFrames);
     recordScalar("numRxGtsAllocated", numRxGtsAllocated);
+    recordScalar("numRxGtsAllocatedReal", getNumAllocatedGTS(GTS::DIRECTION_RX));
     recordScalar("numRxGtsFrames", numRxGtsFrames);
     recordScalar("numGtsDuplicatedAllocation", numGtsDuplicatedAllocation);
     recordScalar("numGtsDeallocated", numGtsDeallocated);
@@ -68,6 +70,9 @@ void DSME::finish() {
     recordScalar("numAllocationDisapproved", numAllocationDisapproved);
     recordScalar("timeFirstAllocationSent", timeFirstAllocationSent);
     recordScalar("timeLastAllocationSent", timeLastAllocationSent);
+    recordScalar("timeAssociated", timeAssociated);
+    recordScalar("timeLastRxGtsFrame", timeLastRxGtsFrame);
+    recordScalar("timeLastTxGtsFrame", timeLastTxGtsFrame);
 }
 
 void DSME::initialize(int stage)
@@ -90,6 +95,9 @@ void DSME::initialize(int stage)
         numAllocationDisapproved = 0;
         timeFirstAllocationSent = 0.0;
         timeLastAllocationSent = 0.0;
+        timeAssociated = 0.0;
+        timeLastRxGtsFrame = 0.0;
+        timeLastTxGtsFrame = 0.0;
 
         // device specific
         isPANCoordinator = hostModule->par("isPANCoordinator");
@@ -392,6 +400,7 @@ void DSME::endChannelScan() {
         EV_DETAIL << "heard " << heardBeacons.getAllocatedCount() << " beacons so far -> end scan!" << endl;
         // TODO assuming associated without sending association request
         isAssociated = true;
+        timeAssociated = simTime();
         if (ev.isGUI())
             hostModule->bubble("Associated now :)");
     }
@@ -438,7 +447,6 @@ void DSME::allocateGTSlots(uint8_t numSlots, bool direction, MACAddress addr) {
 void DSME::deallocateGTSlots(DSME_SAB_Specification sabSpec, uint8_t cmd) {
     // check slots to deallocate:
     // is there at least one and do all belong to the same address?
-    std::cout << simTime() << " deallocate Slots in SF: " << sabSpec.subBlockIndex << endl;
     auto gtss = occupiedGTSs.getGTSsFromAllocation(sabSpec);
     bool foundGts = false;
     bool gtsDifferentAddresses = false;
@@ -505,6 +513,18 @@ void DSME::deallocateGTSlots(DSME_SAB_Specification sabSpec, uint8_t cmd) {
     } else {
         EV_WARN << "DSME deallocateGTSlots: empty SAB" << endl;
     }
+}
+
+unsigned DSME::getNumAllocatedGTS(bool direction) {
+    unsigned num = 0;
+    for (auto sf = allocatedGTSs.begin(); sf < allocatedGTSs.end(); sf++) {
+        for (auto gts = sf->begin(); gts < sf->end(); gts++) {
+            if (gts->address != MACAddress::UNSPECIFIED_ADDRESS
+                    && gts->direction == direction)
+                num++;
+        }
+    }
+    return num;
 }
 
 unsigned DSME::getNumAllocatedGTS(MACAddress address, bool direction) {
@@ -727,7 +747,6 @@ bool DSME::checkAndHandleGTSDuplicateAllocation(DSME_SAB_Specification& sabSpec,
         man.type = DUPLICATED_ALLOCATION_NOTIFICATION;
         dupReq->setGtsManagement(man);
         dupReq->setSABSpec(duplicateSABSpec);
-        std::cout << "Sending duplicatealloc for SF: " << duplicateSABSpec.subBlockIndex << endl;
         sendGTSRequest(dupReq, addr);
     }
 
@@ -774,8 +793,10 @@ void DSME::handleDSMEAck(IEEE802154eMACFrame *ack) {
     if (lastSendGTSFrame != nullptr) {
         MACAddress dest = lastSendGTSFrame->getDestAddr();
         if (ack->getSrcAddr() == dest) {
+            // also delete, beacuse dup'ed before
+            delete lastSendGTSFrame; // TODO check if frame equals frame in queue?
             lastSendGTSFrame = nullptr;
-            GTSQueue[dest].pop_front(); // TODO also delete, beacuse dup'ed before? CSMA does not delete?!
+            GTSQueue[dest].pop_front();
             EV_DEBUG << "DSME received expected Ack, removed packet from queue " << dest << ", remaining: " << GTSQueue[dest].size() << endl;
         } else {
             EV_ERROR << "DSME received unexpected Ack (src and dest address differ)" << endl;
@@ -825,13 +846,13 @@ void DSME::handleGTS() {
             // transmit from GTSQueue
             if (GTSQueue[gts.address].size() > 0) {
                 lastSendGTSFrame = GTSQueue[gts.address].front();
-                std::cout << simTime() << " frame: " << ((void*)lastSendGTSFrame) << endl;
                 if (nullptr == lastSendGTSFrame->getOwner()) { // TODO this might happen if ACK sent but not received? How to avoid??
                     EV_ERROR << simTime() << " handleGTS, transmit, queue.front has no owner! removing, queue.size=" << GTSQueue[gts.address].size() << endl;
                     GTSQueue[gts.address].pop_front();
                 } else {
                     sendDirect(lastSendGTSFrame->dup());
                     numTxGtsFrames++;
+                    timeLastTxGtsFrame = simTime();
                 }
             }
         }
@@ -840,6 +861,7 @@ void DSME::handleGTS() {
 
 void DSME::handleGTSFrame(IEEE802154eMACFrame *macPkt) {
     numRxGtsFrames++;
+    timeLastRxGtsFrame = simTime();
     hostModule->bubble("GTS received");
     sendDSMEAck(macPkt->getSrcAddr());
     sendUp(decapsMsg(macPkt));

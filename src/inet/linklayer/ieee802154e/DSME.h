@@ -134,8 +134,13 @@ protected:
 
     /**
      * Statistics @{
+     * numHeardBeacons
+     * numNeighborHeardBeacons
+     * numTxGtsAllocatedReal
+     * numRxGtsAllocatedReal
      */
     long numBeaconCollision;
+    simtime_t timeAssociated;
     long numTxGtsAllocated;
     long numRxGtsAllocated;
     long numGtsDuplicatedAllocation;
@@ -146,6 +151,8 @@ protected:
     simtime_t timeLastAllocationSent;
     long numTxGtsFrames;
     long numRxGtsFrames;
+    simtime_t timeLastTxGtsFrame;
+    simtime_t timeLastRxGtsFrame;
     long numUpperPacketsDroppedFullQueue;
     /*@}*/
 
@@ -171,6 +178,12 @@ protected:
      * Remove GTS from allocation when they should not be used anymore.
      */
     virtual void removeAllocatedGTS(std::list<GTS>& gtss);
+
+    /**
+     * Get number of allocated slots with given direction
+     */
+    virtual unsigned getNumAllocatedGTS(bool direction);
+
     /**
      * Get number of allocated slots to specified address and given direction
      */
