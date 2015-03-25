@@ -54,8 +54,13 @@ void StaticConcentricMobility::setInitialPosition()
 {
     int numHosts = par("numHosts");
     double distance = par("distance");
+    int coordinatorEveryNthNode = par("coordinatorEveryNthNode");
 
     int index = visualRepresentation->getIndex();
+
+    // update host coordinator state
+    if (index % coordinatorEveryNthNode == 0)
+        getParentModule()->par("isCoordinator").setBoolValue( true );
 
     unsigned int myCircle = circleOfIndex(index);
     unsigned int totalCircles = circleOfIndex(numHosts-1); // -1 for center node

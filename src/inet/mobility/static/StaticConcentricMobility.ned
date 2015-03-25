@@ -30,8 +30,10 @@ simple StaticConcentricMobility extends MobilityBase
 {
     parameters:
         int numHosts;
+        int coordinatorEveryNthNode = default(3);
         double initialZ @unit(m) = default(0m);
         double distance @unit(m) = default(100m);
+        
 
         @class(StaticConcentricMobility);
 }

@@ -99,6 +99,8 @@ void DSME::initialize(int stage)
         timeLastRxGtsFrame = 0.0;
         timeLastTxGtsFrame = 0.0;
 
+    } else if (stage == INITSTAGE_LINK_LAYER) {
+
         // device specific
         isPANCoordinator = hostModule->par("isPANCoordinator");
         isCoordinator = hostModule->par("isCoordinator");
@@ -157,8 +159,6 @@ void DSME::initialize(int stage)
         resetGtsAllocationSent = new cMessage("reset-gts-allocation-sent");
         scheduleAt(nextSlotTimestamp, nextSlotTimer);
 
-
-    } else if (stage == INITSTAGE_LINK_LAYER) {
         // PAN Coordinator starts network with beacon
         if (isPANCoordinator) {
             beaconAllocation.SDIndex = 0;
