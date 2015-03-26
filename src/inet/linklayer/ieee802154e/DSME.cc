@@ -288,9 +288,22 @@ void DSME::handleLowerPacket(cPacket *msg) {
             IEEE802154eMACCmdFrame *macCmd = static_cast<IEEE802154eMACCmdFrame *>(macPkt->decapsulate()); // was send with CSMA
             handleGTSRequest(macCmd);
         } else {
-            // if not handled yet handle with CSMA
-            EV_DEBUG << "HandleLower CSMA @ slot " << currentSlot << endl;
-            return CSMA::handleLowerPacket(msg);
+            // TODO dont do this ugly workaround
+            // Problem: when receiving CSMA-Ack, but not expecting it, CSMA tries to decapsulate a message which crashes the application
+            // The only sendCSMA occurance which does not expect an ACK is the BeaconAllocationRequest.
+            // If that gets called after another CSMARequest was executed and CSMA is in Backoff state,
+            // this problem may occur.
+            if (!useMACAcks && strcmp(msg->getName(), "CSMA-Ack") == 0) {
+                useMACAcks = true;
+                std::cerr << "CSMA-Ack without expecting it!" << endl;
+                CSMA::handleLowerPacket(msg);
+                useMACAcks = false;
+                return;
+            } else {
+                // if not handled yet handle with CSMA
+                EV_DEBUG << "HandleLower CSMA @ slot " << currentSlot << endl;
+                return CSMA::handleLowerPacket(msg);
+            }
         }
     }
 
