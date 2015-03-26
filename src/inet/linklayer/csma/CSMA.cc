@@ -529,6 +529,7 @@ void CSMA::updateStatusWaitAck(t_mac_event event, cMessage *msg)
                       << " ProcessAck, manageQueue..." << endl;
             if (rxAckTimer->isScheduled())
                 cancelEvent(rxAckTimer);
+            delete macQueue.front();
             macQueue.pop_front();
             txAttempts = 0;
             delete msg;
