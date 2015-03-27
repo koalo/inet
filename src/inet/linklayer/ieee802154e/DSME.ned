@@ -42,6 +42,7 @@ simple DSME extends CSMA
     	// Maximum number GTS which a Device is allowed to allocate per destination
     	// e.g. NumberOfGTSPerMultisuperframe / NumberOfNeighbors
     	int maxNumberGTSAllocPerDevice = default(7);
+    	int maxNumberGTSAllocPerRequest = default(2); // also per superframe
     	
     	// Slotted CSMA-CA
     	int contentionWindowLength = default(2);

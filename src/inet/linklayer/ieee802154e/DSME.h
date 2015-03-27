@@ -62,6 +62,7 @@ protected:
     unsigned numberSuperframes;
     unsigned numberTotalSuperframes;
     unsigned numMaxGTSAllocPerDevice;
+    unsigned numMaxGTSAllocPerRequest;
 
     unsigned currentSlot;
     unsigned currentSuperframe;

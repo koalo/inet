@@ -119,6 +119,7 @@ void DSME::initialize(int stage)
         slotsPerSuperframe = par("slotsPerSuperframe");
         numCSMASlots = par("numCSMASlots").longValue();
         numMaxGTSAllocPerDevice = par("maxNumberGTSAllocPerDevice");
+        numMaxGTSAllocPerRequest = par("maxNumberGTSAllocPerRequest");
         baseSuperframeDuration = slotsPerSuperframe * baseSlotDuration;
         superframeDuration = slotDuration * slotsPerSuperframe;
         beaconInterval = baseSuperframeDuration * (1 << superframeSpec.beaconOrder);
@@ -126,7 +127,7 @@ void DSME::initialize(int stage)
         numberTotalSuperframes = (1 << (superframeSpec.beaconOrder - superframeSpec.superframeOrder));   // 2^(BO-SO)
 
         EV_DEBUG << "Beacon Interval: " << beaconInterval << " = #SFrames: " << numberSuperframes;
-        EV << ", #totalSFrames: " << numberTotalSuperframes << " * '#Slots: ";
+        EV << ", #totalSFrames: " << numberTotalSuperframes << " * #Slots: ";
         EV << slotsPerSuperframe << " * SlotDuration: " << slotDuration;
         EV << "; baseSuperframeDuration: " << baseSuperframeDuration << ", superframeDuration: " << superframeDuration << endl;
 
@@ -338,7 +339,8 @@ void DSME::handleUpperPacket(cPacket *msg) {
                     EV << numSlotsAlloc << endl;
                 }
                 if (numSlotsAlloc > 0) {
-                    allocateGTSlots(numSlotsAlloc, GTS::DIRECTION_TX, dest);    // TODO more greedy allocation (configurable)
+                    numSlotsAlloc = std::min(numMaxGTSAllocPerRequest, numSlotsAlloc);
+                    allocateGTSlots(numSlotsAlloc, GTS::DIRECTION_TX, dest);
                 }
             } else {
                 EV << "Enough allocated Slots to handle queue " << numSlots << " / " << numPackets << endl;
