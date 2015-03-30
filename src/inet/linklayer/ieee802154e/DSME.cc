@@ -212,11 +212,16 @@ void DSME::handleSelfMessage(cMessage *msg) {
         // Unassociated devices have scanned for beaconInterval and may have heard beacons
         if (!isAssociated)
             endChannelScan();
+        // Associated devices might need additional GTS to handle queue
+        else
+            checkAndHandleGTSAllocation();
 
         // PAN Coordinator sends beacon every beaconInterval
         // Coordinators send beacons after allocating a slot
         if (isBeaconAllocated)
             sendEnhancedBeacon();
+
+        scheduleAt(simTime() + beaconInterval, beaconIntervalTimer);
     }
     else if (msg == ccaTimer) {
         // slotted CSMA
@@ -320,34 +325,9 @@ void DSME::handleUpperPacket(cPacket *msg) {
     EV_DETAIL << "DSME packet from upper layer: ";
     if (!isAssociated) {
         EV << " not associated -> push into queue." << endl;
-        // TODO allocate slots after association
     } else {
-        EV << " send with GTS: ";
-        // 1) lookup if slot to destination exist
-        // 2) check if queue already contains a message to same destination
-        //  -> request same amount of slots as queue holds packets
-        //     up to the maximum allowed per device
-        unsigned numSlots = getNumAllocatedGTS(dest, GTS::DIRECTION_TX);
-        if (!gtsAllocationSent) {
-            if (numSlots == 0 || numSlots < numPackets) {
-                EV << "No allocated Slots or less than packets in queue " << numSlots << " / " << numPackets << endl;
-                unsigned numSlotsAlloc = numPackets - numSlots;
-                EV << "Allocate " << numSlotsAlloc << " of " << numMaxGTSAllocPerDevice << " GTS. ";
-                if (numMaxGTSAllocPerDevice < numSlots + numSlotsAlloc) {
-                    EV << "Trying to allocate too many slots, reducing to: ";
-                    numSlotsAlloc = numMaxGTSAllocPerDevice - numSlots;
-                    EV << numSlotsAlloc << endl;
-                }
-                if (numSlotsAlloc > 0) {
-                    numSlotsAlloc = std::min(numMaxGTSAllocPerRequest, numSlotsAlloc);
-                    allocateGTSlots(numSlotsAlloc, GTS::DIRECTION_TX, dest);
-                }
-            } else {
-                EV << "Enough allocated Slots to handle queue " << numSlots << " / " << numPackets << endl;
-            }
-        } else {
-            EV << "Slot allocation already sent -> wait for it" << endl;
-        }
+        EV << " send with GTS: check allocation";
+        checkAndHandleGTSAllocation(dest);
     }
 
     // create DSME MAC Packet containing given packet
@@ -361,6 +341,7 @@ void DSME::handleUpperPacket(cPacket *msg) {
     } else {
         EV_WARN << "DSME upperpacket: queue full" << endl;
         numUpperPacketsDroppedFullQueue++;
+        emit(packetFromUpperDroppedSignal, msg);
         if (ev.isGUI())
             hostModule->bubble("Dropped packet, queue full :(");
         delete msg;
@@ -410,7 +391,6 @@ void DSME::endChannelScan() {
     // if now beacon was heard -> scan for another beaconinterval
     if (heardBeacons.getAllocatedCount() == 0) {
         EV_DETAIL << "no beacon heard -> continue scanning" << endl;
-        scheduleAt(simTime() + beaconInterval, beaconIntervalTimer);
     } else {
         EV_DETAIL << "heard " << heardBeacons.getAllocatedCount() << " beacons so far -> end scan!" << endl;
         // TODO assuming associated without sending association request
@@ -421,7 +401,57 @@ void DSME::endChannelScan() {
     }
 }
 
+void DSME::checkAndHandleGTSAllocation() {
+    if (!gtsAllocationSent) {
+        unsigned numSlots;
+        unsigned numPackets;
+        for (auto dest = GTSQueue.begin(); dest != GTSQueue.end(); dest++) {
+            numSlots = getNumAllocatedGTS(dest->first, GTS::DIRECTION_TX);
+            numPackets = GTSQueue[dest->first].size();
+            if (numSlots < numPackets && numSlots < numMaxGTSAllocPerDevice) {
+                std::cout << hostModule->getIndex() << " checkandhandle " << dest->first << " " << numSlots << " " << numPackets << endl;
+                return checkAndHandleGTSAllocation(dest->first);
+            }
+        }
+    } else {
+        // If gtsAllocationSent status was not reset (reply never received) for too long, reset it now
+        if (timeLastAllocationSent < simTime() - 3*beaconInterval) {
+            // TODO make this configurable or think of different handling
+            EV_WARN << "Timeout waiting for gts-reply, reset allocation sent!" << endl;
+            gtsAllocationSent = false;
+        }
+    }
+}
 
+void DSME::checkAndHandleGTSAllocation(MACAddress dest) {
+    // 1) lookup if slot to destination exist
+    // 2) check if queue already contains a message to same destination
+    //  -> request same amount of slots as queue holds packets
+    //     up to the maximum allowed per device
+    unsigned numSlots = getNumAllocatedGTS(dest, GTS::DIRECTION_TX);
+    unsigned numPackets = GTSQueue[dest].size();
+
+    if (!gtsAllocationSent) {
+        if (numSlots == 0 || numSlots < numPackets) {
+            EV << "No allocated Slots or less than packets in queue " << numSlots << " / " << numPackets << endl;
+            unsigned numSlotsAlloc = numPackets - numSlots;
+            EV << "Allocate " << numSlotsAlloc << " of " << numMaxGTSAllocPerDevice << " GTS. ";
+            if (numMaxGTSAllocPerDevice < numSlots + numSlotsAlloc) {
+                EV << "Trying to allocate too many slots, reducing to: ";
+                numSlotsAlloc = numMaxGTSAllocPerDevice - numSlots;
+                EV << numSlotsAlloc << endl;
+            }
+            if (numSlotsAlloc > 0) {
+                numSlotsAlloc = std::min(numMaxGTSAllocPerRequest, numSlotsAlloc);
+                allocateGTSlots(numSlotsAlloc, GTS::DIRECTION_TX, dest);
+            }
+        } else {
+            EV << "Enough allocated Slots to handle queue " << numSlots << " / " << numPackets << endl;
+        }
+    } else {
+        EV << "Slot allocation already sent -> wait for it" << endl;
+    }
+}
 
 
 void DSME::allocateGTSlots(uint8_t numSlots, bool direction, MACAddress addr) {
@@ -956,9 +986,6 @@ void DSME::sendEnhancedBeacon() {
     DSME_PANDescriptor *descr = new DSME_PANDescriptor(PANDescriptor);
     descr->getTimeSyncSpec().beaconTimestamp = simTime();
     beaconFrame->encapsulate(descr);
-
-    // schedule next beacon
-    scheduleAt(simTime() + beaconInterval, beaconIntervalTimer);
 
     EV_DETAIL << "Send EnhancedBeacon, bitmap: " << descr->getBeaconBitmap().SDBitmapLength;
     EV << ": " << descr->getBeaconBitmap().SDBitmap.toString() << endl;

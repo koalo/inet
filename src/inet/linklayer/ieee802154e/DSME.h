@@ -171,6 +171,18 @@ protected:
     virtual void switchToNextSlotChannelAndRadioMode();
 
     /**
+     * Check if enough TX slots allocated to destination
+     * or allocate more if necessary
+     */
+    virtual void checkAndHandleGTSAllocation(MACAddress dest);
+
+    /**
+     * Check if enough TX slots allocated for each destination in GTSQueue
+     * and allocate more if necessary
+     */
+    virtual void checkAndHandleGTSAllocation();
+
+    /**
      * Update GTS allocation for receiving or transmitting for this device
      */
     virtual void updateAllocatedGTS(DSME_SAB_Specification&, bool direction, MACAddress address);
