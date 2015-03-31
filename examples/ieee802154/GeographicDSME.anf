@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scave:Analysis xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:scave="http://www.omnetpp.org/omnetpp/scave">
+  <inputs>
+    <inputs name="/inet/examples/ieee802154/results/GeographicDSME-*.vec"/>
+    <inputs name="/inet/examples/ieee802154/results/GeographicDSME-*.sca"/>
+  </inputs>
+  <datasets>
+    <datasets name="frames">
+      <items xsi:type="scave:Add" filterPattern="numUpperPackets*"/>
+      <items xsi:type="scave:Add" filterPattern="numTxGtsFrames"/>
+      <items xsi:type="scave:Add" filterPattern="numRx*Frames"/>
+      <items xsi:type="scave:BarChart" name="Frames">
+        <properties name="Graph.Title" value="Frames"/>
+      </items>
+      <items xsi:type="scave:ComputeScalar" scalarName="numMissingAck" valueExpr="numTxGtsFrames - numRxAckFrames" moduleExpr="" groupByExpr=""/>
+      <items xsi:type="scave:BarChart" name="Missing ACK">
+        <filters xsi:type="scave:Select" filterPattern="numMissingAck OR numTxGtsFrames"/>
+        <properties name="Bar.Placement" value="InFront"/>
+      </items>
+    </datasets>
+    <datasets name="sums" basedOn="//@datasets/@datasets.0">
+      <items xsi:type="scave:ComputeScalar" scalarName="sumNumTxGtsFrames" valueExpr="sum('numTxGtsFrames')" moduleExpr="hostsAll" groupByExpr=""/>
+      <items xsi:type="scave:ComputeScalar" scalarName="sumNumRxGtsFrames" valueExpr="sum('numRxGtsFrames')" moduleExpr="hostsAll" groupByExpr=""/>
+      <items xsi:type="scave:ComputeScalar" scalarName="sumNumRxAckFrames" valueExpr="sum('numRxAckFrames')" moduleExpr="hostsAll" groupByExpr=""/>
+      <items xsi:type="scave:ComputeScalar" scalarName="sumNumUpperPacketsDroppedFullQueue" valueExpr="sum('numUpperPacketsDroppedFullQueue')" moduleExpr="hostsAll" groupByExpr=""/>
+      <items xsi:type="scave:ComputeScalar" scalarName="sumNumUpperPackets" valueExpr="sum('numUpperPackets')" moduleExpr="hostsAll" groupByExpr=""/>
+      <items xsi:type="scave:BarChart" name="sums">
+        <filters xsi:type="scave:Select" filterPattern="sumNum*"/>
+      </items>
+    </datasets>
+  </datasets>
+  <chartSheets>
+    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.3 //@datasets/@datasets.1/@items.5 //@datasets/@datasets.0/@items.5"/>
+  </chartSheets>
+</scave:Analysis>
