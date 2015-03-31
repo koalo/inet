@@ -63,9 +63,11 @@ void DSME::finish() {
     recordScalar("numRxGtsAllocated", numRxGtsAllocated);
     recordScalar("numRxGtsAllocatedReal", getNumAllocatedGTS(GTS::DIRECTION_RX));
     recordScalar("numRxGtsFrames", numRxGtsFrames);
+    recordScalar("numRxAckFrames", numRxAckFrames);
     recordScalar("numGtsDuplicatedAllocation", numGtsDuplicatedAllocation);
     recordScalar("numGtsDeallocated", numGtsDeallocated);
     recordScalar("numUpperPacketsDroppedFullQueue", numUpperPacketsDroppedFullQueue);
+    recordScalar("numUpperPackets", numUpperPackets);
     recordScalar("numAllocationRequestsSent", numAllocationRequestsSent);
     recordScalar("numAllocationDisapproved", numAllocationDisapproved);
     recordScalar("timeFirstAllocationSent", timeFirstAllocationSent);
@@ -89,8 +91,10 @@ void DSME::initialize(int stage)
         numGtsDuplicatedAllocation = 0;
         numGtsDeallocated = 0;
         numTxGtsFrames = 0;
+        numRxAckFrames = 0;
         numRxGtsFrames = 0;
         numUpperPacketsDroppedFullQueue = 0;
+        numUpperPackets = 0;
         numAllocationRequestsSent = 0;
         numAllocationDisapproved = 0;
         timeFirstAllocationSent = 0.0;
@@ -321,6 +325,7 @@ void DSME::handleUpperPacket(cPacket *msg) {
     IMACProtocolControlInfo *const cInfo = check_and_cast<IMACProtocolControlInfo *>(msg->removeControlInfo());
     MACAddress dest = cInfo->getDestinationAddress();
     unsigned numPackets = GTSQueue[dest].size();
+    numUpperPackets++;
 
     EV_DETAIL << "DSME packet from upper layer: ";
     if (!isAssociated) {
@@ -409,7 +414,7 @@ void DSME::checkAndHandleGTSAllocation() {
             numSlots = getNumAllocatedGTS(dest->first, GTS::DIRECTION_TX);
             numPackets = GTSQueue[dest->first].size();
             if (numSlots < numPackets && numSlots < numMaxGTSAllocPerDevice) {
-                std::cout << hostModule->getIndex() << " checkandhandle " << dest->first << " " << numSlots << " " << numPackets << endl;
+                //std::cout << hostModule->getIndex() << " checkandhandle " << dest->first << " " << numSlots << " " << numPackets << endl;
                 return checkAndHandleGTSAllocation(dest->first);
             }
         }
@@ -834,6 +839,7 @@ void DSME::sendDSMEAck(MACAddress addr) {
 
 void DSME::handleDSMEAck(IEEE802154eMACFrame *ack) {
     EV_DEBUG << "DSME ACK received" << endl;
+    numRxAckFrames++;
     hostModule->bubble("ACK received");
     if (lastSendGTSFrame != nullptr) {
         MACAddress dest = lastSendGTSFrame->getDestAddr();
@@ -1059,7 +1065,7 @@ void DSME::sendBeaconAllocationNotification(uint16_t beaconSDIndex) {
     cancelEvent(beaconIntervalTimer);
     int16_t superframeOffset = (beaconSDIndex > lastHeardBeaconSDIndex)
             ? beaconSDIndex - lastHeardBeaconSDIndex
-            : lastHeardBeaconSDIndex - beaconSDIndex;
+            : numberTotalSuperframes - lastHeardBeaconSDIndex + beaconSDIndex;
     simtime_t beaconStartTime = lastHeardBeaconTimestamp + superframeDuration * superframeOffset;
     scheduleAt(beaconStartTime, beaconIntervalTimer);
     EV_DEBUG << "BeaconAlloc SFoffset: " << superframeOffset << " => beacon @ " << beaconStartTime << endl;
@@ -1138,7 +1144,8 @@ void DSME::setChannelNumber(unsigned k) {
 
     NarrowbandTransmitterBase *transmitter = const_cast<NarrowbandTransmitterBase *>(check_and_cast<const NarrowbandTransmitterBase *>(radio->getTransmitter()));
     NarrowbandReceiverBase *receiver = const_cast<NarrowbandReceiverBase *>(check_and_cast<const NarrowbandReceiverBase *>(radio->getReceiver()));
-    EV << "DSME: changing channel from centerFreq: " << transmitter->getCarrierFrequency() << " to: " << centerFrequency << endl;
+    EV << "DSME: " << currentSuperframe << "|" << currentSlot << "|" << currentChannel;
+    EV << " changing channel from centerFreq: " << transmitter->getCarrierFrequency() << " to: " << centerFrequency << endl;
     transmitter->setCarrierFrequency(centerFrequency);
     receiver->setCarrierFrequency(centerFrequency);
     //ieee80211Radio also does:

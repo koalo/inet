@@ -151,10 +151,12 @@ protected:
     simtime_t timeFirstAllocationSent;
     simtime_t timeLastAllocationSent;
     long numTxGtsFrames;
+    long numRxAckFrames;
     long numRxGtsFrames;
     simtime_t timeLastTxGtsFrame;
     simtime_t timeLastRxGtsFrame;
     long numUpperPacketsDroppedFullQueue;
+    long numUpperPackets;
     /*@}*/
 
     /**
