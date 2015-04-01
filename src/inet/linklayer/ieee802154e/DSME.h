@@ -150,11 +150,13 @@ protected:
     long numAllocationDisapproved;
     simtime_t timeFirstAllocationSent;
     simtime_t timeLastAllocationSent;
+    simtime_t timeLastAllocationSuccess;
     long numTxGtsFrames;
     long numRxAckFrames;
     long numRxGtsFrames;
     simtime_t timeLastTxGtsFrame;
     simtime_t timeLastRxGtsFrame;
+    simtime_t timeFirstMissingAck;
     long numUpperPacketsDroppedFullQueue;
     long numUpperPackets;
     /*@}*/

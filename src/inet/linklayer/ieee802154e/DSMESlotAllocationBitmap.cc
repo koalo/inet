@@ -39,9 +39,21 @@ DSME_SAB_Specification DSMESlotAllocationBitmap::allocateSlots(DSME_SAB_Specific
     replySabSpec.subBlock = BitVector(0, slotsOccupied.getSize());;
     replySabSpec.subBlockIndex = preferredSuperframe;
     replySabSpec.subBlockLength = sabSpec.subBlockLength;
+    unsigned slotOffset = preferredSlot * numChannels;
+    unsigned channel = 0;
+    if (numSuperframesTried == 0) {             // random channel on first try
+        channel = intuniform(0, numChannels-1);
+        for (unsigned i=0; i<numChannels; i++) { // if possible use preferredSlot (check every channel)
+            if (slotsOccupied.getBit(slotOffset + channel))
+                channel = (channel < numChannels) ? channel + 1 : 0;
+            else
+                break;
+        }
+    }
+
     unsigned numAllocated = 0;
-    EV_DETAIL << "allocating slot-channel starting at " << (int)preferredSlot;
-    for (unsigned i = preferredSlot; i < slotsOccupied.getSize(); i++) {
+    EV_DETAIL << "allocating slot with preferred slot " << (int)preferredSlot << " and random channel: " << channel;
+    for (unsigned i = slotOffset + channel; i < slotsOccupied.getSize(); i++) {
         if(GTS::UNDEFINED == allocatedGTS[preferredSuperframe][i/numChannels] &&
                 !slotsOccupied.getBit(i)) {
             replySabSpec.subBlock.setBit(i, true);

@@ -72,9 +72,22 @@ void DSME::finish() {
     recordScalar("numAllocationDisapproved", numAllocationDisapproved);
     recordScalar("timeFirstAllocationSent", timeFirstAllocationSent);
     recordScalar("timeLastAllocationSent", timeLastAllocationSent);
+    recordScalar("timeLastAllocationSuccess", timeLastAllocationSuccess);
     recordScalar("timeAssociated", timeAssociated);
     recordScalar("timeLastRxGtsFrame", timeLastRxGtsFrame);
     recordScalar("timeLastTxGtsFrame", timeLastTxGtsFrame);
+    recordScalar("timeFirstMissingAck",timeFirstMissingAck);
+
+    // gts Allocation via vector
+    cOutVector gtsAllocRx("allocatedRxGTS");
+    cOutVector gtsAllocTx("allocatedTxGTS");
+    cOutVector *v;
+    for (auto sf = allocatedGTSs.begin(); sf < allocatedGTSs.end(); sf++)
+        for (auto gts = sf->begin(); gts < sf->end(); gts++)
+            if (*gts != GTS::UNDEFINED) {
+                v = (gts->direction == GTS::DIRECTION_RX) ? &gtsAllocRx : &gtsAllocTx;
+                v->recordWithTimestamp(gts->superframeID*superframeDuration + gts->slotID*slotDuration, gts->channel);
+            }
 }
 
 void DSME::initialize(int stage)
@@ -99,9 +112,11 @@ void DSME::initialize(int stage)
         numAllocationDisapproved = 0;
         timeFirstAllocationSent = 0.0;
         timeLastAllocationSent = 0.0;
+        timeLastAllocationSuccess = 0.0;
         timeAssociated = 0.0;
         timeLastRxGtsFrame = 0.0;
         timeLastTxGtsFrame = 0.0;
+        timeFirstMissingAck = 0.0;
 
     } else if (stage == INITSTAGE_LINK_LAYER) {
 
@@ -704,6 +719,7 @@ void DSME::handleGTSReply(IEEE802154eMACCmdFrame *macCmd) {
 
             if (man.type == ALLOCATION) {
                 EV_DETAIL << "DSME: GTS Allocation succeeded -> notify" << endl;
+                timeLastAllocationSuccess = simTime();
                 // allocate GTS
                 bool direction = gtsReply->getGtsManagement().direction;
                 updateAllocatedGTS(sabSpec, direction, other);
@@ -902,6 +918,9 @@ void DSME::handleGTS() {
                     GTSQueue[gts.address].pop_front();
                 } else {
                     sendDirect(lastSendGTSFrame->dup());
+                    // statistics
+                    if (timeFirstMissingAck == 0.0 && numTxGtsFrames > numRxAckFrames)
+                        timeFirstMissingAck = simTime();
                     numTxGtsFrames++;
                     timeLastTxGtsFrame = simTime();
                 }

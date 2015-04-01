@@ -28,8 +28,30 @@
         <filters xsi:type="scave:Select" filterPattern="sumNum*"/>
       </items>
     </datasets>
+    <datasets name="Beacon">
+      <items xsi:type="scave:Add" filterPattern="num*HeardBeacons"/>
+      <items xsi:type="scave:BarChart" name="num heard beacons">
+        <properties name="Graph.Title" value="num heard Beacons"/>
+        <properties name="Bar.Placement" value="InFront"/>
+      </items>
+    </datasets>
+    <datasets name="timings">
+      <items xsi:type="scave:Add" filterPattern="time*"/>
+      <items xsi:type="scave:BarChart" name="timings">
+        <properties name="Graph.Title" value="timings"/>
+      </items>
+    </datasets>
+    <datasets name="gtsAllocation">
+      <items xsi:type="scave:Add" filterPattern="allocated*GTS" type="VECTOR"/>
+      <items xsi:type="scave:LineChart" name="multisuperframe gts allocation" lineNameFormat="">
+        <filters xsi:type="scave:Select" filterPattern="allocatedTx* AND (module(*.host[13..15].*) OR module(*.host[49..52].*) OR module(*.host[29..31].*) OR module(*.host[5].*))" type="VECTOR"/>
+        <properties name="Graph.Title" value="multisuperframe gts allocation"/>
+        <properties name="Symbols.Size" value="7"/>
+        <properties name="Line.Type" value="Linear"/>
+      </items>
+    </datasets>
   </datasets>
   <chartSheets>
-    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.3 //@datasets/@datasets.1/@items.5 //@datasets/@datasets.0/@items.5"/>
+    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.3 //@datasets/@datasets.1/@items.5 //@datasets/@datasets.0/@items.5 //@datasets/@datasets.2/@items.1 //@datasets/@datasets.3/@items.1 //@datasets/@datasets.4/@items.1"/>
   </chartSheets>
 </scave:Analysis>
