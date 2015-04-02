@@ -69,6 +69,9 @@ void DSME::finish() {
     recordScalar("numUpperPacketsDroppedFullQueue", numUpperPacketsDroppedFullQueue);
     recordScalar("numUpperPackets", numUpperPackets);
     recordScalar("numAllocationRequestsSent", numAllocationRequestsSent);
+    recordScalar("numAllocationReplyTx", numAllocationReplyTx);
+    recordScalar("numAllocationReplyRx", numAllocationReplyRx);
+    recordScalar("numAllocationNotifyRx", numAllocationNotifyRx);
     recordScalar("numAllocationDisapproved", numAllocationDisapproved);
     recordScalar("timeFirstAllocationSent", timeFirstAllocationSent);
     recordScalar("timeLastAllocationSent", timeLastAllocationSent);
@@ -77,6 +80,7 @@ void DSME::finish() {
     recordScalar("timeLastRxGtsFrame", timeLastRxGtsFrame);
     recordScalar("timeLastTxGtsFrame", timeLastTxGtsFrame);
     recordScalar("timeFirstMissingAck",timeFirstMissingAck);
+    recordScalar("timeLastMissingAck",timeLastMissingAck);
 
     // gts Allocation via vector
     cOutVector gtsAllocRx("allocatedRxGTS");
@@ -109,6 +113,9 @@ void DSME::initialize(int stage)
         numUpperPacketsDroppedFullQueue = 0;
         numUpperPackets = 0;
         numAllocationRequestsSent = 0;
+        numAllocationReplyTx = 0;
+        numAllocationReplyRx = 0;
+        numAllocationNotifyRx = 0;
         numAllocationDisapproved = 0;
         timeFirstAllocationSent = 0.0;
         timeLastAllocationSent = 0.0;
@@ -117,6 +124,7 @@ void DSME::initialize(int stage)
         timeLastRxGtsFrame = 0.0;
         timeLastTxGtsFrame = 0.0;
         timeFirstMissingAck = 0.0;
+        timeLastMissingAck = 0.0;
 
     } else if (stage == INITSTAGE_LINK_LAYER) {
 
@@ -640,7 +648,7 @@ void DSME::handleGTSRequest(IEEE802154eMACCmdFrame *macCmd) {
             reply->getGtsManagement().status = ALLOCATION_APPROVED;
             // allocate for opposite direction of request
             updateAllocatedGTS(replySABSpec, !reply->getGtsManagement().direction, macCmd->getSrcAddr());
-
+            numAllocationReplyTx++;
         }
 
         //EV_WARN << "DUPLICATED DEBUG slot 000"<< endl;
@@ -725,6 +733,7 @@ void DSME::handleGTSReply(IEEE802154eMACCmdFrame *macCmd) {
                 updateAllocatedGTS(sabSpec, direction, other);
                 occupiedGTSs.updateSlotAllocation(sabSpec, man.type);
                 scheduleResetGtsAllocationSent = true;
+                numAllocationReplyRx++;
             } else if (man.type == DEALLOCATION) {
                 // TODO already removed allocated slots on request, do anything?
             }
@@ -771,8 +780,10 @@ void DSME::handleGTSNotify(IEEE802154eMACCmdFrame *macCmd) {
     DSME_GTS_Management man = gtsNotify->getGtsManagement();
     if (gtsNotify->getDestinationAddress() == address) {
         sendCSMAAck(other);
-        if (man.type == ALLOCATION)
+        if (man.type == ALLOCATION) {
             occupiedGTSs.updateSlotAllocation(gtsNotify->getSABSpec(), man.type);
+            numAllocationNotifyRx++;
+        }
     }
     // update neighbor slot allocation
     else {
@@ -900,6 +911,7 @@ void DSME::sendDirect(cPacket *msg) {
 }
 
 void DSME::handleGTS() {
+    static unsigned numMissingAck = 0;
     unsigned currentGTS = currentSlot - numCSMASlots - 1;
     GTS &gts = allocatedGTSs[currentSuperframe][currentGTS];
     if (gts != GTS::UNDEFINED) {
@@ -921,6 +933,10 @@ void DSME::handleGTS() {
                     // statistics
                     if (timeFirstMissingAck == 0.0 && numTxGtsFrames > numRxAckFrames)
                         timeFirstMissingAck = simTime();
+                    if (numTxGtsFrames > numRxAckFrames + numMissingAck) {
+                        timeLastMissingAck = simTime();
+                        numMissingAck++;
+                    }
                     numTxGtsFrames++;
                     timeLastTxGtsFrame = simTime();
                 }

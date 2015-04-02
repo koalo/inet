@@ -147,6 +147,9 @@ protected:
     long numGtsDuplicatedAllocation;
     long numGtsDeallocated;
     long numAllocationRequestsSent;
+    long numAllocationReplyTx;
+    long numAllocationReplyRx;
+    long numAllocationNotifyRx;
     long numAllocationDisapproved;
     simtime_t timeFirstAllocationSent;
     simtime_t timeLastAllocationSent;
@@ -157,6 +160,7 @@ protected:
     simtime_t timeLastTxGtsFrame;
     simtime_t timeLastRxGtsFrame;
     simtime_t timeFirstMissingAck;
+    simtime_t timeLastMissingAck;
     long numUpperPacketsDroppedFullQueue;
     long numUpperPackets;
     /*@}*/
