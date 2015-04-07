@@ -59,8 +59,10 @@ protected:
     double beaconInterval;
 
     unsigned numCSMASlots;
+    unsigned numGTSlots;
     unsigned numberSuperframes;
     unsigned numberTotalSuperframes;
+    unsigned numChannels;
     unsigned numMaxGTSAllocPerDevice;
     unsigned numMaxGTSAllocPerRequest;
 
@@ -139,6 +141,8 @@ protected:
      * numNeighborHeardBeacons
      * numTxGtsAllocatedReal
      * numRxGtsAllocatedReal
+     * vec allocatedRxGTS
+     * vec allocatedTxGTS
      */
     long numBeaconCollision;
     simtime_t timeAssociated;
@@ -163,6 +167,8 @@ protected:
     simtime_t timeLastMissingAck;
     long numUpperPacketsDroppedFullQueue;
     long numUpperPackets;
+    cOutVector gtsAllocation;
+    cOutVector gtsDeallocation;
     /*@}*/
 
     /**

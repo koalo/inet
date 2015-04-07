@@ -125,6 +125,8 @@ void DSME::initialize(int stage)
         timeLastTxGtsFrame = 0.0;
         timeFirstMissingAck = 0.0;
         timeLastMissingAck = 0.0;
+        gtsAllocation.setName("gtsAllocation");
+        gtsDeallocation.setName("gtsDeallocation");
 
     } else if (stage == INITSTAGE_LINK_LAYER) {
 
@@ -165,9 +167,10 @@ void DSME::initialize(int stage)
         useBrdCstAcks = true;   // DSME GTS management uses broadcast messages with encapsulated dest address
 
         // GTS
-        unsigned gtsPerSuperframe = slotsPerSuperframe-numCSMASlots-1;
-        occupiedGTSs = DSMESlotAllocationBitmap(numberSuperframes, gtsPerSuperframe, 16); // TODO par channels
-        allocatedGTSs.insert(allocatedGTSs.begin(), numberSuperframes, std::vector<GTS>(gtsPerSuperframe, GTS::UNDEFINED));
+        numGTSlots = slotsPerSuperframe-numCSMASlots-1;
+        numChannels = 16; // TODO parameter
+        occupiedGTSs = DSMESlotAllocationBitmap(numberSuperframes, numGTSlots, numChannels);
+        allocatedGTSs.insert(allocatedGTSs.begin(), numberSuperframes, std::vector<GTS>(numGTSlots, GTS::UNDEFINED));
         gtsAllocationSent = false;
 
         // Beacon management:
@@ -681,20 +684,23 @@ void DSME::updateAllocatedGTS(DSME_SAB_Specification& sabSpec, bool direction, M
     std::list<GTS> gtss = occupiedGTSs.getGTSsFromAllocation(sabSpec);
     EV_DEBUG << "Allocated slots for " << address << " (" << direction << "): ";
     EV << gtss.size() << " in " << sabSpec.subBlock.toString() << endl;
-    for(auto it = gtss.begin(); it != gtss.end(); it++) {
-        EV << it->superframeID << "/" << it->slotID;
-        if (allocatedGTSs[it->superframeID][it->slotID] == GTS::UNDEFINED) {
-            it->direction = direction;
-            it->address = address;
-            allocatedGTSs[it->superframeID][it->slotID] = *it;
-            EV << "@" << (int)it->channel << "  ";
+    for(auto gts = gtss.begin(); gts != gtss.end(); gts++) {
+        EV << gts->superframeID << "/" << gts->slotID;
+        if (allocatedGTSs[gts->superframeID][gts->slotID] == GTS::UNDEFINED) {
+            gts->direction = direction;
+            gts->address = address;
+            allocatedGTSs[gts->superframeID][gts->slotID] = *gts;
+            EV << "@" << (int)gts->channel << "  ";
+
+            // Statistic
             if (direction)
                 numRxGtsAllocated++;
             else
                 numTxGtsAllocated++;
+            gtsAllocation.record(gts->superframeID*numGTSlots*numChannels + gts->slotID * numChannels + gts->channel);
         } else {
             EV << " already allocated! ";
-            sabSpec.subBlock.setBit(occupiedGTSs.getSubBlockIndex(*it), false);
+            sabSpec.subBlock.setBit(occupiedGTSs.getSubBlockIndex(*gts), false);
         }
     }
     EV << endl;
@@ -704,7 +710,9 @@ void DSME::removeAllocatedGTS(std::list<GTS>& gtss) {
     for (auto gts = gtss.begin(); gts != gtss.end(); gts++) {
         EV_DEBUG << "DSME removing allocated slot: " << gts->superframeID << "/" << gts->slotID << endl;
         allocatedGTSs[gts->superframeID][gts->slotID] = GTS::UNDEFINED;
+        // Statistic
         numGtsDeallocated++;
+        gtsDeallocation.record(gts->superframeID*numGTSlots*numChannels + gts->slotID * numChannels + gts->channel);
     }
 }
 
