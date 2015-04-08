@@ -130,9 +130,10 @@ public:
     /**
      * Deallocate Slots when not needed anymore or received duplicated allocation notification
      * Given the slot allocation bitmap
-     * and the MAC command type to send (DSME_GTS_Request/Reply)
+     * and the MAC command type to send (DSME_GTS_Request/Reply).
+     * Unless addr is UNSPECIFED, only consider GTS belonging to that address
      */
-    virtual void deallocateGTSlots(DSME_SAB_Specification, uint8_t cmd);
+    virtual void deallocateGTSlots(DSME_SAB_Specification, uint8_t cmd, MACAddress addr);
 protected:
 
     /**
