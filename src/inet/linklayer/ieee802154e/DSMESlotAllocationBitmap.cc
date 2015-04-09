@@ -73,6 +73,10 @@ DSME_SAB_Specification DSMESlotAllocationBitmap::allocateSlots(DSME_SAB_Specific
     EV << endl;
 
     // if not found any free slot, try next superframe
+    /*
+     * DO NOT CHECK FURTHER SUPERFRAMES OUTSIDE OF RECEIVED SAB
+     * This may lead to half allocated slots, when the requesting device only accepts part of the allocated slots from the reply!
+     * Which may lead to a deallication process
     EV_DEBUG << "numAllocated: " << numAllocated << ", superframesTried: " << numSuperframesTried << " of " << bitmap.size() << endl;
     numSuperframesTried++;
     if (numAllocated == 0 && numSuperframesTried < bitmap.size()) {
@@ -82,7 +86,7 @@ DSME_SAB_Specification DSMESlotAllocationBitmap::allocateSlots(DSME_SAB_Specific
     else {
         numSuperframesTried = 0;
     }
-
+    */
     return replySabSpec;
 }
 
