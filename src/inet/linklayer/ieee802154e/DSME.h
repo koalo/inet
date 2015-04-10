@@ -162,6 +162,10 @@ protected:
     long numTxGtsFrames;
     long numRxAckFrames;
     long numRxGtsFrames;
+    long numUnusedTxGts;
+    long numUnusedTxGtsBeforeLastTx;
+    long numUnusedRxGts;
+    long numUnusedRxGtsBeforeLastRx;
     simtime_t timeLastTxGtsFrame;
     simtime_t timeLastRxGtsFrame;
     simtime_t timeFirstMissingAck;

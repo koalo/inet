@@ -64,6 +64,10 @@ void DSME::finish() {
     recordScalar("numRxGtsAllocatedReal", getNumAllocatedGTS(GTS::DIRECTION_RX));
     recordScalar("numRxGtsFrames", numRxGtsFrames);
     recordScalar("numRxAckFrames", numRxAckFrames);
+    recordScalar("numUnusedTxGts", numUnusedTxGts);
+    recordScalar("numUnusedTxGtsBeforeLastTx", numUnusedTxGtsBeforeLastTx);
+    recordScalar("numUnusedRxGts", numUnusedRxGts);
+    recordScalar("numUnusedRxGtsBeforeLastRx", numUnusedRxGtsBeforeLastRx);
     recordScalar("numGtsDuplicatedAllocation", numGtsDuplicatedAllocation);
     recordScalar("numGtsDeallocated", numGtsDeallocated);
     recordScalar("numUpperPacketsDroppedFullQueue", numUpperPacketsDroppedFullQueue);
@@ -112,6 +116,10 @@ void DSME::initialize(int stage)
         numTxGtsFrames = 0;
         numRxAckFrames = 0;
         numRxGtsFrames = 0;
+        numUnusedRxGts = 0;
+        numUnusedRxGtsBeforeLastRx = 0;
+        numUnusedTxGts = 0;
+        numUnusedTxGtsBeforeLastTx = 0;
         numUpperPacketsDroppedFullQueue = 0;
         numUpperPackets = 0;
         numAllocationRequestsSent = 0;
@@ -931,13 +939,15 @@ void DSME::sendDirect(cPacket *msg) {
 
 void DSME::handleGTS() {
     static unsigned numMissingAck = 0;
+    static simtime_t timeLastLastTx = 0.0;
+    static simtime_t timeLastLastRx = 0.0;  // TODO
     unsigned currentGTS = currentSlot - numCSMASlots - 1;
     GTS &gts = allocatedGTSs[currentSuperframe][currentGTS];
     if (gts != GTS::UNDEFINED) {
         EV_DEBUG << "DSME: handleGTS @ " << currentSuperframe << "/" << currentGTS << ": ";
         EV << "direction:" << gts.direction << " channel:" << (unsigned)gts.channel << endl;
 
-        if (gts.direction) {
+        if (gts.direction == GTS::DIRECTION_RX) {
             EV << "Waiting to receive from: " << gts.address << endl;
         } else {
             EV << "send to: " << gts.address << " | " << GTSQueue[gts.address].size() << " packets in queue" << endl;
@@ -955,10 +965,17 @@ void DSME::handleGTS() {
                     if (numTxGtsFrames > numRxAckFrames + numMissingAck) {
                         timeLastMissingAck = simTime();
                         numMissingAck++;
+                        EV_WARN << "Missing ACK for last sent GTS-frame" << endl;
                     }
                     numTxGtsFrames++;
                     timeLastTxGtsFrame = simTime();
                 }
+            } else {
+                if (timeLastTxGtsFrame > timeLastLastTx) {
+                    numUnusedTxGtsBeforeLastTx = numUnusedTxGts;
+                    timeLastLastTx = timeLastTxGtsFrame;
+                }
+                numUnusedTxGts++;
             }
         }
     }

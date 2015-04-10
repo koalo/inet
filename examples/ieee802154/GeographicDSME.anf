@@ -45,13 +45,13 @@
       <items xsi:type="scave:Add" filterPattern="allocated*GTS" type="VECTOR"/>
       <items xsi:type="scave:Add" filterPattern="gts*llocation" type="VECTOR"/>
       <items xsi:type="scave:LineChart" name="multisuperframe gts allocation" lineNameFormat="">
-        <filters xsi:type="scave:Select" filterPattern="allocated* AND (module(*.host[14].*) OR module(*.host[29].*) OR module(*.host[5].*) )" type="VECTOR"/>
+        <filters xsi:type="scave:Select" filterPattern="allocated* AND (module(*.host[18].*)  OR module(*.host[1].*) OR module(*.host[6].*))" type="VECTOR"/>
         <properties name="Graph.Title" value="multisuperframe gts allocation"/>
         <properties name="Symbols.Size" value="7"/>
         <properties name="Line.Type" value="Linear"/>
       </items>
       <items xsi:type="scave:LineChart" name="gts de-/allocation over simtime" lineNameFormat="">
-        <filters xsi:type="scave:Select" filterPattern="gtsAllocation AND (module(*.host[0].*) OR module(*.host[4..6].*) OR module(*.host[13..15].*) OR module(*.host[28..30].*))" type="VECTOR"/>
+        <filters xsi:type="scave:Select" filterPattern="gts*llocation AND (module(*.host[18].*)  OR module(*.host[1].*) OR module(*.host[6].*))" type="VECTOR"/>
         <properties name="Graph.Title" value="gts de-/allocation over simtime"/>
       </items>
     </datasets>
