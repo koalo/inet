@@ -7,10 +7,11 @@
   <datasets>
     <datasets name="frames">
       <items xsi:type="scave:Add" filterPattern="numUpperPackets*"/>
-      <items xsi:type="scave:Add" filterPattern="numTxGtsFrames"/>
+      <items xsi:type="scave:Add" filterPattern="numTxGtsFrames*"/>
       <items xsi:type="scave:Add" filterPattern="numRx*Frames"/>
       <items xsi:type="scave:Add" filterPattern="numUnused*BeforeLast*"/>
       <items xsi:type="scave:BarChart" name="Frames">
+        <filters xsi:type="scave:Select" filterPattern="NOT numUnused*"/>
         <properties name="Graph.Title" value="Frames"/>
       </items>
       <items xsi:type="scave:ComputeScalar" scalarName="numMissingAck" valueExpr="numTxGtsFrames - numRxAckFrames" moduleExpr="" groupByExpr=""/>
@@ -21,6 +22,15 @@
       <items xsi:type="scave:BarChart" name="Unused GTS Counter">
         <filters xsi:type="scave:Select" filterPattern="numUnused*"/>
         <properties name="Graph.Title" value="Unused GTS Counter"/>
+      </items>
+    </datasets>
+    <datasets name="throughput" basedOn="//@datasets/@datasets.0">
+      <items xsi:type="scave:Add" filterPattern="time*"/>
+      <items xsi:type="scave:ComputeScalar" scalarName="throughputSinceFirstAllocation" valueExpr="'numTxGtsFrames' / (timeLastTxGtsFrame - timeFirstAllocationSent)" moduleExpr="" groupByExpr=""/>
+      <items xsi:type="scave:ComputeScalar" scalarName="throughputSinceLastAllocation" valueExpr="'numTxGtsFramesSinceLastAlloc' / (timeLastTxGtsFrame - timeLastAllocationSuccess)" moduleExpr="" groupByExpr=""/>
+      <items xsi:type="scave:BarChart" name="throughput Since Allocation">
+        <filters xsi:type="scave:Select" filterPattern="throughputSince*Allocation"/>
+        <properties name="Graph.Title" value="throughputSinceAllocation"/>
       </items>
     </datasets>
     <datasets name="sums" basedOn="//@datasets/@datasets.0">
@@ -69,6 +79,6 @@
     </datasets>
   </datasets>
   <chartSheets>
-    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.4 //@datasets/@datasets.1/@items.5 //@datasets/@datasets.0/@items.6 //@datasets/@datasets.2/@items.1 //@datasets/@datasets.3/@items.1 //@datasets/@datasets.4/@items.3 //@datasets/@datasets.4/@items.4 //@datasets/@datasets.0/@items.7 //@datasets/@datasets.4/@items.5"/>
+    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.4 //@datasets/@datasets.2/@items.5 //@datasets/@datasets.0/@items.6 //@datasets/@datasets.3/@items.1 //@datasets/@datasets.4/@items.1 //@datasets/@datasets.5/@items.3 //@datasets/@datasets.5/@items.4 //@datasets/@datasets.0/@items.7 //@datasets/@datasets.5/@items.5 //@datasets/@datasets.1/@items.3"/>
   </chartSheets>
 </scave:Analysis>

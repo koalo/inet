@@ -162,6 +162,7 @@ protected:
     simtime_t timeLastAllocationSent;
     simtime_t timeLastAllocationSuccess;
     long numTxGtsFrames;
+    long numTxGtsFramesSinceLastAlloc;
     long numRxAckFrames;
     long numRxGtsFrames;
     long numUnusedTxGts;

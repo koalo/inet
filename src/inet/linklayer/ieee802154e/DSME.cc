@@ -60,6 +60,7 @@ void DSME::finish() {
     recordScalar("numTxGtsAllocated", numTxGtsAllocated);
     recordScalar("numTxGtsAllocatedReal", getNumAllocatedGTS(GTS::DIRECTION_TX));
     recordScalar("numTxGtsFrames", numTxGtsFrames);
+    recordScalar("numTxGtsFramesSinceLastAlloc", numTxGtsFramesSinceLastAlloc);
     recordScalar("numRxGtsAllocated", numRxGtsAllocated);
     recordScalar("numRxGtsAllocatedReal", getNumAllocatedGTS(GTS::DIRECTION_RX));
     recordScalar("numRxGtsFrames", numRxGtsFrames);
@@ -119,6 +120,7 @@ void DSME::initialize(int stage)
         numGtsDuplicatedAllocation = 0;
         numGtsDeallocated = 0;
         numTxGtsFrames = 0;
+        numTxGtsFramesSinceLastAlloc = 0;
         numRxAckFrames = 0;
         numRxGtsFrames = 0;
         numUnusedRxGts = 0;
@@ -764,6 +766,7 @@ void DSME::handleGTSReply(IEEE802154eMACCmdFrame *macCmd) {
             if (man.type == ALLOCATION) {
                 EV_DETAIL << "DSME: GTS Allocation succeeded -> notify" << endl;
                 timeLastAllocationSuccess = simTime();
+                numTxGtsFramesSinceLastAlloc = 0;
                 // allocate GTS
                 bool direction = gtsReply->getGtsManagement().direction;
                 updateAllocatedGTS(sabSpec, direction, other);
@@ -976,6 +979,7 @@ void DSME::handleGTS() {
                         EV_WARN << "Missing ACK for last sent GTS-frame" << endl;
                     }
                     numTxGtsFrames++;
+                    numTxGtsFramesSinceLastAlloc++;
                     gts.idleCounter = 0;
                     timeLastTxGtsFrame = simTime();
                 }
