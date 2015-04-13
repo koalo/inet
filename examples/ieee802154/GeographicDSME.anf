@@ -24,6 +24,16 @@
         <properties name="Graph.Title" value="Unused GTS Counter"/>
       </items>
     </datasets>
+    <datasets name="sums" basedOn="//@datasets/@datasets.0">
+      <items xsi:type="scave:ComputeScalar" scalarName="sumNumTxGtsFrames" valueExpr="sum('numTxGtsFrames')" moduleExpr="hostsAll" groupByExpr=""/>
+      <items xsi:type="scave:ComputeScalar" scalarName="sumNumRxGtsFrames" valueExpr="sum('numRxGtsFrames')" moduleExpr="hostsAll" groupByExpr=""/>
+      <items xsi:type="scave:ComputeScalar" scalarName="sumNumRxAckFrames" valueExpr="sum('numRxAckFrames')" moduleExpr="hostsAll" groupByExpr=""/>
+      <items xsi:type="scave:ComputeScalar" scalarName="sumNumUpperPacketsDroppedFullQueue" valueExpr="sum('numUpperPacketsDroppedFullQueue')" moduleExpr="hostsAll" groupByExpr=""/>
+      <items xsi:type="scave:ComputeScalar" scalarName="sumNumUpperPackets" valueExpr="sum('numUpperPackets')" moduleExpr="hostsAll" groupByExpr=""/>
+      <items xsi:type="scave:BarChart" name="sums">
+        <filters xsi:type="scave:Select" filterPattern="sumNum*"/>
+      </items>
+    </datasets>
     <datasets name="throughput" basedOn="//@datasets/@datasets.0">
       <items xsi:type="scave:Add" filterPattern="time*"/>
       <items xsi:type="scave:ComputeScalar" scalarName="throughputSinceFirstAllocation" valueExpr="'numTxGtsFrames' / (timeLastTxGtsFrame - timeFirstAllocationSent)" moduleExpr="" groupByExpr=""/>
@@ -33,14 +43,12 @@
         <properties name="Graph.Title" value="throughputSinceAllocation"/>
       </items>
     </datasets>
-    <datasets name="sums" basedOn="//@datasets/@datasets.0">
-      <items xsi:type="scave:ComputeScalar" scalarName="sumNumTxGtsFrames" valueExpr="sum('numTxGtsFrames')" moduleExpr="hostsAll" groupByExpr=""/>
-      <items xsi:type="scave:ComputeScalar" scalarName="sumNumRxGtsFrames" valueExpr="sum('numRxGtsFrames')" moduleExpr="hostsAll" groupByExpr=""/>
-      <items xsi:type="scave:ComputeScalar" scalarName="sumNumRxAckFrames" valueExpr="sum('numRxAckFrames')" moduleExpr="hostsAll" groupByExpr=""/>
-      <items xsi:type="scave:ComputeScalar" scalarName="sumNumUpperPacketsDroppedFullQueue" valueExpr="sum('numUpperPacketsDroppedFullQueue')" moduleExpr="hostsAll" groupByExpr=""/>
-      <items xsi:type="scave:ComputeScalar" scalarName="sumNumUpperPackets" valueExpr="sum('numUpperPackets')" moduleExpr="hostsAll" groupByExpr=""/>
-      <items xsi:type="scave:BarChart" name="sums">
-        <filters xsi:type="scave:Select" filterPattern="sumNum*"/>
+    <datasets name="packetLoss">
+      <items xsi:type="scave:Add" filterPattern="sentPk:count OR destRcvdPk"/>
+      <items xsi:type="scave:ComputeScalar" scalarName="packetLoss" valueExpr="100 - 100 * destRcvdPk / 'sentPk:count'" moduleExpr="" groupByExpr=""/>
+      <items xsi:type="scave:BarChart" name="packetLoss">
+        <filters xsi:type="scave:Select" filterPattern="packetLoss"/>
+        <properties name="Graph.Title" value="packetLoss"/>
       </items>
     </datasets>
     <datasets name="Beacon">
@@ -79,6 +87,6 @@
     </datasets>
   </datasets>
   <chartSheets>
-    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.4 //@datasets/@datasets.2/@items.5 //@datasets/@datasets.0/@items.6 //@datasets/@datasets.3/@items.1 //@datasets/@datasets.4/@items.1 //@datasets/@datasets.5/@items.3 //@datasets/@datasets.5/@items.4 //@datasets/@datasets.0/@items.7 //@datasets/@datasets.5/@items.5 //@datasets/@datasets.1/@items.3"/>
+    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.4 //@datasets/@datasets.1/@items.5 //@datasets/@datasets.0/@items.6 //@datasets/@datasets.4/@items.1 //@datasets/@datasets.5/@items.1 //@datasets/@datasets.6/@items.3 //@datasets/@datasets.6/@items.4 //@datasets/@datasets.0/@items.7 //@datasets/@datasets.6/@items.5 //@datasets/@datasets.2/@items.3 //@datasets/@datasets.3/@items.2"/>
   </chartSheets>
 </scave:Analysis>
