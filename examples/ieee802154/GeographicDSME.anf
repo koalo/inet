@@ -9,13 +9,18 @@
       <items xsi:type="scave:Add" filterPattern="numUpperPackets*"/>
       <items xsi:type="scave:Add" filterPattern="numTxGtsFrames"/>
       <items xsi:type="scave:Add" filterPattern="numRx*Frames"/>
+      <items xsi:type="scave:Add" filterPattern="numUnused*BeforeLast*"/>
       <items xsi:type="scave:BarChart" name="Frames">
         <properties name="Graph.Title" value="Frames"/>
       </items>
       <items xsi:type="scave:ComputeScalar" scalarName="numMissingAck" valueExpr="numTxGtsFrames - numRxAckFrames" moduleExpr="" groupByExpr=""/>
       <items xsi:type="scave:BarChart" name="Missing ACK">
-        <filters xsi:type="scave:Select" filterPattern="numMissingAck OR numTxGtsFrames"/>
+        <filters xsi:type="scave:Select" filterPattern="numMissingAck "/>
         <properties name="Bar.Placement" value="InFront"/>
+      </items>
+      <items xsi:type="scave:BarChart" name="Unused GTS Counter">
+        <filters xsi:type="scave:Select" filterPattern="numUnused*"/>
+        <properties name="Graph.Title" value="Unused GTS Counter"/>
       </items>
     </datasets>
     <datasets name="sums" basedOn="//@datasets/@datasets.0">
@@ -44,6 +49,7 @@
     <datasets name="gtsAllocation">
       <items xsi:type="scave:Add" filterPattern="allocated*GTS" type="VECTOR"/>
       <items xsi:type="scave:Add" filterPattern="gts*llocation" type="VECTOR"/>
+      <items xsi:type="scave:Add" filterPattern="*GTSIdleCount" type="VECTOR"/>
       <items xsi:type="scave:LineChart" name="multisuperframe gts allocation" lineNameFormat="">
         <filters xsi:type="scave:Select" filterPattern="allocated* AND (module(*.host[18].*) OR module(*.host[6].*))" type="VECTOR"/>
         <properties name="Graph.Title" value="multisuperframe gts allocation"/>
@@ -56,9 +62,13 @@
         <properties name="Symbols.Size" value="8"/>
         <properties name="Line.Type" value="Dots"/>
       </items>
+      <items xsi:type="scave:LineChart" name="gts idle count" lineNameFormat="">
+        <filters xsi:type="scave:Select" filterPattern="*GTSIdleCount" type="VECTOR"/>
+        <properties name="Graph.Title" value="gts idle count"/>
+      </items>
     </datasets>
   </datasets>
   <chartSheets>
-    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.3 //@datasets/@datasets.1/@items.5 //@datasets/@datasets.0/@items.5 //@datasets/@datasets.2/@items.1 //@datasets/@datasets.3/@items.1 //@datasets/@datasets.4/@items.2 //@datasets/@datasets.4/@items.3"/>
+    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.4 //@datasets/@datasets.1/@items.5 //@datasets/@datasets.0/@items.6 //@datasets/@datasets.2/@items.1 //@datasets/@datasets.3/@items.1 //@datasets/@datasets.4/@items.3 //@datasets/@datasets.4/@items.4 //@datasets/@datasets.0/@items.7 //@datasets/@datasets.4/@items.5"/>
   </chartSheets>
 </scave:Analysis>

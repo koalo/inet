@@ -144,6 +144,8 @@ protected:
      * numRxGtsAllocatedReal
      * vec allocatedRxGTS
      * vec allocatedTxGTS
+     * vec allocatedRxGTSIdleCounter
+     * vec allocatedTxGTSIdleCounter
      */
     long numBeaconCollision;
     simtime_t timeAssociated;

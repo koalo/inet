@@ -34,6 +34,7 @@ public:
     uint8_t channel;
     bool direction;
     MACAddress address;
+    unsigned idleCounter;
 
     bool operator==(const GTS& b) const { return (this->superframeID==b.superframeID && this->slotID==b.slotID && this->channel==b.channel);}
     bool operator!=(const GTS& b) const { return !(*this == b); }

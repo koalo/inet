@@ -89,14 +89,19 @@ void DSME::finish() {
     // gts Allocation via vector
     cOutVector gtsAllocRx("allocatedRxGTS");
     cOutVector gtsAllocTx("allocatedTxGTS");
-    cOutVector *v;
+    cOutVector gtsAllocRxIdle("allocatedRxGTSIdleCount");
+    cOutVector gtsAllocTxIdle("allocatedTxGTSIdleCount");
+    cOutVector *v1, *v2;
     for (auto sf = allocatedGTSs.begin(); sf < allocatedGTSs.end(); sf++)
         for (auto gts = sf->begin(); gts < sf->end(); gts++)
             if (*gts != GTS::UNDEFINED) {
-                v = (gts->direction == GTS::DIRECTION_RX) ? &gtsAllocRx : &gtsAllocTx;
+                v1 = (gts->direction == GTS::DIRECTION_RX) ? &gtsAllocRx : &gtsAllocTx;
+                v2 = (gts->direction == GTS::DIRECTION_RX) ? &gtsAllocRxIdle : &gtsAllocTxIdle;
                 //v->recordWithTimestamp(gts->superframeID*superframeDuration + gts->slotID*slotDuration, gts->channel);
-                v->recordWithTimestamp(gts->superframeID*numGTSlots*numChannels + gts->slotID * numChannels + gts->channel,
-                        gts->address.getInt() & 0xffff);
+                unsigned uniqueSlotId = gts->superframeID*numGTSlots*numChannels + gts->slotID * numChannels + gts->channel;
+                v1->recordWithTimestamp(uniqueSlotId, gts->address.getInt() & 0xffff);
+                v2->recordWithTimestamp(uniqueSlotId, gts->idleCounter);
+
             }
 }
 
@@ -420,6 +425,10 @@ void DSME::switchToNextSlotChannelAndRadioMode() {
         if (gts != GTS::UNDEFINED) {
             setChannelNumber(11 + gts.channel);
             radio->setRadioMode((gts.direction) ? IRadio::RADIO_MODE_RECEIVER : IRadio::RADIO_MODE_TRANSMITTER);
+            // statistic
+            if (gts.direction == GTS::DIRECTION_RX)
+                numUnusedRxGts++;   // gets decremented on actual reception
+            gts.idleCounter++;      // gets reset to zero on RX or TX
             return;
         }
     }
@@ -940,7 +949,6 @@ void DSME::sendDirect(cPacket *msg) {
 void DSME::handleGTS() {
     static unsigned numMissingAck = 0;
     static simtime_t timeLastLastTx = 0.0;
-    static simtime_t timeLastLastRx = 0.0;  // TODO
     unsigned currentGTS = currentSlot - numCSMASlots - 1;
     GTS &gts = allocatedGTSs[currentSuperframe][currentGTS];
     if (gts != GTS::UNDEFINED) {
@@ -968,6 +976,7 @@ void DSME::handleGTS() {
                         EV_WARN << "Missing ACK for last sent GTS-frame" << endl;
                     }
                     numTxGtsFrames++;
+                    gts.idleCounter = 0;
                     timeLastTxGtsFrame = simTime();
                 }
             } else {
@@ -982,8 +991,15 @@ void DSME::handleGTS() {
 }
 
 void DSME::handleGTSFrame(IEEE802154eMACFrame *macPkt) {
+    static simtime_t timeLastLastRx = 0.0;
     numRxGtsFrames++;
+    numUnusedRxGts--;
+    allocatedGTSs[currentSuperframe][currentSlot-numCSMASlots-1].idleCounter = 0;
     timeLastRxGtsFrame = simTime();
+    if (timeLastRxGtsFrame > timeLastLastRx) {
+        numUnusedRxGtsBeforeLastRx = numUnusedRxGts;
+        timeLastLastRx = timeLastRxGtsFrame;
+    }
     hostModule->bubble("GTS received");
     sendDSMEAck(macPkt->getSrcAddr());
     sendUp(decapsMsg(macPkt));

@@ -24,6 +24,7 @@ GTS::GTS(uint16_t superframeID, uint16_t slotID, uint8_t channel) {
     this->slotID = slotID;
     this->channel = channel;
     this->address = MACAddress::UNSPECIFIED_ADDRESS;
+    this->idleCounter = 0;
 }
 
 
