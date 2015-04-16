@@ -82,6 +82,8 @@ void DSME::finish() {
     recordScalar("timeLastAllocationSent", timeLastAllocationSent);
     recordScalar("timeLastAllocationSuccess", timeLastAllocationSuccess);
     recordScalar("timeAssociated", timeAssociated);
+    recordScalar("timeFirstRxGtsFrame", timeFirstRxGtsFrame);
+    recordScalar("timeFirstTxGtsFrame", timeFirstTxGtsFrame);
     recordScalar("timeLastRxGtsFrame", timeLastRxGtsFrame);
     recordScalar("timeLastTxGtsFrame", timeLastTxGtsFrame);
     recordScalar("timeFirstMissingAck",timeFirstMissingAck);
@@ -138,6 +140,8 @@ void DSME::initialize(int stage)
         timeLastAllocationSent = 0.0;
         timeLastAllocationSuccess = 0.0;
         timeAssociated = 0.0;
+        timeFirstRxGtsFrame = 0.0;
+        timeFirstTxGtsFrame = 0.0;
         timeLastRxGtsFrame = 0.0;
         timeLastTxGtsFrame = 0.0;
         timeFirstMissingAck = 0.0;
@@ -982,6 +986,8 @@ void DSME::handleGTS() {
                     numTxGtsFramesSinceLastAlloc++;
                     gts.idleCounter = 0;
                     timeLastTxGtsFrame = simTime();
+                    if (timeFirstTxGtsFrame == 0.0)
+                        timeFirstTxGtsFrame = simTime();
                 }
             } else {
                 if (timeLastTxGtsFrame > timeLastLastTx) {
@@ -1004,6 +1010,8 @@ void DSME::handleGTSFrame(IEEE802154eMACFrame *macPkt) {
         numUnusedRxGtsBeforeLastRx = numUnusedRxGts;
         timeLastLastRx = timeLastRxGtsFrame;
     }
+    if (timeFirstRxGtsFrame == 0.0)
+        timeFirstRxGtsFrame = simTime();
     hostModule->bubble("GTS received");
     sendDSMEAck(macPkt->getSrcAddr());
     sendUp(decapsMsg(macPkt));

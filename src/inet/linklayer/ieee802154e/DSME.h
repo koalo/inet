@@ -169,6 +169,8 @@ protected:
     long numUnusedTxGtsBeforeLastTx;
     long numUnusedRxGts;
     long numUnusedRxGtsBeforeLastRx;
+    simtime_t timeFirstTxGtsFrame;
+    simtime_t timeFirstRxGtsFrame;
     simtime_t timeLastTxGtsFrame;
     simtime_t timeLastRxGtsFrame;
     simtime_t timeFirstMissingAck;

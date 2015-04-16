@@ -59,9 +59,9 @@
       </items>
     </datasets>
     <datasets name="timings">
-      <items xsi:type="scave:Add" filterPattern="time*"/>
+      <items xsi:type="scave:Add" filterPattern="timeAssociated OR timeFirstAllocationSent OR timeLastAllocationSuccess"/>
       <items xsi:type="scave:BarChart" name="timings">
-        <properties name="Graph.Title" value="timings"/>
+        <properties name="Bar.Placement" value="InFront"/>
       </items>
     </datasets>
     <datasets name="gtsAllocation">
