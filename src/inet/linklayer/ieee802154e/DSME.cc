@@ -166,6 +166,7 @@ void DSME::initialize(int stage)
         numCSMASlots = par("numCSMASlots").longValue();
         numMaxGTSAllocPerDevice = par("maxNumberGTSAllocPerDevice");
         numMaxGTSAllocPerRequest = par("maxNumberGTSAllocPerRequest");
+        maxGTSIdleCount = par("maxGTSIdleCount");
         baseSuperframeDuration = slotsPerSuperframe * baseSlotDuration;
         superframeDuration = slotDuration * slotsPerSuperframe;
         beaconInterval = baseSuperframeDuration * (1 << superframeSpec.beaconOrder);
@@ -260,6 +261,7 @@ void DSME::handleSelfMessage(cMessage *msg) {
         if (!isAssociated)
             endChannelScan();
         // Associated devices might need additional GTS to handle queue
+        // Also unused GTS shall be deallocated
         else
             checkAndHandleGTSAllocation();
 
@@ -427,6 +429,7 @@ void DSME::switchToNextSlotChannelAndRadioMode() {
         if (gts != GTS::UNDEFINED) {
             setChannelNumber(11 + gts.channel);
             radio->setRadioMode((gts.direction) ? IRadio::RADIO_MODE_RECEIVER : IRadio::RADIO_MODE_TRANSMITTER);
+
             // statistic
             if (gts.direction == GTS::DIRECTION_RX)
                 numUnusedRxGts++;   // gets decremented on actual reception
@@ -454,6 +457,33 @@ void DSME::endChannelScan() {
 }
 
 void DSME::checkAndHandleGTSAllocation() {
+    // deallocate unused GTS
+    if (maxGTSIdleCount > 0) {
+        DSME_SAB_Specification sabSpec;
+        sabSpec.subBlockLength = occupiedGTSs.getSubBlockLength();
+        sabSpec.subBlock = BitVector(0, sabSpec.subBlockLength);
+        bool found = false;
+        MACAddress dest;
+        for (auto sf = allocatedGTSs.begin(); !found && sf < allocatedGTSs.end(); sf++) {
+            for (auto gts = sf->begin(); gts < sf->end(); gts++) {
+                if (gts->idleCounter > maxGTSIdleCount
+                        && (dest == MACAddress::UNSPECIFIED_ADDRESS || dest == gts->address)) {
+                    EV_WARN << "GTS IdleCount reached maximum: deallocate!" << gts->superframeID << "/" << gts->slotID << endl;
+                    std::cout << simTime() << " maxGTSIdleCount " << gts->superframeID << "/" << gts->slotID << endl;
+                    found = true;
+                    dest = gts->address;
+                    sabSpec.subBlockIndex = gts->superframeID;
+                    sabSpec.subBlock.setBit(occupiedGTSs.getSubBlockIndex(*gts), true);
+                }
+            }
+            if (found) {
+                std::cout << sabSpec.subBlock.toString() << endl;
+                deallocateGTSlots(sabSpec, DSME_GTS_REQUEST, dest);
+            }
+        }
+    }
+
+    // Check if more GTS are needed
     if (!gtsAllocationSent) {
         unsigned numSlots;
         unsigned numPackets;

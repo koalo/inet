@@ -88,6 +88,7 @@ protected:
     gts_allocation allocatedGTSs;
     DSMESlotAllocationBitmap occupiedGTSs;
     bool gtsAllocationSent;
+    unsigned maxGTSIdleCount;
 
     gts_queue GTSQueue;
     IEEE802154eMACFrame *lastSendGTSFrame;
@@ -200,7 +201,8 @@ protected:
 
     /**
      * Check if enough TX slots allocated for each destination in GTSQueue
-     * and allocate more if necessary
+     * and allocate more if necessary.
+     * Deallocate unused GTS
      */
     virtual void checkAndHandleGTSAllocation();
 

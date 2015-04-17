@@ -43,6 +43,7 @@ simple DSME extends CSMA
     	// e.g. NumberOfGTSPerMultisuperframe / NumberOfNeighbors
     	int maxNumberGTSAllocPerDevice = default(7);
     	int maxNumberGTSAllocPerRequest = default(2); // also per superframe
+    	int maxGTSIdleCount = default(0);	// 0 => never deallocate idle GTS
     	
     	// Slotted CSMA-CA
     	int contentionWindowLength = default(2);
