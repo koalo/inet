@@ -465,7 +465,7 @@ void DSME::checkAndHandleGTSAllocation() {
     if (maxGTSIdleCount > 0) {
         DSME_SAB_Specification sabSpec;
         sabSpec.subBlockLength = occupiedGTSs.getSubBlockLength();
-        sabSpec.subBlock = BitVector(0, sabSpec.subBlockLength);
+        sabSpec.subBlock = BitVector(0, sabSpec.subBlockLength*8); // in bits...
         bool found = false;
         MACAddress dest;
         for (auto sf = allocatedGTSs.begin(); !found && sf < allocatedGTSs.end(); sf++) {
