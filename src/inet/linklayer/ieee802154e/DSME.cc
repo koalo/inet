@@ -473,7 +473,7 @@ void DSME::checkAndHandleGTSAllocation() {
                 if (gts->idleCounter > maxGTSIdleCount
                         && (dest == MACAddress::UNSPECIFIED_ADDRESS || dest == gts->address)) {
                     EV_WARN << "GTS IdleCount reached maximum: deallocate!" << gts->superframeID << "/" << gts->slotID << endl;
-                    std::cout << simTime() << " maxGTSIdleCount " << gts->superframeID << "/" << gts->slotID << endl;
+                    //std::cout << simTime() << " maxGTSIdleCount " << gts->superframeID << "/" << gts->slotID << endl;
                     found = true;
                     dest = gts->address;
                     sabSpec.subBlockIndex = gts->superframeID;
@@ -481,7 +481,7 @@ void DSME::checkAndHandleGTSAllocation() {
                 }
             }
             if (found) {
-                std::cout << sabSpec.subBlock.toString() << endl;
+                //std::cout << sabSpec.subBlock.toString() << endl;
                 deallocateGTSlots(sabSpec, DSME_GTS_REQUEST, dest);
             }
         }
