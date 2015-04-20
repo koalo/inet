@@ -45,7 +45,7 @@ DSME_SAB_Specification DSMESlotAllocationBitmap::allocateSlots(DSME_SAB_Specific
         channel = intuniform(0, numChannels-1);
         for (unsigned i=0; i<numChannels; i++) { // if possible use preferredSlot (check every channel)
             if (slotsOccupied.getBit(slotOffset + channel))
-                channel = (channel < numChannels) ? channel + 1 : 0;
+                channel = (channel < numChannels-1) ? channel + 1 : 0;
             else
                 break;
         }
