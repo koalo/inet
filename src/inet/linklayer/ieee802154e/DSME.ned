@@ -47,6 +47,9 @@ simple DSME extends CSMA
     	
     	// Slotted CSMA-CA
     	int contentionWindowLength = default(2);
+    	
+    	// statistics
+    	double saveGtsAllocationStatsAt @unit("s") = default(0.0s);	// store current gts allocation at givven time or at finish if 0
         
     	@class(DSME);
     

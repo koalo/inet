@@ -58,11 +58,9 @@ void DSME::finish() {
     recordScalar("numNeighborHeardBeacons", neighborHeardBeacons.getAllocatedCount());
     recordScalar("numBeaconCollision", numBeaconCollision);
     recordScalar("numTxGtsAllocated", numTxGtsAllocated);
-    recordScalar("numTxGtsAllocatedReal", getNumAllocatedGTS(GTS::DIRECTION_TX));
     recordScalar("numTxGtsFrames", numTxGtsFrames);
     recordScalar("numTxGtsFramesSinceLastAlloc", numTxGtsFramesSinceLastAlloc);
     recordScalar("numRxGtsAllocated", numRxGtsAllocated);
-    recordScalar("numRxGtsAllocatedReal", getNumAllocatedGTS(GTS::DIRECTION_RX));
     recordScalar("numRxGtsFrames", numRxGtsFrames);
     recordScalar("numRxAckFrames", numRxAckFrames);
     recordScalar("numUnusedTxGts", numUnusedTxGts);
@@ -88,6 +86,14 @@ void DSME::finish() {
     recordScalar("timeLastTxGtsFrame", timeLastTxGtsFrame);
     recordScalar("timeFirstMissingAck",timeFirstMissingAck);
     recordScalar("timeLastMissingAck",timeLastMissingAck);
+    if (par("saveGtsAllocationStatsAt").doubleValue() == 0.0)
+        saveGtsAllocationStats();
+}
+
+void DSME::saveGtsAllocationStats() {
+
+    recordScalar("numTxGtsAllocatedReal", getNumAllocatedGTS(GTS::DIRECTION_TX));
+    recordScalar("numRxGtsAllocatedReal", getNumAllocatedGTS(GTS::DIRECTION_RX));
 
     // gts Allocation via vector
     cOutVector gtsAllocRx("allocatedRxGTS");
@@ -95,7 +101,7 @@ void DSME::finish() {
     cOutVector gtsAllocRxIdle("allocatedRxGTSIdleCount");
     cOutVector gtsAllocTxIdle("allocatedTxGTSIdleCount");
     cOutVector *v1, *v2;
-    for (auto sf = allocatedGTSs.begin(); sf < allocatedGTSs.end(); sf++)
+    for (auto sf = allocatedGTSs.begin(); sf < allocatedGTSs.end(); sf++) {
         for (auto gts = sf->begin(); gts < sf->end(); gts++)
             if (*gts != GTS::UNDEFINED) {
                 v1 = (gts->direction == GTS::DIRECTION_RX) ? &gtsAllocRx : &gtsAllocTx;
@@ -106,8 +112,8 @@ void DSME::finish() {
                 v2->recordWithTimestamp(uniqueSlotId, gts->idleCounter);
 
             }
+    }
 }
-
 void DSME::initialize(int stage)
 {
     hostModule = getParentModule()->getParentModule();
@@ -148,6 +154,9 @@ void DSME::initialize(int stage)
         timeLastMissingAck = 0.0;
         gtsAllocation.setName("gtsAllocation");
         gtsDeallocation.setName("gtsDeallocation");
+
+        if (par("saveGtsAllocationStatsAt").doubleValue() > 0.0)
+            scheduleAt(simtime_t(par("saveGtsAllocationStatsAt").doubleValue()), new cMessage("saveGtsAllocationStatsAt"));
 
     } else if (stage == INITSTAGE_LINK_LAYER) {
 
@@ -303,6 +312,9 @@ void DSME::handleSelfMessage(cMessage *msg) {
             EV_DEBUG << "HandleSelf CSMA @ slot " << currentSlot << endl;
             CSMA::handleSelfMessage(msg);
         }
+    }
+    else if (strcmp(msg->getName(), "saveGtsAllocationStatsAt") == 0) {
+        saveGtsAllocationStats();
     }
     else {
         // TODO handle discared messages, e.g. clear isBeaconAllocationSent

@@ -378,6 +378,11 @@ protected:
      */
     virtual void setChannelNumber(unsigned k);
 
+
+
+    // save gts allocation vector statistics
+    void saveGtsAllocationStats();
+
 };
 
 } //namespace
