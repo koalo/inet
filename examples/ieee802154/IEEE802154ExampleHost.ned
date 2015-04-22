@@ -33,7 +33,7 @@ module IEEE802154ExampleHost extends StandardHost
     parameters:
         bool isPANCoordinator = default(false);
         bool isCoordinator = default(isPANCoordinator);
-        
+
         string neighborTableType = default("StraightestNeighborTable");
         *.neighborTableModule = default(neighborTableType != "" ? absPath(".neighborTable") : "");
 
@@ -41,6 +41,7 @@ module IEEE802154ExampleHost extends StandardHost
         wlan[0].typename = default("Ieee802154NarrowbandNic");
 
         trafficgen.protocol = 59; // TODO possible with enum?
+        setupTrafficgen.protocol = 60; // TODO ????
         trafficgen.packetLength = default(10B);
 
         @statistic[rcvdPkSrc](title="packets received per source"; source=rcvdPk; record="groupCount(sourceAddr)"; interpolationmode=none);
@@ -49,8 +50,11 @@ module IEEE802154ExampleHost extends StandardHost
         forwarding = default(true);
 
     submodules:
+        setupTrafficgen: IPvXTrafGen {
+            @display("p=134,287");
+        }
         trafficgen: IPvXTrafGen {
-            @display("p=149,287");
+            @display("p=188,287");
         }
 
         neighborTable: <neighborTableType> like INeighborTable {
@@ -60,5 +64,8 @@ module IEEE802154ExampleHost extends StandardHost
     connections:
         networkLayer.transportOut++ --> trafficgen.ipIn;
         networkLayer.transportIn++ <-- trafficgen.ipOut;
+        networkLayer.transportOut++ --> setupTrafficgen.ipIn;
+        networkLayer.transportIn++ <-- setupTrafficgen.ipOut;
+        
 
 }
