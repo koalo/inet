@@ -379,6 +379,8 @@ protected:
     virtual void setChannelNumber(unsigned k);
 
 
+    // empty all dsme gts queues
+    void flushGTSQueues(bool keepFront);
 
     // save gts allocation vector statistics
     void saveGtsAllocationStats();

@@ -48,6 +48,9 @@ simple DSME extends CSMA
     	// Slotted CSMA-CA
     	int contentionWindowLength = default(2);
     	
+    	// Setup
+    	double setupPhaseLength @unit("s") = default(0.0s);			// Time for setup phase. DSME Queues get flushed after that time
+    	
     	// statistics
     	double saveGtsAllocationStatsAt @unit("s") = default(0.0s);	// store current gts allocation at givven time or at finish if 0
         

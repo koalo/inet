@@ -113,6 +113,12 @@ void DSME::saveGtsAllocationStats() {
 
             }
     }
+
+    // TX GTS for each GTSQueue
+    cOutVector gtsQeueueAlloc("gtsQueueAllocatedTx");
+    for (auto q = GTSQueue.begin(); q != GTSQueue.end(); q++) {
+        gtsQeueueAlloc.recordWithTimestamp(q->first.getInt() & 0xffff, getNumAllocatedGTS(q->first, GTS::DIRECTION_TX));
+    }
 }
 void DSME::initialize(int stage)
 {
@@ -157,6 +163,8 @@ void DSME::initialize(int stage)
 
         if (par("saveGtsAllocationStatsAt").doubleValue() > 0.0)
             scheduleAt(simtime_t(par("saveGtsAllocationStatsAt").doubleValue()), new cMessage("saveGtsAllocationStatsAt"));
+        if (par("setupPhaseLength").doubleValue() > 0.0)
+            scheduleAt(simtime_t(par("setupPhaseLength").doubleValue()), new cMessage("flushGtsQueue"));
 
     } else if (stage == INITSTAGE_LINK_LAYER) {
 
@@ -179,6 +187,7 @@ void DSME::initialize(int stage)
         numCSMASlots = par("numCSMASlots").longValue();
         numMaxGTSAllocPerDevice = par("maxNumberGTSAllocPerDevice");
         numMaxGTSAllocPerRequest = par("maxNumberGTSAllocPerRequest");
+        std::cout << numMaxGTSAllocPerDevice << "/" << numMaxGTSAllocPerRequest << endl;
         maxGTSIdleCount = par("maxGTSIdleCount");
         baseSuperframeDuration = slotsPerSuperframe * baseSlotDuration;
         superframeDuration = slotDuration * slotsPerSuperframe;
@@ -315,6 +324,9 @@ void DSME::handleSelfMessage(cMessage *msg) {
     }
     else if (strcmp(msg->getName(), "saveGtsAllocationStatsAt") == 0) {
         saveGtsAllocationStats();
+    }
+    else if (strcmp(msg->getName(), "flushGtsQueue") == 0) {
+        flushGTSQueues(true);
     }
     else {
         // TODO handle discared messages, e.g. clear isBeaconAllocationSent
@@ -1293,6 +1305,17 @@ void DSME::setChannelNumber(unsigned k) {
     //endReceptionTimer = nullptr;
     //emit(radioChannelChangedSignal, newChannelNumber);
     emit(radio->listeningChangedSignal, 0);
+}
+
+
+void DSME::flushGTSQueues(bool keepFront) {
+    // remove all but keep front, as it may be in use
+    for (auto q = GTSQueue.begin(); q != GTSQueue.end(); q++) {
+        auto begin = q->second.begin();
+        if (keepFront)
+            begin++;
+        q->second.erase(begin , q->second.end());
+    }
 }
 
 } //namespace

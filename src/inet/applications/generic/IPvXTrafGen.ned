@@ -44,7 +44,7 @@ simple IPvXTrafGen like IIPvXTrafficGenerator
         @display("i=block/source");
         @signal[sentPk](type=cPacket);
         @signal[rcvdPk](type=cPacket);
-        @statistic[rcvdPk](title="packets received"; source=rcvdPk; record=count,"sum(packetBytes)","vector(packetBytes)"; interpolationmode=none);
+        @statistic[rcvdPk](title="packets received"; source=rcvdPk; record=count,"groupCount(sourceAddr)","sum(packetBytes)","vector(packetBytes)"; interpolationmode=none);
         @statistic[sentPk](title="packets sent"; source=sentPk; record=count,"sum(packetBytes)","vector(packetBytes)"; interpolationmode=none);
         @statistic[endToEndDelay](title="end-to-end delay"; source="messageAge(rcvdPk)"; unit=s; record=histogram,vector; interpolationmode=none);
     gates:

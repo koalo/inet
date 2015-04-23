@@ -44,7 +44,7 @@ module IEEE802154ExampleHost extends StandardHost
         setupTrafficgen.protocol = 60; // TODO ????
         trafficgen.packetLength = default(10B);
 
-        @statistic[rcvdPkSrc](title="packets received per source"; source=rcvdPk; record="groupCount(sourceAddr)"; interpolationmode=none);
+        //@statistic[rcvdPkSrc](title="packets received per source"; source=rcvdPk; record="groupCount(sourceAddr)"; interpolationmode=none);
 
         @display("i=device/accesspoint;bgb=,-");
         forwarding = default(true);

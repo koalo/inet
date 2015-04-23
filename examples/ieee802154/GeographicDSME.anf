@@ -11,16 +11,16 @@
       <items xsi:type="scave:Add" filterPattern="numRx*Frames"/>
       <items xsi:type="scave:Add" filterPattern="numUnused*BeforeLast*"/>
       <items xsi:type="scave:BarChart" name="Frames">
-        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-20150420-13:44:29-3452) AND NOT numUnused*"/>
+        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-*) AND NOT numUnused*"/>
         <properties name="Graph.Title" value="Frames"/>
       </items>
       <items xsi:type="scave:ComputeScalar" scalarName="numMissingAck" valueExpr="numTxGtsFrames - numRxAckFrames" moduleExpr="" groupByExpr=""/>
       <items xsi:type="scave:BarChart" name="Missing ACK">
-        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-20150420-13:44:29-3452) AND numMissingAck "/>
+        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-*) AND numMissingAck "/>
         <properties name="Bar.Placement" value="InFront"/>
       </items>
       <items xsi:type="scave:BarChart" name="Unused GTS Counter">
-        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-20150420-13:44:29-3452) AND numUnused*"/>
+        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-*) AND numUnused*"/>
         <properties name="Graph.Title" value="Unused GTS Counter"/>
       </items>
     </datasets>
@@ -31,7 +31,7 @@
       <items xsi:type="scave:ComputeScalar" scalarName="sumNumUpperPacketsDroppedFullQueue" valueExpr="sum('numUpperPacketsDroppedFullQueue')" moduleExpr="hostsAll" groupByExpr=""/>
       <items xsi:type="scave:ComputeScalar" scalarName="sumNumUpperPackets" valueExpr="sum('numUpperPackets')" moduleExpr="hostsAll" groupByExpr=""/>
       <items xsi:type="scave:BarChart" name="sums">
-        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-20150420-13:44:29-3452) AND sumNum*"/>
+        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-*) AND sumNum*"/>
       </items>
     </datasets>
     <datasets name="throughput" basedOn="//@datasets/@datasets.0">
@@ -39,7 +39,7 @@
       <items xsi:type="scave:ComputeScalar" scalarName="throughputSinceFirstAllocation" valueExpr="('numTxGtsFrames' >0) ? 'numTxGtsFrames' / (timeLastTxGtsFrame - timeFirstAllocationSent) : 0" moduleExpr="" groupByExpr=""/>
       <items xsi:type="scave:ComputeScalar" scalarName="throughputSinceLastAllocation" valueExpr="('numTxGtsFramesSinceLastAlloc'>0) ? 'numTxGtsFramesSinceLastAlloc' / (timeLastTxGtsFrame - timeLastAllocationSuccess) : 0" moduleExpr="" groupByExpr=""/>
       <items xsi:type="scave:BarChart" name="throughput Since Allocation">
-        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-20150420-13:44:29-3452) AND throughputSince*Allocation"/>
+        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-*) AND throughputSince*Allocation"/>
         <properties name="Graph.Title" value="throughputSinceAllocation"/>
       </items>
       <items xsi:type="scave:ComputeScalar" scalarName="meanThroughputSinceLastAllocation" valueExpr="mean('throughputSinceLastAllocation')" moduleExpr="allHosts" groupByExpr=""/>
@@ -54,17 +54,17 @@
       </items>
     </datasets>
     <datasets name="packetLoss">
-      <items xsi:type="scave:Add" filterPattern="sentPk:count OR destRcvdPk"/>
+      <items xsi:type="scave:Add" filterPattern="run(GeographicDSME-2-*) AND module(*.trafficgen) AND (sentPk:count OR destRcvdPk)"/>
       <items xsi:type="scave:ComputeScalar" scalarName="packetLoss" valueExpr="100 - 100 * destRcvdPk / 'sentPk:count'" moduleExpr="" groupByExpr=""/>
       <items xsi:type="scave:BarChart" name="packetLoss">
-        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-20150420-13:44:29-3452) AND packetLoss"/>
+        <filters xsi:type="scave:Select" filterPattern="packetLoss"/>
         <properties name="Graph.Title" value="packetLoss"/>
       </items>
     </datasets>
     <datasets name="Beacon">
       <items xsi:type="scave:Add" filterPattern="num*HeardBeacons"/>
       <items xsi:type="scave:BarChart" name="num heard beacons">
-        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-20150420-13:44:29-3452)"/>
+        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-*)"/>
         <properties name="Graph.Title" value="num heard Beacons"/>
         <properties name="Bar.Placement" value="InFront"/>
       </items>
@@ -72,7 +72,7 @@
     <datasets name="timings">
       <items xsi:type="scave:Add" filterPattern="timeAssociated OR timeFirstAllocationSent OR timeLastAllocationSuccess"/>
       <items xsi:type="scave:BarChart" name="timings">
-        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-20150420-13:44:29-3452)"/>
+        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-*)"/>
         <properties name="Bar.Placement" value="InFront"/>
       </items>
     </datasets>
@@ -80,25 +80,34 @@
       <items xsi:type="scave:Add" filterPattern="allocated*GTS" type="VECTOR"/>
       <items xsi:type="scave:Add" filterPattern="gts*llocation" type="VECTOR"/>
       <items xsi:type="scave:Add" filterPattern="*GTSIdleCount" type="VECTOR"/>
+      <items xsi:type="scave:Add" filterPattern="gtsQueueAllocatedTx" type="VECTOR"/>
       <items xsi:type="scave:LineChart" name="multisuperframe gts allocation" lineNameFormat="">
-        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-20150420-13:44:29-3452) AND allocated* AND (module(*.host[18].*) OR module(*.host[6].*))" type="VECTOR"/>
+        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-*) AND allocated* AND (module(*.host[18].*) OR module(*.host[6].*))" type="VECTOR"/>
         <properties name="Graph.Title" value="multisuperframe gts allocation"/>
         <properties name="Symbols.Size" value="7"/>
         <properties name="Line.Type" value="Linear"/>
       </items>
       <items xsi:type="scave:LineChart" name="gts de-/allocation over simtime" lineNameFormat="">
-        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-20150420-13:44:29-3452) AND gts*llocation AND (module(*.host[18].*) OR module(*.host[6].*))" type="VECTOR"/>
+        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-*) AND gts*llocation AND (module(*.host[0].*) OR module(*.host[1..62].*))" type="VECTOR"/>
         <properties name="Graph.Title" value="gts de-/allocation over simtime"/>
         <properties name="Symbols.Size" value="8"/>
         <properties name="Line.Type" value="Dots"/>
       </items>
       <items xsi:type="scave:LineChart" name="gts idle count" lineNameFormat="">
-        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-20150420-13:44:29-3452) AND *GTSIdleCount" type="VECTOR"/>
+        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-*) AND *GTSIdleCount" type="VECTOR"/>
         <properties name="Graph.Title" value="gts idle count"/>
+      </items>
+      <items xsi:type="scave:LineChart" name="gtsQueueAllocatedTx" lineNameFormat="">
+        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-*) AND gtsQueueAllocatedTx" type="VECTOR"/>
+      </items>
+      <items xsi:type="scave:Add" filterPattern="num*x*Real"/>
+      <items xsi:type="scave:ComputeScalar" scalarName="numGtsAllocatedReal" valueExpr="'numTxGtsAllocatedReal' + 'numRxGtsAllocatedReal'" moduleExpr="" groupByExpr=""/>
+      <items xsi:type="scave:BarChart" name="gts allocated">
+        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-*) AND numGtsAllocatedReal"/>
       </items>
     </datasets>
   </datasets>
   <chartSheets>
-    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.4 //@datasets/@datasets.1/@items.5 //@datasets/@datasets.0/@items.6 //@datasets/@datasets.4/@items.1 //@datasets/@datasets.5/@items.1 //@datasets/@datasets.6/@items.3 //@datasets/@datasets.6/@items.4 //@datasets/@datasets.0/@items.7 //@datasets/@datasets.6/@items.5 //@datasets/@datasets.2/@items.3 //@datasets/@datasets.3/@items.2 //@datasets/@datasets.2/@items.7 //@datasets/@datasets.2/@items.5"/>
+    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.4 //@datasets/@datasets.1/@items.5 //@datasets/@datasets.0/@items.6 //@datasets/@datasets.4/@items.1 //@datasets/@datasets.5/@items.1 //@datasets/@datasets.6/@items.4 //@datasets/@datasets.6/@items.5 //@datasets/@datasets.0/@items.7 //@datasets/@datasets.6/@items.6 //@datasets/@datasets.2/@items.3 //@datasets/@datasets.3/@items.2 //@datasets/@datasets.2/@items.7 //@datasets/@datasets.2/@items.5 //@datasets/@datasets.6/@items.10 //@datasets/@datasets.6/@items.7"/>
   </chartSheets>
 </scave:Analysis>
