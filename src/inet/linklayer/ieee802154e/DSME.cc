@@ -187,7 +187,6 @@ void DSME::initialize(int stage)
         numCSMASlots = par("numCSMASlots").longValue();
         numMaxGTSAllocPerDevice = par("maxNumberGTSAllocPerDevice");
         numMaxGTSAllocPerRequest = par("maxNumberGTSAllocPerRequest");
-        std::cout << numMaxGTSAllocPerDevice << "/" << numMaxGTSAllocPerRequest << endl;
         maxGTSIdleCount = par("maxGTSIdleCount");
         baseSuperframeDuration = slotsPerSuperframe * baseSlotDuration;
         superframeDuration = slotDuration * slotsPerSuperframe;
