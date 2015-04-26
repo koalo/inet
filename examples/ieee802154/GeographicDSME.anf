@@ -63,7 +63,7 @@
         <properties name="Graph.Title" value="packetLoss"/>
         <properties name="Y.Axis.Min" value="0.0"/>
         <properties name="Y.Axis.Max" value="100.0"/>
-        <properties name="Bar.Placement" value="Stacked"/>
+        <properties name="Bar.Placement" value="Overlap"/>
       </items>
     </datasets>
     <datasets name="Beacon">

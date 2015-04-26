@@ -10,7 +10,7 @@ fi
 
 cd results
 
-scaFile=$(ls *"${1}".sca)
+scaFile=$(ls *"-${1}".sca)
 
 grep "trafficgen.*rcvdPk:group" "$scaFile" |\
  			sed 's/.*:host\[/scalar Net802154Geographic.host[/' |\
