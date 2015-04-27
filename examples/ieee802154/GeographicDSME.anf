@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <scave:Analysis xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:scave="http://www.omnetpp.org/omnetpp/scave">
   <inputs>
-    <inputs name="/inet/examples/ieee802154/results/GeographicDSME*0.sca"/>
+    <inputs name="/inet/examples/ieee802154/results/GeographicDSME*.sca"/>
   </inputs>
   <datasets>
     <datasets name="frames">
@@ -41,15 +41,37 @@
         <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-*) AND throughputSince*Allocation"/>
         <properties name="Graph.Title" value="throughputSinceAllocation"/>
       </items>
-      <items xsi:type="scave:ComputeScalar" scalarName="centerThroughputRx" valueExpr="'rcvdPk:count' / (timeLastRxGtsFrame - 90.1)" moduleExpr="" groupByExpr=""/>
+      <items xsi:type="scave:ComputeScalar" scalarName="centerThroughputRx" valueExpr="*.host[0].trafficgen.'rcvdPk:count' / (*.host[0].**.'timeLastRxGtsFrame' - 90.1)" moduleExpr="*.host[0].trafficgen" groupByExpr=""/>
       <items xsi:type="scave:ComputeScalar" scalarName="meanThroughputSinceLastAllocation" valueExpr="mean('throughputSinceLastAllocation')" moduleExpr="allHosts" groupByExpr=""/>
       <items xsi:type="scave:BarChart">
         <filters xsi:type="scave:Select" filterPattern="meanThroughputSinceLastAllocation"/>
       </items>
       <items xsi:type="scave:Add" filterPattern="sendInt OR maxGTS1"/>
       <items xsi:type="scave:ScatterChart" name="throughput" xDataPattern="module(.) AND name(sendInt)">
-        <filters xsi:type="scave:Select" filterPattern="sendInt OR (centerThroughputRx AND module(*.host[0].*) )"/>
+        <filters xsi:type="scave:Select" filterPattern="sendInt OR (centerThroughputRx )"/>
+        <properties name="Y.Axis.Min" value="0.0"/>
+        <properties name="Y.Axis.Max" value="50.0"/>
+        <properties name="X.Axis.Min" value="1.2"/>
+        <properties name="X.Axis.Max" value="2.0"/>
+        <isoDataPattern>maxGTS2(*)</isoDataPattern>
         <isoDataPattern>maxGTS1(*)</isoDataPattern>
+        <isoDataPattern>maxGTS4(*)</isoDataPattern>
+        <isoDataPattern>maxGTS5(*)</isoDataPattern>
+        <isoDataPattern>maxGTS7(*)</isoDataPattern>
+      </items>
+    </datasets>
+    <datasets name="latency">
+      <items xsi:type="scave:Add" filterPattern="sendInt OR (endToEndDelay:histogram:max AND module(*.host[0].trafficgen) )"/>
+      <items xsi:type="scave:ScatterChart" name="latency" xDataPattern="module(.) AND name(sendInt)">
+        <filters xsi:type="scave:Select" filterPattern="sendInt OR endToEndDelay:histogram:max"/>
+        <properties name="Graph.Title" value="latency"/>
+        <properties name="X.Axis.Min" value="1.2"/>
+        <properties name="X.Axis.Max" value="2.0"/>
+        <isoDataPattern>maxGTS2(*)</isoDataPattern>
+        <isoDataPattern>maxGTS1(*)</isoDataPattern>
+        <isoDataPattern>maxGTS4(*)</isoDataPattern>
+        <isoDataPattern>maxGTS5(*)</isoDataPattern>
+        <isoDataPattern>maxGTS7(*)</isoDataPattern>
       </items>
     </datasets>
     <datasets name="packetLoss">
@@ -127,6 +149,6 @@
     </datasets>
   </datasets>
   <chartSheets>
-    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.4 //@datasets/@datasets.1/@items.5 //@datasets/@datasets.0/@items.6 //@datasets/@datasets.4/@items.1 //@datasets/@datasets.5/@items.1 //@datasets/@datasets.6/@items.4 //@datasets/@datasets.6/@items.5 //@datasets/@datasets.0/@items.7 //@datasets/@datasets.6/@items.6 //@datasets/@datasets.2/@items.3 //@datasets/@datasets.3/@items.7 //@datasets/@datasets.2/@items.8 //@datasets/@datasets.2/@items.6 //@datasets/@datasets.6/@items.10 //@datasets/@datasets.6/@items.7 //@datasets/@datasets.3/@items.6"/>
+    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.4 //@datasets/@datasets.1/@items.5 //@datasets/@datasets.0/@items.6 //@datasets/@datasets.5/@items.1 //@datasets/@datasets.6/@items.1 //@datasets/@datasets.7/@items.4 //@datasets/@datasets.7/@items.5 //@datasets/@datasets.0/@items.7 //@datasets/@datasets.7/@items.6 //@datasets/@datasets.2/@items.3 //@datasets/@datasets.4/@items.7 //@datasets/@datasets.2/@items.8 //@datasets/@datasets.2/@items.6 //@datasets/@datasets.7/@items.10 //@datasets/@datasets.7/@items.7 //@datasets/@datasets.4/@items.6 //@datasets/@datasets.3/@items.1"/>
   </chartSheets>
 </scave:Analysis>
