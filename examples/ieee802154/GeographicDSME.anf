@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <scave:Analysis xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:scave="http://www.omnetpp.org/omnetpp/scave">
   <inputs>
-    <inputs name="/inet/examples/ieee802154/results/GeographicDSME-*.vec"/>
-    <inputs name="/inet/examples/ieee802154/results/GeographicDSME-*.sca"/>
+    <inputs name="/inet/examples/ieee802154/results/GeographicDSME*0.sca"/>
   </inputs>
   <datasets>
     <datasets name="frames">
@@ -35,29 +34,44 @@
       </items>
     </datasets>
     <datasets name="throughput" basedOn="//@datasets/@datasets.0">
-      <items xsi:type="scave:Add" filterPattern="time*"/>
+      <items xsi:type="scave:Add" filterPattern="rcvdPk:count OR time*"/>
       <items xsi:type="scave:ComputeScalar" scalarName="throughputSinceFirstAllocation" valueExpr="('numTxGtsFrames' >0) ? 'numTxGtsFrames' / (timeLastTxGtsFrame - timeFirstAllocationSent) : 0" moduleExpr="" groupByExpr=""/>
       <items xsi:type="scave:ComputeScalar" scalarName="throughputSinceLastAllocation" valueExpr="('numTxGtsFramesSinceLastAlloc'>0) ? 'numTxGtsFramesSinceLastAlloc' / (timeLastTxGtsFrame - timeLastAllocationSuccess) : 0" moduleExpr="" groupByExpr=""/>
       <items xsi:type="scave:BarChart" name="throughput Since Allocation">
         <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-*) AND throughputSince*Allocation"/>
         <properties name="Graph.Title" value="throughputSinceAllocation"/>
       </items>
+      <items xsi:type="scave:ComputeScalar" scalarName="centerThroughputRx" valueExpr="'rcvdPk:count' / (timeLastRxGtsFrame - 90.1)" moduleExpr="" groupByExpr=""/>
       <items xsi:type="scave:ComputeScalar" scalarName="meanThroughputSinceLastAllocation" valueExpr="mean('throughputSinceLastAllocation')" moduleExpr="allHosts" groupByExpr=""/>
       <items xsi:type="scave:BarChart">
         <filters xsi:type="scave:Select" filterPattern="meanThroughputSinceLastAllocation"/>
       </items>
-      <items xsi:type="scave:Add" filterPattern="n"/>
-      <items xsi:type="scave:ScatterChart" name="throughput" xDataPattern="module(.) AND name(n)">
-        <filters xsi:type="scave:Select" filterPattern="n OR meanThroughputSinceLastAllocation"/>
-        <isoDataPattern>n(*)</isoDataPattern>
-        <isoDataPattern>attr:experiment(*)</isoDataPattern>
+      <items xsi:type="scave:Add" filterPattern="sendInt OR maxGTS1"/>
+      <items xsi:type="scave:ScatterChart" name="throughput" xDataPattern="module(.) AND name(sendInt)">
+        <filters xsi:type="scave:Select" filterPattern="sendInt OR (centerThroughputRx AND module(*.host[0].*) )"/>
+        <isoDataPattern>maxGTS1(*)</isoDataPattern>
       </items>
     </datasets>
     <datasets name="packetLoss">
-      <items xsi:type="scave:Add" filterPattern="run(GeographicDSME-*-*) AND module(*.trafficgen) AND (sentPk:count OR destRcvdPk)"/>
+      <items xsi:type="scave:Add" filterPattern="sendInt OR maxGTS1"/>
+      <items xsi:type="scave:Add" filterPattern="run(Geographic*-*-*) AND module(*.trafficgen) AND (sentPk:count OR destRcvdPk)"/>
       <items xsi:type="scave:ComputeScalar" scalarName="packetLoss" valueExpr="100 - 100 * destRcvdPk / 'sentPk:count'" moduleExpr="" groupByExpr=""/>
       <items xsi:type="scave:ComputeScalar" scalarName="reliability" valueExpr="100 * destRcvdPk / 'sentPk:count'" moduleExpr="" groupByExpr=""/>
-      <items xsi:type="scave:ComputeScalar" scalarName="meanPacketLoss" valueExpr="mean(packetLoss)" moduleExpr="allHosts" groupByExpr=""/>
+      <items xsi:type="scave:ComputeScalar" scalarName="maxPacketLoss" valueExpr="max(packetLoss)" moduleExpr="allHosts" groupByExpr=""/>
+      <items xsi:type="scave:ComputeScalar" scalarName="meanPacketLoss" valueExpr="mean(packetLoss)" moduleExpr="allHosts" groupByExpr="" averageReplications="true" computeMinMax="true"/>
+      <items xsi:type="scave:ScatterChart" name="packetLoss" xDataPattern="module(.) AND name(sendInt)">
+        <filters xsi:type="scave:Select" filterPattern="maxPacketLoss OR sendInt"/>
+        <properties name="Graph.Title" value="packetLoss"/>
+        <properties name="Y.Axis.Min" value="0.0"/>
+        <properties name="Y.Axis.Max" value="75.0"/>
+        <properties name="X.Axis.Min" value="1.2"/>
+        <properties name="X.Axis.Max" value="2.0"/>
+        <isoDataPattern>maxGTS2(*)</isoDataPattern>
+        <isoDataPattern>maxGTS1(*)</isoDataPattern>
+        <isoDataPattern>maxGTS4(*)</isoDataPattern>
+        <isoDataPattern>maxGTS5(*)</isoDataPattern>
+        <isoDataPattern>maxGTS7(*)</isoDataPattern>
+      </items>
       <items xsi:type="scave:BarChart" name="packetLoss">
         <filters xsi:type="scave:Select" filterPattern="packetLoss"/>
         <properties name="Graph.Title" value="packetLoss"/>
@@ -113,6 +127,6 @@
     </datasets>
   </datasets>
   <chartSheets>
-    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.4 //@datasets/@datasets.1/@items.5 //@datasets/@datasets.0/@items.6 //@datasets/@datasets.4/@items.1 //@datasets/@datasets.5/@items.1 //@datasets/@datasets.6/@items.4 //@datasets/@datasets.6/@items.5 //@datasets/@datasets.0/@items.7 //@datasets/@datasets.6/@items.6 //@datasets/@datasets.2/@items.3 //@datasets/@datasets.3/@items.4 //@datasets/@datasets.2/@items.7 //@datasets/@datasets.2/@items.5 //@datasets/@datasets.6/@items.10 //@datasets/@datasets.6/@items.7"/>
+    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.4 //@datasets/@datasets.1/@items.5 //@datasets/@datasets.0/@items.6 //@datasets/@datasets.4/@items.1 //@datasets/@datasets.5/@items.1 //@datasets/@datasets.6/@items.4 //@datasets/@datasets.6/@items.5 //@datasets/@datasets.0/@items.7 //@datasets/@datasets.6/@items.6 //@datasets/@datasets.2/@items.3 //@datasets/@datasets.3/@items.7 //@datasets/@datasets.2/@items.8 //@datasets/@datasets.2/@items.6 //@datasets/@datasets.6/@items.10 //@datasets/@datasets.6/@items.7 //@datasets/@datasets.3/@items.6"/>
   </chartSheets>
 </scave:Analysis>

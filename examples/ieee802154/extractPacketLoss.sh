@@ -2,15 +2,23 @@
 
 if [ "$#" -lt 1 ]
 	then
-	echo $0 run-id
+	echo $0 [prefix = "-"] run-id
 	exit
 fi
 
-#numPackets=100
+prefix="-"
+scaId=$1
+if [ "$#" -gt 1 ]
+	then
+	prefix=$1
+  scaId=$2
+fi
 
 cd results
 
-scaFile=$(ls *"-${1}".sca)
+scaFile=$(ls *"${prefix}${scaId}".sca)
+
+echo $scaFile
 
 grep "trafficgen.*rcvdPk:group" "$scaFile" |\
  			sed 's/.*:host\[/scalar Net802154Geographic.host[/' |\
