@@ -34,19 +34,22 @@
       </items>
     </datasets>
     <datasets name="throughput" basedOn="//@datasets/@datasets.0">
-      <items xsi:type="scave:Add" filterPattern="rcvdPk:count OR time*"/>
+      <items xsi:type="scave:Add" filterPattern="time*"/>
       <items xsi:type="scave:ComputeScalar" scalarName="throughputSinceFirstAllocation" valueExpr="('numTxGtsFrames' >0) ? 'numTxGtsFrames' / (timeLastTxGtsFrame - timeFirstAllocationSent) : 0" moduleExpr="" groupByExpr=""/>
       <items xsi:type="scave:ComputeScalar" scalarName="throughputSinceLastAllocation" valueExpr="('numTxGtsFramesSinceLastAlloc'>0) ? 'numTxGtsFramesSinceLastAlloc' / (timeLastTxGtsFrame - timeLastAllocationSuccess) : 0" moduleExpr="" groupByExpr=""/>
       <items xsi:type="scave:BarChart" name="throughput Since Allocation">
         <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-*) AND throughputSince*Allocation"/>
         <properties name="Graph.Title" value="throughputSinceAllocation"/>
       </items>
-      <items xsi:type="scave:ComputeScalar" scalarName="centerThroughputRx" valueExpr="*.host[0].trafficgen.'rcvdPk:count' / (*.host[0].**.'timeLastRxGtsFrame' - 90.1)" moduleExpr="*.host[0].trafficgen" groupByExpr=""/>
       <items xsi:type="scave:ComputeScalar" scalarName="meanThroughputSinceLastAllocation" valueExpr="mean('throughputSinceLastAllocation')" moduleExpr="allHosts" groupByExpr=""/>
       <items xsi:type="scave:BarChart">
         <filters xsi:type="scave:Select" filterPattern="meanThroughputSinceLastAllocation"/>
       </items>
+    </datasets>
+    <datasets name="center throughput RX">
+      <items xsi:type="scave:Add" filterPattern="rcvdPk:count OR timeLastRxGtsFrame"/>
       <items xsi:type="scave:Add" filterPattern="sendInt OR maxGTS1"/>
+      <items xsi:type="scave:ComputeScalar" scalarName="centerThroughputRx" valueExpr="*.host[0].trafficgen.'rcvdPk:count' / (*.host[0].**.'timeLastRxGtsFrame' - 90.1)" moduleExpr="*.host[0].trafficgen" groupByExpr=""/>
       <items xsi:type="scave:ScatterChart" name="throughput" xDataPattern="module(.) AND name(sendInt)">
         <filters xsi:type="scave:Select" filterPattern="sendInt OR (centerThroughputRx )"/>
         <properties name="Y.Axis.Min" value="0.0"/>
@@ -149,6 +152,6 @@
     </datasets>
   </datasets>
   <chartSheets>
-    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.4 //@datasets/@datasets.1/@items.5 //@datasets/@datasets.0/@items.6 //@datasets/@datasets.5/@items.1 //@datasets/@datasets.6/@items.1 //@datasets/@datasets.7/@items.4 //@datasets/@datasets.7/@items.5 //@datasets/@datasets.0/@items.7 //@datasets/@datasets.7/@items.6 //@datasets/@datasets.2/@items.3 //@datasets/@datasets.4/@items.7 //@datasets/@datasets.2/@items.8 //@datasets/@datasets.2/@items.6 //@datasets/@datasets.7/@items.10 //@datasets/@datasets.7/@items.7 //@datasets/@datasets.4/@items.6 //@datasets/@datasets.3/@items.1"/>
+    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.4 //@datasets/@datasets.1/@items.5 //@datasets/@datasets.0/@items.6 //@datasets/@datasets.6/@items.1 //@datasets/@datasets.7/@items.1 //@datasets/@datasets.8/@items.4 //@datasets/@datasets.8/@items.5 //@datasets/@datasets.0/@items.7 //@datasets/@datasets.8/@items.6 //@datasets/@datasets.2/@items.3 //@datasets/@datasets.5/@items.7 //@datasets/@datasets.8/@items.10 //@datasets/@datasets.8/@items.7 //@datasets/@datasets.5/@items.6 //@datasets/@datasets.4/@items.1"/>
   </chartSheets>
 </scave:Analysis>
