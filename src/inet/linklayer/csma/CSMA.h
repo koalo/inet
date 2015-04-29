@@ -128,6 +128,7 @@ class INET_API CSMA : public MACProtocolBase, public IMACProtocol
     long nbDuplicates;
     long nbBackoffs;
     double backoffValues;
+    simtime_t timeLastRxFrame;
     /*@}*/
 
     /** @brief MAC states

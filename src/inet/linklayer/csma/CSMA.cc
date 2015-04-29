@@ -58,6 +58,7 @@ void CSMA::initialize(int stage)
         nbDuplicates = 0;
         nbBackoffs = 0;
         backoffValues = 0;
+        timeLastRxFrame = 0.0;
         macMaxCSMABackoffs = par("macMaxCSMABackoffs");
         macMaxFrameRetries = par("macMaxFrameRetries");
         macAckWaitDuration = par("macAckWaitDuration").doubleValue();
@@ -148,6 +149,7 @@ void CSMA::finish()
     }
     recordScalar("nbBackoffs", nbBackoffs);
     recordScalar("backoffDurations", backoffValues);
+    recordScalar("timeLastRxCsmaFrame", timeLastRxFrame);
 }
 
 CSMA::~CSMA()
@@ -276,6 +278,7 @@ void CSMA::updateStatusIdle(t_mac_event event, cMessage *msg)
             EV_DETAIL << "(15) FSM State IDLE_1, EV_FRAME_RECEIVED: setting up radio tx -> WAITSIFS." << endl;
             sendUp(decapsMsg(static_cast<CSMAFrame *>(msg)));
             nbRxFrames++;
+            timeLastRxFrame = simTime();
             delete msg;
 
             if (useMACAcks) {
