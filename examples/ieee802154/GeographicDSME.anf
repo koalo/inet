@@ -48,9 +48,9 @@
     </datasets>
     <datasets name="center throughput RX">
       <items xsi:type="scave:Add" filterPattern="rcvdPk:count OR timeLastRxGtsFrame OR timeLastRxCsmaFrame"/>
-      <items xsi:type="scave:Add" filterPattern="sendInt OR maxGTS1"/>
+      <items xsi:type="scave:Add" filterPattern="sendInt OR maxGTS1 OR trafficStart"/>
       <items xsi:type="scave:ComputeScalar" scalarName="centerThroughputRxCSMA" valueExpr="*.host[0].trafficgen.'rcvdPk:count' / (*.host[0].**.'timeLastRxCsmaFrame' - 1)" moduleExpr="*.host[0].trafficgen" groupByExpr=""/>
-      <items xsi:type="scave:ComputeScalar" scalarName="centerThroughputRxDSME" valueExpr="*.host[0].trafficgen.'rcvdPk:count' / (*.host[0].**.'timeLastRxGtsFrame' - 90.1)" moduleExpr="*.host[0].trafficgen" groupByExpr=""/>
+      <items xsi:type="scave:ComputeScalar" scalarName="centerThroughputRxDSME" valueExpr="*.host[0].trafficgen.'rcvdPk:count' / (*.host[0].**.'timeLastRxGtsFrame' - trafficStart-0.01)" moduleExpr="*.host[0].trafficgen" groupByExpr=""/>
       <items xsi:type="scave:ScatterChart" name="throughput" xDataPattern="module(.) AND name(sendInt)">
         <filters xsi:type="scave:Select" filterPattern="sendInt OR (centerThroughputRxDSME OR centerThroughputRxCSMA)"/>
         <properties name="Y.Axis.Min" value="0.0"/>
