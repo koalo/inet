@@ -93,13 +93,13 @@
         <properties name="Graph.Title" value="packetLoss"/>
         <properties name="Y.Axis.Min" value="0.0"/>
         <properties name="Y.Axis.Max" value="75.0"/>
-        <properties name="X.Axis.Min" value="1.2"/>
+        <properties name="X.Axis.Min" value="0.0"/>
         <properties name="X.Axis.Max" value="2.0"/>
         <isoDataPattern>maxGTS2(*)</isoDataPattern>
         <isoDataPattern>maxGTS1(*)</isoDataPattern>
+        <isoDataPattern>maxGTS7(*)</isoDataPattern>
         <isoDataPattern>maxGTS4(*)</isoDataPattern>
         <isoDataPattern>maxGTS5(*)</isoDataPattern>
-        <isoDataPattern>maxGTS7(*)</isoDataPattern>
       </items>
       <items xsi:type="scave:BarChart" name="packetLoss">
         <filters xsi:type="scave:Select" filterPattern="packetLoss"/>
