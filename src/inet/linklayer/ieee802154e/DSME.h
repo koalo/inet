@@ -182,6 +182,8 @@ protected:
     cOutVector gtsDeallocation;
     /*@}*/
 
+    bool recordGtsUpdates;
+
     /**
      * Called after BeaconInterval
      * May trigger another scan on some channel if no becons were heard.

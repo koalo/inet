@@ -161,6 +161,8 @@ void DSME::initialize(int stage)
         gtsAllocation.setName("gtsAllocation");
         gtsDeallocation.setName("gtsDeallocation");
 
+        recordGtsUpdates = par("recordGtsUpdates").boolValue();
+
         if (par("saveGtsAllocationStatsAt").doubleValue() > 0.0)
             scheduleAt(simtime_t(par("saveGtsAllocationStatsAt").doubleValue()), new cMessage("saveGtsAllocationStatsAt"));
         if (par("setupPhaseLength").doubleValue() > 0.0)
@@ -776,7 +778,8 @@ void DSME::updateAllocatedGTS(DSME_SAB_Specification& sabSpec, bool direction, M
                 numRxGtsAllocated++;
             else
                 numTxGtsAllocated++;
-            gtsAllocation.record(gts->superframeID*numGTSlots*numChannels + gts->slotID * numChannels + gts->channel);
+            if (recordGtsUpdates)
+                gtsAllocation.record(gts->superframeID*numGTSlots*numChannels + gts->slotID * numChannels + gts->channel);
         } else {
             EV << " already allocated! ";
             sabSpec.subBlock.setBit(occupiedGTSs.getSubBlockIndex(*gts), false);
@@ -796,7 +799,8 @@ void DSME::removeAllocatedGTS(std::list<GTS>& gtss) {
             EV << "=" << uniqueSlotId-gts->channel + allocatedGTSs[gts->superframeID][gts->slotID].channel << endl;
             // Statistic
             numGtsDeallocated++;
-            gtsDeallocation.record(uniqueSlotId);
+            if (recordGtsUpdates)
+                gtsDeallocation.record(uniqueSlotId);
         } else {
             EV_WARN << "DSME: tried to remove Slot with different channel!" << endl;
         }

@@ -54,6 +54,8 @@ simple DSME extends CSMA
     	// statistics
     	double saveGtsAllocationStatsAt @unit("s") = default(0.0s);	// store current gts allocation at givven time or at finish if 0
         
+        bool recordGtsUpdates = default(false);
+        
     	@class(DSME);
     
 }

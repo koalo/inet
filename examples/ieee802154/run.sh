@@ -1,9 +1,9 @@
 #!/bin/bash
 
-opp_run -r 0..11 -u Cmdenv -c GeographicDSME -n ..:../../src -l ../../src/INET -f omnetpp.ini >/dev/null &
-opp_run -r 12..23 -u Cmdenv -c GeographicDSME -n ..:../../src -l ../../src/INET -f omnetpp.ini >/dev/null &
-opp_run -r 24..35 -u Cmdenv -c GeographicDSME -n ..:../../src -l ../../src/INET -f omnetpp.ini >/dev/null &
-opp_run -r 36..47 -u Cmdenv -c GeographicDSME -n ..:../../src -l ../../src/INET -f omnetpp.ini >/dev/null &
+opp_run -r 0..55 -u Cmdenv -c GeographicDSME -n ..:../../src -l ../../src/INET -f omnetpp.ini >/dev/null &
+opp_run -r 56..127 -u Cmdenv -c GeographicDSME -n ..:../../src -l ../../src/INET -f omnetpp.ini >/dev/null &
+opp_run -r 128..167 -u Cmdenv -c GeographicDSME -n ..:../../src -l ../../src/INET -f omnetpp.ini >/dev/null &
+#opp_run -r 36..47 -u Cmdenv -c GeographicDSME -n ..:../../src -l ../../src/INET -f omnetpp.ini >/dev/null &
 
 
 exit
