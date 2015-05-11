@@ -56,15 +56,16 @@
         <properties name="Y.Axis.Min" value="0.0"/>
         <properties name="Y.Axis.Max" value="50.0"/>
         <properties name="X.Axis.Min" value="1.2"/>
-        <properties name="X.Axis.Max" value="2.0"/>
+        <properties name="X.Axis.Max" value="2.7"/>
         <properties name="Line.Color/*.host[0].trafficgen centerThroughputRxCSMA -     " value="red"/>
         <properties name="Line.Color/*.host[0].trafficgen centerThroughputRxDSME - maxGTS2=7 maxGTS1=10 maxGTS4=8 maxGTS5=7 maxGTS7=4" value="blue"/>
         <properties name="Line.Color/*.host[0].trafficgen centerThroughputRxDSME - maxGTS2=7 maxGTS1=10 maxGTS7=4 maxGTS4=8 maxGTS5=7" value="blue"/>
+        <isoDataPattern>queueLength(*)</isoDataPattern>
         <isoDataPattern>maxGTS2(*)</isoDataPattern>
         <isoDataPattern>maxGTS1(*)</isoDataPattern>
-        <isoDataPattern>maxGTS7(*)</isoDataPattern>
         <isoDataPattern>maxGTS4(*)</isoDataPattern>
         <isoDataPattern>maxGTS5(*)</isoDataPattern>
+        <isoDataPattern>maxGTS7(*)</isoDataPattern>
       </items>
     </datasets>
     <datasets name="latency">
@@ -73,7 +74,8 @@
         <filters xsi:type="scave:Select" filterPattern="sendInt OR endToEndDelay:histogram:max"/>
         <properties name="Graph.Title" value="latency"/>
         <properties name="X.Axis.Min" value="1.2"/>
-        <properties name="X.Axis.Max" value="2.0"/>
+        <properties name="X.Axis.Max" value="2.7"/>
+        <isoDataPattern>queueLength(*)</isoDataPattern>
         <isoDataPattern>maxGTS2(*)</isoDataPattern>
         <isoDataPattern>maxGTS1(*)</isoDataPattern>
         <isoDataPattern>maxGTS4(*)</isoDataPattern>
@@ -91,10 +93,11 @@
       <items xsi:type="scave:ScatterChart" name="packetLoss" xDataPattern="module(.) AND name(sendInt)">
         <filters xsi:type="scave:Select" filterPattern="maxPacketLoss OR sendInt"/>
         <properties name="Graph.Title" value="packetLoss"/>
-        <properties name="Y.Axis.Min" value="0.0"/>
+        <properties name="Y.Axis.Min" value="-10.0"/>
         <properties name="Y.Axis.Max" value="75.0"/>
-        <properties name="X.Axis.Min" value="0.0"/>
+        <properties name="X.Axis.Min" value="1.0"/>
         <properties name="X.Axis.Max" value="2.7"/>
+        <isoDataPattern>queueLength(*)</isoDataPattern>
         <isoDataPattern>maxGTS2(*)</isoDataPattern>
         <isoDataPattern>maxGTS1(*)</isoDataPattern>
         <isoDataPattern>maxGTS4(*)</isoDataPattern>
