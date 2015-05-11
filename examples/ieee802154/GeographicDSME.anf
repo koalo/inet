@@ -53,19 +53,42 @@
       <items xsi:type="scave:ComputeScalar" scalarName="centerThroughputRxDSME" valueExpr="*.host[0].trafficgen.'rcvdPk:count' / (*.host[0].**.'timeLastRxGtsFrame' - trafficStart-0.01)" moduleExpr="*.host[0].trafficgen" groupByExpr=""/>
       <items xsi:type="scave:ScatterChart" name="throughput" xDataPattern="module(.) AND name(sendInt)">
         <filters xsi:type="scave:Select" filterPattern="sendInt OR (centerThroughputRxDSME OR centerThroughputRxCSMA)"/>
-        <properties name="Y.Axis.Min" value="0.0"/>
-        <properties name="Y.Axis.Max" value="50.0"/>
+        <properties name="Y.Axis.Min" value="19.0"/>
+        <properties name="Y.Axis.Max" value="38.0"/>
         <properties name="X.Axis.Min" value="1.2"/>
-        <properties name="X.Axis.Max" value="2.7"/>
-        <properties name="Line.Color/*.host[0].trafficgen centerThroughputRxCSMA -     " value="red"/>
-        <properties name="Line.Color/*.host[0].trafficgen centerThroughputRxDSME - maxGTS2=7 maxGTS1=10 maxGTS4=8 maxGTS5=7 maxGTS7=4" value="blue"/>
-        <properties name="Line.Color/*.host[0].trafficgen centerThroughputRxDSME - maxGTS2=7 maxGTS1=10 maxGTS7=4 maxGTS4=8 maxGTS5=7" value="blue"/>
-        <isoDataPattern>queueLength(*)</isoDataPattern>
+        <properties name="X.Axis.Max" value="2.6"/>
+        <properties name="Symbols.Type/*.host[0].trafficgen centerThroughputRxCSMA -      " value="Triangle"/>
+        <properties name="Symbols.Size/*.host[0].trafficgen centerThroughputRxCSMA -      " value="6"/>
+        <properties name="Line.Color/*.host[0].trafficgen centerThroughputRxCSMA -      " value="black"/>
+        <properties name="Line.Display/*.host[0].trafficgen centerThroughputRxCSMA - maxGTS2=6 maxGTS1=9 maxGTS7=3 maxGTS4=7 maxGTS5=6 queueLength=25" value="false"/>
+        <properties name="Line.Display/*.host[0].trafficgen centerThroughputRxCSMA - maxGTS2=6 maxGTS1=9 maxGTS7=3 maxGTS4=7 maxGTS5=6 queueLength=56" value="false"/>
+        <properties name="Line.Display/*.host[0].trafficgen centerThroughputRxCSMA - maxGTS2=7 maxGTS1=10 maxGTS7=4 maxGTS4=8 maxGTS5=7 queueLength=25" value="false"/>
+        <properties name="Line.Display/*.host[0].trafficgen centerThroughputRxCSMA - maxGTS2=7 maxGTS1=10 maxGTS7=4 maxGTS4=8 maxGTS5=7 queueLength=56" value="false"/>
+        <properties name="Line.Display/*.host[0].trafficgen centerThroughputRxCSMA - maxGTS2=8 maxGTS1=10 maxGTS7=5 maxGTS4=9 maxGTS5=8 queueLength=25" value="false"/>
+        <properties name="Line.Display/*.host[0].trafficgen centerThroughputRxCSMA - maxGTS2=8 maxGTS1=10 maxGTS7=5 maxGTS4=9 maxGTS5=8 queueLength=56" value="false"/>
+        <properties name="Line.Display/*.host[0].trafficgen centerThroughputRxCSMA - maxGTS2=100 maxGTS1=100 maxGTS7=100 maxGTS4=100 maxGTS5=100 queueLength=25" value="false"/>
+        <properties name="Line.Display/*.host[0].trafficgen centerThroughputRxCSMA - maxGTS2=100 maxGTS1=100 maxGTS7=100 maxGTS4=100 maxGTS5=100 queueLength=56" value="false"/>
+        <properties name="Line.Color/*.host[0].trafficgen centerThroughputRxDSME - maxGTS2=6 maxGTS1=9 maxGTS7=3 maxGTS4=7 maxGTS5=6 queueLength=25" value="#008080"/>
+        <properties name="Line.Color/*.host[0].trafficgen centerThroughputRxDSME - maxGTS2=6 maxGTS1=9 maxGTS7=3 maxGTS4=7 maxGTS5=6 queueLength=56" value="#008080"/>
+        <properties name="Symbols.Type/*.host[0].trafficgen centerThroughputRxDSME - maxGTS2=6 maxGTS1=9 maxGTS7=3 maxGTS4=7 maxGTS5=6 queueLength=56" value="Square"/>
+        <properties name="Line.Color/*.host[0].trafficgen centerThroughputRxDSME - maxGTS2=7 maxGTS1=10 maxGTS7=4 maxGTS4=8 maxGTS5=7 queueLength=25" value="cyan"/>
+        <properties name="Symbols.Type/*.host[0].trafficgen centerThroughputRxDSME - maxGTS2=7 maxGTS1=10 maxGTS7=4 maxGTS4=8 maxGTS5=7 queueLength=25" value="Triangle"/>
+        <properties name="Symbols.Type/*.host[0].trafficgen centerThroughputRxDSME - maxGTS2=7 maxGTS1=10 maxGTS7=4 maxGTS4=8 maxGTS5=7 queueLength=56" value="Square"/>
+        <properties name="Line.Color/*.host[0].trafficgen centerThroughputRxDSME - maxGTS2=7 maxGTS1=10 maxGTS7=4 maxGTS4=8 maxGTS5=7 queueLength=56" value="cyan"/>
+        <properties name="Symbols.Type/*.host[0].trafficgen centerThroughputRxDSME - maxGTS2=8 maxGTS1=10 maxGTS7=5 maxGTS4=9 maxGTS5=8 queueLength=25" value="Diamond"/>
+        <properties name="Line.Color/*.host[0].trafficgen centerThroughputRxDSME - maxGTS2=8 maxGTS1=10 maxGTS7=5 maxGTS4=9 maxGTS5=8 queueLength=25" value="blue4"/>
+        <properties name="Symbols.Type/*.host[0].trafficgen centerThroughputRxDSME - maxGTS2=8 maxGTS1=10 maxGTS7=5 maxGTS4=9 maxGTS5=8 queueLength=56" value="Square"/>
+        <properties name="Line.Color/*.host[0].trafficgen centerThroughputRxDSME - maxGTS2=8 maxGTS1=10 maxGTS7=5 maxGTS4=9 maxGTS5=8 queueLength=56" value="blue4"/>
+        <properties name="Symbols.Type/*.host[0].trafficgen centerThroughputRxDSME - maxGTS2=100 maxGTS1=100 maxGTS7=100 maxGTS4=100 maxGTS5=100 queueLength=25" value="Dot"/>
+        <properties name="Line.Color/*.host[0].trafficgen centerThroughputRxDSME - maxGTS2=100 maxGTS1=100 maxGTS7=100 maxGTS4=100 maxGTS5=100 queueLength=25" value="red"/>
+        <properties name="Symbols.Type/*.host[0].trafficgen centerThroughputRxDSME - maxGTS2=100 maxGTS1=100 maxGTS7=100 maxGTS4=100 maxGTS5=100 queueLength=56" value="Square"/>
+        <properties name="Line.Color/*.host[0].trafficgen centerThroughputRxDSME - maxGTS2=100 maxGTS1=100 maxGTS7=100 maxGTS4=100 maxGTS5=100 queueLength=56" value="red"/>
         <isoDataPattern>maxGTS2(*)</isoDataPattern>
         <isoDataPattern>maxGTS1(*)</isoDataPattern>
+        <isoDataPattern>maxGTS7(*)</isoDataPattern>
         <isoDataPattern>maxGTS4(*)</isoDataPattern>
         <isoDataPattern>maxGTS5(*)</isoDataPattern>
-        <isoDataPattern>maxGTS7(*)</isoDataPattern>
+        <isoDataPattern>queueLength(*)</isoDataPattern>
       </items>
     </datasets>
     <datasets name="latency">
@@ -74,13 +97,15 @@
         <filters xsi:type="scave:Select" filterPattern="sendInt OR endToEndDelay:histogram:max"/>
         <properties name="Graph.Title" value="latency"/>
         <properties name="X.Axis.Min" value="1.2"/>
-        <properties name="X.Axis.Max" value="2.7"/>
-        <isoDataPattern>queueLength(*)</isoDataPattern>
+        <properties name="X.Axis.Max" value="2.6"/>
+        <properties name="Symbols.Size/Net802154Geographic.host[0].trafficgen endToEndDelay:histogram:max -      " value="6"/>
+        <properties name="Line.Color/Net802154Geographic.host[0].trafficgen endToEndDelay:histogram:max -      " value="black"/>
         <isoDataPattern>maxGTS2(*)</isoDataPattern>
         <isoDataPattern>maxGTS1(*)</isoDataPattern>
+        <isoDataPattern>maxGTS7(*)</isoDataPattern>
         <isoDataPattern>maxGTS4(*)</isoDataPattern>
         <isoDataPattern>maxGTS5(*)</isoDataPattern>
-        <isoDataPattern>maxGTS7(*)</isoDataPattern>
+        <isoDataPattern>queueLength(*)</isoDataPattern>
       </items>
     </datasets>
     <datasets name="packetLoss">
@@ -93,19 +118,22 @@
       <items xsi:type="scave:ScatterChart" name="packetLoss" xDataPattern="module(.) AND name(sendInt)">
         <filters xsi:type="scave:Select" filterPattern="maxPacketLoss OR sendInt"/>
         <properties name="Graph.Title" value="packetLoss"/>
-        <properties name="Y.Axis.Min" value="-10.0"/>
-        <properties name="Y.Axis.Max" value="75.0"/>
-        <properties name="X.Axis.Min" value="1.0"/>
-        <properties name="X.Axis.Max" value="2.7"/>
-        <isoDataPattern>queueLength(*)</isoDataPattern>
+        <properties name="Y.Axis.Min" value="-2.0"/>
+        <properties name="Y.Axis.Max" value="60.0"/>
+        <properties name="X.Axis.Min" value="1.2"/>
+        <properties name="X.Axis.Max" value="2.6"/>
+        <properties name="Symbols.Size/allHosts maxPacketLoss -      " value="6"/>
+        <properties name="Line.Color/allHosts maxPacketLoss -      " value="black"/>
+        <properties name="Line.Name/allHosts maxPacketLoss -      " value="CSMA"/>
         <isoDataPattern>maxGTS2(*)</isoDataPattern>
         <isoDataPattern>maxGTS1(*)</isoDataPattern>
+        <isoDataPattern>maxGTS7(*)</isoDataPattern>
         <isoDataPattern>maxGTS4(*)</isoDataPattern>
         <isoDataPattern>maxGTS5(*)</isoDataPattern>
-        <isoDataPattern>maxGTS7(*)</isoDataPattern>
+        <isoDataPattern>queueLength(*)</isoDataPattern>
       </items>
       <items xsi:type="scave:BarChart" name="packetLoss">
-        <filters xsi:type="scave:Select" filterPattern="packetLoss"/>
+        <filters xsi:type="scave:Select" filterPattern="packetLoss AND run(GeographicDSME-3-*) "/>
         <properties name="Graph.Title" value="packetLoss"/>
         <properties name="Y.Axis.Min" value="0.0"/>
         <properties name="Y.Axis.Max" value="100.0"/>
@@ -123,8 +151,16 @@
     <datasets name="timings">
       <items xsi:type="scave:Add" filterPattern="timeAssociated OR timeFirstAllocationSent OR timeLastAllocationSuccess"/>
       <items xsi:type="scave:BarChart" name="timings">
-        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-*)"/>
+        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-88-*)"/>
+        <properties name="Y.Axis.Min" value="0.0"/>
+        <properties name="Y.Axis.Max" value="50.0"/>
         <properties name="Bar.Placement" value="InFront"/>
+      </items>
+    </datasets>
+    <datasets name="queue">
+      <items xsi:type="scave:Add" filterPattern="queue*Fill"/>
+      <items xsi:type="scave:BarChart" name="queueFill">
+        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-3-*)"/>
       </items>
     </datasets>
     <datasets name="gtsAllocation">
@@ -154,11 +190,11 @@
       <items xsi:type="scave:Add" filterPattern="num*x*Real"/>
       <items xsi:type="scave:ComputeScalar" scalarName="numGtsAllocatedReal" valueExpr="'numTxGtsAllocatedReal' + 'numRxGtsAllocatedReal'" moduleExpr="" groupByExpr=""/>
       <items xsi:type="scave:BarChart" name="gts allocated">
-        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-2-*) AND numGtsAllocatedReal"/>
+        <filters xsi:type="scave:Select" filterPattern="run(GeographicDSME-3-*) AND num*xGtsAllocatedReal"/>
       </items>
     </datasets>
   </datasets>
   <chartSheets>
-    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.4 //@datasets/@datasets.1/@items.5 //@datasets/@datasets.0/@items.6 //@datasets/@datasets.6/@items.1 //@datasets/@datasets.7/@items.1 //@datasets/@datasets.8/@items.4 //@datasets/@datasets.8/@items.5 //@datasets/@datasets.0/@items.7 //@datasets/@datasets.8/@items.6 //@datasets/@datasets.2/@items.3 //@datasets/@datasets.5/@items.7 //@datasets/@datasets.8/@items.10 //@datasets/@datasets.8/@items.7 //@datasets/@datasets.5/@items.6 //@datasets/@datasets.4/@items.1"/>
+    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.4 //@datasets/@datasets.1/@items.5 //@datasets/@datasets.0/@items.6 //@datasets/@datasets.6/@items.1 //@datasets/@datasets.7/@items.1 //@datasets/@datasets.9/@items.4 //@datasets/@datasets.9/@items.5 //@datasets/@datasets.0/@items.7 //@datasets/@datasets.9/@items.6 //@datasets/@datasets.2/@items.3 //@datasets/@datasets.5/@items.7 //@datasets/@datasets.9/@items.10 //@datasets/@datasets.9/@items.7 //@datasets/@datasets.5/@items.6 //@datasets/@datasets.4/@items.1 //@datasets/@datasets.8/@items.1"/>
   </chartSheets>
 </scave:Analysis>

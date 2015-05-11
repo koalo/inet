@@ -116,9 +116,16 @@ void DSME::saveGtsAllocationStats() {
 
     // TX GTS for each GTSQueue
     cOutVector gtsQeueueAlloc("gtsQueueAllocatedTx");
+    double queueMeanFill = 0;
+    long queueMaxFill = 0;
     for (auto q = GTSQueue.begin(); q != GTSQueue.end(); q++) {
         gtsQeueueAlloc.recordWithTimestamp(q->first.getInt() & 0xffff, getNumAllocatedGTS(q->first, GTS::DIRECTION_TX));
+        queueMaxFill = std::max((long)q->second.size(), queueMaxFill);
+        queueMeanFill += q->second.size();
     }
+    queueMeanFill /= GTSQueue.size();
+    recordScalar("queueMaxFill", queueMaxFill);
+    recordScalar("queueMeanFill", queueMeanFill);
 }
 void DSME::initialize(int stage)
 {

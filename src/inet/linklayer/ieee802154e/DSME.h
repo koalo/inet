@@ -147,6 +147,8 @@ protected:
      * vec allocatedTxGTS
      * vec allocatedRxGTSIdleCounter
      * vec allocatedTxGTSIdleCounter
+     * long queueMeanFill;
+     * long queueMaxFill;
      */
     long numBeaconCollision;
     simtime_t timeAssociated;
