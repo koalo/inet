@@ -148,6 +148,10 @@
         <properties name="Bar.Placement" value="InFront"/>
       </items>
     </datasets>
+    <datasets name="duplicate and collision">
+      <items xsi:type="scave:Add" filterPattern="run(GeographicDSME-139-*) AND (numGtsDuplicatedAllocation OR numBeaconCollision)"/>
+      <items xsi:type="scave:BarChart"/>
+    </datasets>
     <datasets name="timings">
       <items xsi:type="scave:Add" filterPattern="timeAssociated OR timeFirstAllocationSent OR timeLastAllocationSuccess"/>
       <items xsi:type="scave:BarChart" name="timings">
@@ -195,6 +199,6 @@
     </datasets>
   </datasets>
   <chartSheets>
-    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.4 //@datasets/@datasets.1/@items.5 //@datasets/@datasets.0/@items.6 //@datasets/@datasets.6/@items.1 //@datasets/@datasets.7/@items.1 //@datasets/@datasets.9/@items.4 //@datasets/@datasets.9/@items.5 //@datasets/@datasets.0/@items.7 //@datasets/@datasets.9/@items.6 //@datasets/@datasets.2/@items.3 //@datasets/@datasets.5/@items.7 //@datasets/@datasets.9/@items.10 //@datasets/@datasets.9/@items.7 //@datasets/@datasets.5/@items.6 //@datasets/@datasets.4/@items.1 //@datasets/@datasets.8/@items.1"/>
+    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.4 //@datasets/@datasets.1/@items.5 //@datasets/@datasets.0/@items.6 //@datasets/@datasets.6/@items.1 //@datasets/@datasets.8/@items.1 //@datasets/@datasets.10/@items.4 //@datasets/@datasets.10/@items.5 //@datasets/@datasets.0/@items.7 //@datasets/@datasets.10/@items.6 //@datasets/@datasets.2/@items.3 //@datasets/@datasets.5/@items.7 //@datasets/@datasets.10/@items.10 //@datasets/@datasets.10/@items.7 //@datasets/@datasets.5/@items.6 //@datasets/@datasets.4/@items.1 //@datasets/@datasets.9/@items.1 //@datasets/@datasets.7/@items.1"/>
   </chartSheets>
 </scave:Analysis>
