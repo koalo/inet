@@ -42,6 +42,7 @@ public:
     // types: Guaranteed Time Slot management
     typedef std::vector<std::vector<GTS>> gts_allocation;     // superframes x slots
     typedef std::map<MACAddress, std::list<IEEE802154eMACFrame*>> gts_queue;
+    typedef enum {ALLOC_RANDOM, ALLOC_NEXT_SLOT} gts_allocation_scheme;
 
 protected:
     cModule *hostModule;
@@ -85,6 +86,7 @@ protected:
     DSME_PANDescriptor PANDescriptor;
 
     // Guaranteed Time Slot management
+    gts_allocation_scheme allocationScheme;
     gts_allocation allocatedGTSs;
     DSMESlotAllocationBitmap occupiedGTSs;
     bool gtsAllocationSent;

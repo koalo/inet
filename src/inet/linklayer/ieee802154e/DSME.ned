@@ -45,6 +45,8 @@ simple DSME extends CSMA
     	int maxNumberGTSAllocPerRequest = default(2); // also per superframe
     	int maxGTSIdleCount = default(0);	// 0 => never deallocate idle GTS
     	
+    	string allocationScheme = default("random");	// ("random", "next")
+    	
     	// Slotted CSMA-CA
     	int contentionWindowLength = default(2);
     	

@@ -190,6 +190,12 @@ void DSME::initialize(int stage)
         superframeSpec.finalCAPSlot = par("finalCAPSlot");
         dsmeSuperframeSpec.multiSuperframeOrder = par("multiSuperframeOrder");
 
+        if (strcmp(par("allocationScheme").stringValue(), "next")==0)
+            allocationScheme = ALLOC_NEXT_SLOT;
+        else
+            allocationScheme = ALLOC_RANDOM;
+
+
         double baseSlotDuration = par("baseSlotDuration").longValue() * par("secondsPerSymbol").doubleValue();
         slotDuration = baseSlotDuration * (1 << superframeSpec.superframeOrder);                    // IEEE802.15.4e-2012 p. 37
         slotsPerSuperframe = par("slotsPerSuperframe");
@@ -573,9 +579,17 @@ void DSME::checkAndHandleGTSAllocation(MACAddress dest) {
 
 
 void DSME::allocateGTSlots(uint8_t numSlots, bool direction, MACAddress addr) {
-    // select random slot
-    GTS randomGTS = occupiedGTSs.getRandomFreeGTS(allocatedGTSs);  // TODO get for nearby superframe
-    if (randomGTS == GTS::UNDEFINED) {
+    // select random or next slot
+    GTS preferredGTS = GTS::UNDEFINED;
+    switch(allocationScheme) {
+        case ALLOC_RANDOM:
+            preferredGTS = occupiedGTSs.getRandomFreeGTS(allocatedGTSs);
+        break;
+        case ALLOC_NEXT_SLOT:
+            preferredGTS = occupiedGTSs.getNextFreeGTS(currentSuperframe, currentSlot-numCSMASlots-1, allocatedGTSs);
+    }
+
+    if (preferredGTS == GTS::UNDEFINED) {
         EV_WARN << "DSME allocateGTS: no free slot found" << endl;
         return;
     }
@@ -588,15 +602,15 @@ void DSME::allocateGTSlots(uint8_t numSlots, bool direction, MACAddress addr) {
     man.prioritizedChannelAccess = false;
     DSME_SAB_Specification sabSpec;
     sabSpec.subBlockLength = occupiedGTSs.getSubBlockLength();
-    sabSpec.subBlockIndex = randomGTS.superframeID;            // TODO subBlockIndex in units or in bits?!
-    sabSpec.subBlock = occupiedGTSs.getSubBlock(randomGTS.superframeID);
+    sabSpec.subBlockIndex = preferredGTS.superframeID;            // TODO subBlockIndex in units or in bits?!
+    sabSpec.subBlock = occupiedGTSs.getSubBlock(preferredGTS.superframeID);
 
     DSME_GTSRequestCmd *req = new DSME_GTSRequestCmd("gts-request-allocation");
     req->setGtsManagement(man);
     req->setSABSpec(sabSpec);
     req->setNumSlots(numSlots);
-    req->setPreferredSuperframeID(randomGTS.superframeID);
-    req->setPreferredSlotID(randomGTS.slotID);
+    req->setPreferredSuperframeID(preferredGTS.superframeID);
+    req->setPreferredSlotID(preferredGTS.slotID);
 
     sendGTSRequest(req, addr);
     gtsAllocationSent = true;

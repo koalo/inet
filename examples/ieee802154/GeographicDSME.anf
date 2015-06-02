@@ -92,7 +92,7 @@
       </items>
     </datasets>
     <datasets name="latency">
-      <items xsi:type="scave:Add" filterPattern="sendInt OR (endToEndDelay:histogram:max AND module(*.host[0].trafficgen) )"/>
+      <items xsi:type="scave:Add" filterPattern="run(GeographicDSME_Next*) AND (sendInt OR (endToEndDelay:histogram:max AND module(*.host[0].trafficgen) ))"/>
       <items xsi:type="scave:ScatterChart" name="latency" xDataPattern="module(.) AND name(sendInt)">
         <filters xsi:type="scave:Select" filterPattern="sendInt OR endToEndDelay:histogram:max"/>
         <properties name="Graph.Title" value="latency"/>

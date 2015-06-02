@@ -63,6 +63,11 @@ public:
     GTS getRandomFreeGTS(uint16_t superframeID, const gts_allocation&);
 
     /**
+     * Get the next free slot after the given slot
+     */
+    GTS getNextFreeGTS(uint16_t superframeID, uint16_t slotID, const gts_allocation&);
+
+    /**
      * Returns the subblock length unit in bytes which is numSlots*numChannels / 8
      */
     uint8_t getSubBlockLength();

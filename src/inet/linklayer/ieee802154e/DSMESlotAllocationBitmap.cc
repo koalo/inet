@@ -142,6 +142,32 @@ GTS DSMESlotAllocationBitmap::getRandomFreeGTS(uint16_t superframeID, const gts_
     return GTS::UNDEFINED;
 }
 
+GTS DSMESlotAllocationBitmap::getNextFreeGTS(uint16_t superframeID, uint16_t slotID, const gts_allocation&) {
+    if (slotID < numSlots)
+        slotID++;
+    else {
+        slotID = 0;
+        superframeID = (superframeID < (bitmap.size()-1)) ? superframeID+1 : 0;
+    }
+    for (uint16_t i=superframeID; i<bitmap.size()-1; i++) {
+        BitVector subBlock = getSubBlock(i);
+        for (uint16_t j=slotID*numChannels; j<subBlockLength-1; j++) {
+            if (GTS::UNDEFINED == allocatedGTS[i][j/numChannels]
+                    && !subBlock.getBit(j))
+                return getGTS(i, j);
+        }
+    }
+    for (uint16_t i=0; i<start; i++) {
+        BitVector subBlock = getSubBlock(i);
+        for (uint16_t j=0; j<subBlockLength-1; j++) {
+            if (GTS::UNDEFINED == allocatedGTS[i][j/numChannels]
+                    && !subBlock.getBit(j))
+                return getGTS(i, j);
+        }
+    }
+    return GTS::UNDEFINED;
+}
+
 uint8_t DSMESlotAllocationBitmap::getSubBlockLength() {
     return subBlockLength / 8;  // TODO actually + subBlockLength % 8
 }
